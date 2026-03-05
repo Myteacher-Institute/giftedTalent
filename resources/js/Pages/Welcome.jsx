@@ -6,6 +6,9 @@ import heroImage from '../../image/div (1).jpg';
 
 
 export default function Welcome({ auth, laravelVersion, phpVersion }) {
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+
     const handleImageError = () => {
         document
             .getElementById('screenshot-container')
@@ -19,7 +22,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
 
     return (
         <>
-            <Head title="Welcome" />
+            <Head title="GiftedTalents" />
 
             <div className="home-screen">
                 {/* Henry */}
@@ -27,17 +30,43 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                     <div className="logo">
                         GiftedTalents<span>.online</span>
                     </div>
-                    <div className="nav-links">
+                    <div className={`nav-links ${menuOpen ? 'active' : ''}`}>
                         <a href="#">Find Jobs</a>
                         <a href="#">Find Talents</a>
                         <a href="#">How It Works</a>
                         <a href="#">About</a>
+                        <a href="#" className="nav-signin">Sign In</a>
+                        <button
+                            className={`nav-get-started ${dropdownOpen ? 'active' : ''}`}
+                            onClick={() => setDropdownOpen(!dropdownOpen)}
+                        >
+                            Get Started
+                        </button>
                     </div>
 
                     <div className="nav-right">
                         <a href="#">Sign In</a>
-                        <a href="#" className="get-started">Get Started</a>
+                        <div className={`dropdown-container ${dropdownOpen ? 'active' : ''}`}>
+                            <button
+                                className={`get-started ${dropdownOpen ? 'active' : ''}`}
+                                onClick={() => setDropdownOpen(!dropdownOpen)}
+                            >
+                                Get Started
+                            </button>
+                            <div className={`dropdown-menu ${dropdownOpen ? 'active' : ''}`}>
+                                <a href="#" className="dropdown-item">Sign In</a>
+                            </div>
+                        </div>
                     </div>
+
+                    <button
+                        className={`hamburger ${menuOpen ? 'active' : ''}`}
+                        onClick={() => setMenuOpen(!menuOpen)}
+                    >
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
                 </nav>
 
                 <section className="hero">
@@ -48,7 +77,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                         <h1>
                             Discover Opportunities.
                             <br />
-                            Showcase Your Talent.
+                            <span className="talent-text">Showcase Your Talent.</span>
                         </h1>
                         <p>
                             Connecting skilled talents with verified employers worldwide.
@@ -67,7 +96,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
 
 
 
-                // {/* search bar */}
+                {/* search bar */}
                 <div className="search-container">
                     <div className="search-box">
                         <div className="input-with-icon">
