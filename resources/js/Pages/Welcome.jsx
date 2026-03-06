@@ -259,6 +259,8 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                             <button className="view-all-btn">View All Jobs</button>
                         </div>
                     </div>
+                </div>
+                
                 <div className="featured-talents">
                     <div className="feature-talent-header">
                         <h3>Featured Talents</h3>
@@ -304,9 +306,9 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                     </div>
                     
                     <Link href="" className='browse-all-btn'>Browse All Talents</Link>
-               </div>
+                </div>
                 
             </div>
-        </>
+            </>
     );
 }
