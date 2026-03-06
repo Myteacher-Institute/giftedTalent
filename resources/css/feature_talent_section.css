@@ -1,0 +1,252 @@
+@import url('https://fonts.googleapis.com/css2?family=Edu+QLD+Hand:wght@400..700&family=Exo+2:ital,wght@0,100..900;1,100..900&family=Fira+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Pixelify+Sans:wght@400..700&family=Poetsen+One&family=Rubik+Moonrocks&family=Zain:wght@200;300;400;700;800;900&display=swap');
+
+
+.featured-talents {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.featured-talents>.feature-talent-header {
+    margin: 0 auto;
+    text-align: center;
+    display: block;
+    padding: 10px;
+}
+
+.featured-talents>.feature-talent-header>h3 {
+    color: #0A2463;
+    font-family: "Fira Sans", sans-serif;
+    font-weight: 700;
+    font-style: Bold;
+    font-size: 40px;
+    line-height: 40px;
+    letter-spacing: -0.5px;
+}
+
+.featured-talents>.feature-talent-header>p {
+    color: #4B5563;
+    font-family: "Fira Sans", sans-serif;
+    font-weight: 400;
+    font-style: Regular;
+    font-size: 20px;
+    line-height: 50px;
+    letter-spacing: -0.5px;
+}
+
+.featured-talents>.feature-talent-content {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+}
+
+.featured-talents>.feature-talent-content>.feature-talent-card {
+    width: 100%;
+    max-width: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    overflow-x: hidden;
+    text-align: center;
+    padding: 20px;
+    box-shadow: 0px 10px 15px 0px #0000001A;
+    box-shadow: 0px 4px 6px 0px #0000001A;
+
+}
+
+.featured-talents>.feature-talent-content>.feature-talent-card>.feature-talent-card-header {
+    width: 100%;
+    max-width: 100px;
+    max-height: 100px;
+}
+
+.featured-talents>.feature-talent-content>.feature-talent-card>.feature-talent-card-header>img {
+    width: 100px;
+    border-radius: 100px;
+}
+
+.featured-talents>.feature-talent-content>.feature-talent-card>.feature-talent-card-body>h3 {
+    font-weight: 700;
+    font-style: Bold;
+    font-size: 22px;
+    line-height: 28px;
+    letter-spacing: -0.5px;
+    color: #0A2463;
+}
+
+.featured-talents>.feature-talent-content>.feature-talent-card>.feature-talent-card-body>p {
+    font-weight: 400;
+    font-style: Regular;
+    font-size: 16px;
+    line-height: 24px;
+    letter-spacing: -0.5px;
+}
+
+.featured-talents>.feature-talent-content>.feature-talent-card>.feature-talent-card-stars {
+    display: flex;
+    gap: 8px;
+}
+
+.featured-talents>.feature-talent-content>.feature-talent-card>.feature-talent-card-stars>img {
+    width: 100%;
+    max-width: 20px;
+    height: 20px;
+}
+
+.featured-talents>.feature-talent-content>.feature-talent-card>.feature-talent-card-roles {
+    display: flex;
+    gap: 25px;
+}
+
+.featured-talents>.feature-talent-content>.feature-talent-card>.feature-talent-card-roles>span {
+    font-weight: 500;
+    font-style: Medium;
+    font-size: 15px;
+    line-height: 16px;
+    letter-spacing: -0.5px;
+    text-align: center;
+    color: #3B82F6;
+    transition: all 0.6s linear;
+    cursor: pointer;
+}
+
+.featured-talents>.feature-talent-content>.feature-talent-card>.feature-talent-card-roles>span:hover {
+    transform: translateY(-10px);
+}
+
+.featured-talents>.feature-talent-content>.feature-talent-card>.feature-talent-card-footer>a {
+    width: 100%;
+    padding: 14px 60px;
+    color: #fff;
+    text-decoration: none;
+    background-color: #0A2463;
+    font-weight: 400;
+    font-style: 'Semi' Bold;
+    font-size: 16px;
+    line-height: 20px;
+    letter-spacing: 2px;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.6s ease-in-out;
+}
+
+.featured-talents>.feature-talent-content>.feature-talent-card>.feature-talent-card-footer>a:hover{
+    background-color: #3B82F6;
+    color: #fff;
+}
+
+.featured-talents>.browse-all-btn {
+    background-color: #fff;
+    text-align: center;
+    margin: 70px auto 0 auto;
+    border: 2px solid #0A2463;
+    box-shadow: 0px 4px 6px 0px #0000001A;
+    padding: 20px 30px;
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: 700;
+    font-style: Bold;
+    font-size: 20px;
+    line-height: 20px;
+    letter-spacing: -0.5px;
+    text-align: center;
+    border-radius: 15px;
+    transition: all 0.6s ease-in-out;
+}
+
+.featured-talents>.browse-all-btn:hover{
+    background-color: #0A2463;
+    color: #fff;
+}
+
+/* Tablet Responsive Styles */
+@media (max-width: 768px) {
+    .featured-talents>.feature-talent-content {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+    }
+    
+    .featured-talents>.feature-talent-content>.feature-talent-card {
+        max-width: 280px;
+        padding: 15px;
+    }
+    
+    .featured-talents>.feature-talent-header>h3 {
+        font-size: 32px;
+        line-height: 36px;
+    }
+    
+    .featured-talents>.feature-talent-header>p {
+        font-size: 18px;
+        line-height: 28px;
+    }
+    
+    .featured-talents>.browse-all-btn {
+        margin: 50px auto 0 auto;
+        padding: 18px 25px;
+        font-size: 18px;
+    }
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 480px) {
+    .featured-talents>.feature-talent-content {
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+    
+    .featured-talents>.feature-talent-content>.feature-talent-card {
+        max-width: 100%;
+        width: 90%;
+        padding: 20px;
+    }
+    
+    .featured-talents>.feature-talent-header>h3 {
+        font-size: 28px;
+        line-height: 32px;
+    }
+    
+    .featured-talents>.feature-talent-header>p {
+        font-size: 16px;
+        line-height: 24px;
+    }
+    
+    .featured-talents>.feature-talent-content>.feature-talent-card>.feature-talent-card-body>h3 {
+        font-size: 20px;
+        line-height: 24px;
+    }
+    
+    .featured-talents>.feature-talent-content>.feature-talent-card>.feature-talent-card-body>p {
+        font-size: 14px;
+        line-height: 20px;
+    }
+    
+    .featured-talents>.feature-talent-content>.feature-talent-card>.feature-talent-card-roles {
+        gap: 15px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .featured-talents>.feature-talent-content>.feature-talent-card>.feature-talent-card-roles>span {
+        font-size: 14px;
+        line-height: 14px;
+    }
+    
+    .featured-talents>.feature-talent-content>.feature-talent-card>.feature-talent-card-footer>a {
+        padding: 12px 40px;
+        font-size: 14px;
+    }
+    
+    .featured-talents>.browse-all-btn {
+        margin: 40px auto 0 auto;
+        padding: 15px 20px;
+        font-size: 16px;
+        width: 90%;
+    }
+}
