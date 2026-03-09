@@ -1,11 +1,8 @@
-import { Head, Link } from '@inertiajs/react';
-<<<<<<< HEAD
-import { useState } from 'react';
+import { Head, Link, useState } from '@inertiajs/react';
 import '../../css/nav.css';
 import '../../css/hero.css';
 import heroImage from '../../image/div (1).jpg';
 
-=======
 import '../../css/feature.css';
 import '../../css/welcome.css';
 import '../../css/feature_talent_section.css';
@@ -71,7 +68,6 @@ const featuresData = [
         icon: starIcon
     }
 ]
->>>>>>> 426b550062f40b492c5cf8393893609e15d64ab4
 
 export default function Welcome({ auth, laravelVersion, phpVersion }) {
     const [menuOpen, setMenuOpen] = useState(false);
@@ -84,7 +80,6 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
             <div className="home-screen">
                 {/* Henry */}
                 <nav className="navbar">
-<<<<<<< HEAD
                     <div className="logo">
                         GiftedTalents<span>.online</span>
                     </div>
@@ -125,9 +120,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                         <span></span>
                         <span></span>
                     </button>
-=======
 
->>>>>>> 426b550062f40b492c5cf8393893609e15d64ab4
                 </nav>
 
                 <section className="hero">
@@ -192,17 +185,12 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
 
                 {/* christopher - Featured Jobs Section */}
                 <div className="feature-jobs">
-<<<<<<< HEAD
-
-                </div>
-=======
                     <div className="jobs-wrapper">
                         {/* Header */}
                         <div className="jobs-header">
                             <h2 className="jobs-title">Featured Jobs</h2>
                             <p className="jobs-subtitle">Top opportunities from verified employers</p>
                         </div>
->>>>>>> 426b550062f40b492c5cf8393893609e15d64ab4
 
                         {/* Jobs Grid */}
                         <div className="jobs-grid">
@@ -365,9 +353,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                 </div>
                 
                 <div className="featured-talents">
-<<<<<<< HEAD
 
-=======
                     <div className="feature-talent-header">
                         <h3>Featured Talents</h3>
                         <p>Connect with skilled professionals ready to work</p>
@@ -412,7 +398,6 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                     </div>
                     
                     <Link href="" className='browse-all-btn'>Browse All Talents</Link>
->>>>>>> 426b550062f40b492c5cf8393893609e15d64ab4
                 </div>
                 
             </div>
