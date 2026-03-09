@@ -226,7 +226,6 @@ class ProfileController extends Controller
     }
 
 
-    
 
 
     /**
