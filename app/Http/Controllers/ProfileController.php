@@ -225,6 +225,8 @@ class ProfileController extends Controller
         return Redirect::route('profile.edit')->with('success', 'Education updated successfully.');
     }
 
+    
+
     /**
      * Delete education.
      */
