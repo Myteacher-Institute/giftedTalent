@@ -9,17 +9,6 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
     const [menuOpen, setMenuOpen] = useState(false);
     const [dropdownOpen, setDropdownOpen] = useState(false);
 
-    const handleImageError = () => {
-        document
-            .getElementById('screenshot-container')
-            ?.classList.add('!hidden');
-        document.getElementById('docs-card')?.classList.add('!row-span-1');
-        document
-            .getElementById('docs-card-content')
-            ?.classList.add('!flex-row');
-        document.getElementById('background')?.classList.add('!hidden');
-    };
-
     return (
         <>
             <Head title="GiftedTalents" />
@@ -31,32 +20,32 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                         GiftedTalents<span>.online</span>
                     </div>
                     <div className={`nav-links ${menuOpen ? 'active' : ''}`}>
-                        <a href="#">Find Jobs</a>
-                        <a href="#">Find Talents</a>
-                        <a href="#">How It Works</a>
-                        <a href="#">About</a>
-                        <a href="#" className="nav-signin">Sign In</a>
-                        <button
-                            className={`nav-get-started ${dropdownOpen ? 'active' : ''}`}
-                            onClick={() => setDropdownOpen(!dropdownOpen)}
-                        >
-                            Get Started
-                        </button>
+                        <Link href="/find-jobs">Find Jobs</Link>
+                        <Link href="/find-talents">Find Talents</Link>
+                        <Link href="/how-it-works">How It Works</Link>
+                        <Link href="/about">About</Link>
                     </div>
 
                     <div className="nav-right">
-                        <a href="#">Sign In</a>
-                        <div className={`dropdown-container ${dropdownOpen ? 'active' : ''}`}>
-                            <button
-                                className={`get-started ${dropdownOpen ? 'active' : ''}`}
-                                onClick={() => setDropdownOpen(!dropdownOpen)}
-                            >
-                                Get Started
-                            </button>
-                            <div className={`dropdown-menu ${dropdownOpen ? 'active' : ''}`}>
-                                <a href="#" className="dropdown-item">Sign In</a>
+                        {auth?.user ? (
+                            <Link href="/dashboard">Dashboard</Link>
+                        ) : (
+                    <div className="auth-links">
+                                <Link href="/login">Sign In</Link>
+                                <div className={`dropdown-container ${dropdownOpen ? 'active' : ''}`}>
+                                    <button
+                                        className={`get-started ${dropdownOpen ? 'active' : ''}`}
+                                        onClick={() => setDropdownOpen(!dropdownOpen)}
+                                    >
+                                        Get Started
+                                    </button>
+                                    <div className={`dropdown-menu ${dropdownOpen ? 'active' : ''}`}>
+                                        <Link href="/register" className="dropdown-item">Register</Link>
+                                        <Link href="/login" className="dropdown-item">Sign In</Link>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
 
                     <button
