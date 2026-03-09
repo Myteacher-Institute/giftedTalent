@@ -226,8 +226,6 @@ class ProfileController extends Controller
     }
 
 
-
-
     /**
      * Delete education.
      */
