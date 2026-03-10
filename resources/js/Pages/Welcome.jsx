@@ -1,35 +1,203 @@
 import { Head, Link } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
+import '../../css/nav.css';
+import '../../css/hero.css';
+
 import '../../css/feature.css';
+import '../../css/welcome.css';
+import '../../css/feature_talent_section.css';
+
+import starIcon from '../../assets/svg/star.svg';
+import halfStarIcon from '../../assets/svg/half-star.svg';
+
+import sample1 from '../../assets/img/sample1.jpg';
+import sample2 from '../../assets/img/sample2.jpg';
+import sample3 from '../../assets/img/sample3.jpg';
+import sample4 from '../../assets/img/sample4.jpg';
+import heroImage from '../../assets/img/giftedtalentimage.png';
+
+
+// Nav Component
+function Nav({ auth }) {
+    const [isActive, setIsActive] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            if (window.scrollY > 50) {
+                setScrolled(true);
+            } else {
+                setScrolled(false);
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    return (
+        <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
+            <div className="logo">
+                GiftedTalent<span>.Online</span>
+            </div>
+            <ul className={`nav-links ${isActive ? 'active' : ''}`}>
+                <li><a href="/">Home</a></li>
+                <li><a href="/find-jobs">Find Jobs</a></li>
+                <li><a href="/find-talents">Find Talents</a></li>
+                <li><a href="/how-it-works">How It Works</a></li>
+                <li><a href="/about">About</a></li>
+            </ul>
+            <div className="nav-right">
+                {auth?.user ? (
+                    <div className="auth-links">
+                        <a href="/dashboard">Dashboard</a>
+                        <a href="/profile">Profile</a>
+                    </div>
+                ) : (
+                    <div className="auth-links">
+                        <a href="/login">Sign In</a>
+                        <button className="get-started" onClick={() => window.location.href = '/register'}>Get Started</button>
+                    </div>
+                )}
+                <div 
+                    className={`hamburger ${isActive ? 'active' : ''}`} 
+                    onClick={() => setIsActive(!isActive)}
+                >
+                    <span></span>
+                    <span></span>
+                    <span></span>e 
+                </div>
+            </div>
+        </nav>
+    );
+}
+
+// Hero Component
+function Hero() {
+    return (
+        <div className="hero">
+            <div className="circle1"></div>
+            <div className="circle2"></div>
+            <div className="hero-left">
+                <h1>Discover opportunities. <span>Showcase Your Talent.</span></h1>
+                <p>Connect with top employers and talented professionals. Your dream job or ideal candidate is just a click away.</p>
+                <div className="hero-buttons">
+                    <button className="btn-primary">Find Jobs</button>
+                    <button className="btn-secondary">Hire Talent</button>
+                </div>
+            </div>
+            <div className="hero-right">
+                <img src={heroImage} alt="Hero" />
+            </div>
+        </div>
+    );
+}
+
+const featuresData = [
+    {
+        name: "Micheal Chen",
+        image: sample1,
+        role: "Full Stack Developer",
+        tech: ['Node.js', 'React', 'mongoDB'],
+        bg: { background: 'linear-gradient(135deg, #EFF6FF 0%, #FFFFFF 70.71%)' },
+        border: {border: '1px solid #DBEAFE'},
+        rating: 48,
+        stars: 5,
+        fullStar: true,
+        icon: starIcon
+    },
+    {
+        name: "Sarah Johnson",
+        image: sample2,
+        role: "UI/UX Designer",
+        tech: ['Figma', 'Adobe', 'Prototyping'],
+        border: {border: '1px solid #F3E8FF'},
+        bg: { background: 'linear-gradient(135deg, #FAF5FF 0%, #FFFFFF 70.71%)' },
+        stars: 4,
+        rating: 35,
+        fullStar: false,
+        halfStar: true,
+        icon: starIcon,
+        halfStarIcon: halfStarIcon
+    },
+    {
+        name: "David Martinez",
+        role: "Data Analyst",
+        bg: { background: 'linear-gradient(135deg, #F0FDF4 0%, #FFFFFF 70.71%)' },
+        image: sample3,
+        rating: 52,
+        border: {border: '1px solid #DCFCE7'},
+        tech: ['Python', 'SQL', 'Tebleau'],
+        stars: 5,
+        fullStar: true,
+        icon: starIcon
+    },
+    {
+        name: "Emily Wilson",
+        role: "Content Writer",
+        bg: { background: 'linear-gradient(135deg, #FFF7ED 0%, #FFFFFF 70.71%)' },
+        rating: 41,
+        image: sample4,
+        tech: ['SEO', 'CopyWriting', 'Blogging'],
+        border: {border: '1px solid #FFEDD5'},
+        stars: 5,
+        fullStar: true,
+        icon: starIcon
+    }
+]
 
 export default function Welcome({ auth, laravelVersion, phpVersion }) {
-    const handleImageError = () => {
-        document
-            .getElementById('screenshot-container')
-            ?.classList.add('!hidden');
-        document.getElementById('docs-card')?.classList.add('!row-span-1');
-        document
-            .getElementById('docs-card-content')
-            ?.classList.add('!flex-row');
-        document.getElementById('background')?.classList.add('!hidden');
-    };
 
     return (
         <>
-            <Head title="Welcome" />
+            <Head title="GiftedTalents" />
 
             <div className="home-screen">
                 {/* Henry */}
-                <nav className="navbar">
+                <Nav auth={auth} />
 
-                </nav>
+                <Hero />
 
-                <div className="hero">
 
+
+                {/* search bar */}
+                <div className="search-container">
+                    <div className="search-box">
+                        <div className="search-inputs">
+                            <div className="input-with-icon">
+                                {/* magnifying glass / keyword */}
+                                <svg xmlns="http://www.w3.org/2000/svg" className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                                <input type="text" placeholder="Job title or Keyword" />
+                            </div>
+                            <div className="input-with-icon">
+                                {/* briefcase / skill */}
+                                <svg xmlns="http://www.w3.org/2000/svg" className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                    <path d="M16 3H8v4h8V3z"></path>
+                                </svg>
+                                <input type="text" placeholder="Skill" />
+                            </div>
+                            <div className="input-with-icon">
+                                {/* map pin / location */}
+                                <svg xmlns="http://www.w3.org/2000/svg" className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M21 10c0 6-9 13-9 13S3 16 3 10a9 9 0 1118 0z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                                <input type="text" placeholder="Location" />
+                            </div>
+                        </div>
+
+                        <button className="search-button">Search Jobs</button>
+                    </div>
                 </div>
 
 
                 {/* christopher - Featured Jobs Section */}
                 <div className="feature-jobs">
+
                     <div className="jobs-wrapper">
                         {/* Header */}
                         <div className="jobs-header">
@@ -196,11 +364,56 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                         </div>
                     </div>
                 </div>
-
+                
                 <div className="featured-talents">
 
+                    <div className="feature-talent-header">
+                        <h3>Featured Talents</h3>
+                        <p>Connect with skilled professionals ready to work</p>
+                    </div>
+
+                    <div className="feature-talent-content">
+                        {featuresData.map((feature, index) => (
+                            <div className="feature-talent-card" key={index} style={{...feature.bg, ...feature.border}}>
+                                <div className="feature-talent-card-header">
+                                    <img src={feature.image} alt="" />
+                                </div>
+
+                                <div className="feature-talent-card-body">
+                                    <h3>{feature.name}</h3>
+                                    <p>{feature.role}</p>
+                                </div>
+
+                                <div className="feature-talent-card-stars">
+                                    {[...Array(5)].map((_, starIndex) => {
+                                        if (starIndex < feature.stars) {
+                                            return <img key={starIndex} src={feature.icon} alt="star" />;
+                                        } else if (starIndex === feature.stars && feature.halfStar) {
+                                            return <img key={starIndex} src={feature.halfStarIcon} alt="half star" />;
+                                        }
+                                        return null;
+                                    })}
+                                    <span>{`(${feature.rating})`}</span>
+                                </div>
+
+                                <div className="feature-talent-card-roles">
+                                    {feature.tech.map((tech, techIndex) => (
+                                        <span key={techIndex}>{tech}</span>
+                                    ))}
+                                </div>
+
+                                <div className="feature-talent-card-footer">
+                                    <Link href="">View Profile</Link>
+                                </div>
+                            </div>
+                        ))}
+
+                    </div>
+                    
+                    <Link href="" className='browse-all-btn'>Browse All Talents</Link>
                 </div>
+                
             </div>
-        </>
+            </>
     );
 }

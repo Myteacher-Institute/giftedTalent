@@ -33,7 +33,12 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        // Check admin status after authentication
+        $user = Auth::user();
+        $isAdmin = $user && $user->is_admin;
+
+        $redirectRoute = $isAdmin ? 'admin.dashboard' : 'dashboard';
+        return redirect()->intended(route($redirectRoute, absolute: false));
     }
 
     /**
@@ -41,11 +46,19 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $user = Auth::user();
+        $isAdmin = $user && $user->is_admin;
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
 
         $request->session()->regenerateToken();
+
+        // Redirect admins to login with flash message, others to home
+        if ($isAdmin) {
+            return redirect()->route('login')->with('status', 'Admin logged out successfully.');
+        }
 
         return redirect('/');
     }

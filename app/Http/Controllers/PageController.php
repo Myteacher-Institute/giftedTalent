@@ -1,0 +1,42 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Inertia\Inertia;
+use Inertia\Response;
+
+class PageController extends Controller
+{
+    /**
+     * Display the Find Jobs page.
+     */
+    public function findJobs(): Response
+    {
+        return Inertia::render('FindJobs');
+    }
+
+    /**
+     * Display the Find Talents page.
+     */
+    public function findTalents(): Response
+    {
+        return Inertia::render('FindTalents');
+    }
+
+    /**
+     * Display the How It Works page.
+     */
+    public function howItWorks(): Response
+    {
+        return Inertia::render('HowItWorks');
+    }
+
+    /**
+     * Display the About page.
+     */
+    public function about(): Response
+    {
+        return Inertia::render('About');
+    }
+}
+
