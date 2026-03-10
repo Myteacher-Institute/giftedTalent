@@ -20,6 +20,7 @@ Route::get('/find-jobs', [PageController::class, 'findJobs'])->name('pages.findJ
 Route::get('/find-talents', [PageController::class, 'findTalents'])->name('pages.findTalents');
 Route::get('/how-it-works', [PageController::class, 'howItWorks'])->name('pages.howItWorks');
 Route::get('/about', [PageController::class, 'about'])->name('pages.about');
+Route::get('/user-profile', [PageController::class, 'userProfile'])->name('pages.userProfile');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
