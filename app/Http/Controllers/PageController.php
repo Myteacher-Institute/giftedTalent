@@ -31,12 +31,21 @@ class PageController extends Controller
         return Inertia::render('HowItWorks');
     }
 
-    /**
-     * Display the About page.
-     */
-    public function about(): Response
-    {
-        return Inertia::render('About');
-    }
+/**
+ * Display the About page.
+ */
+public function about(): Response
+{
+    return Inertia::render('About');
+}
+
+/**
+ * Display the User Profile page.
+ */
+public function userProfile(): Response
+{
+    return Inertia::render('userProfile');
+}
+
 }
 
