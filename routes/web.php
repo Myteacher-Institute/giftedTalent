@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -22,11 +24,15 @@ Route::get('/how-it-works', [PageController::class, 'howItWorks'])->name('pages.
 Route::get('/about', [PageController::class, 'about'])->name('pages.about');
 Route::get('/user-profile', [PageController::class, 'userProfile'])->name('pages.userProfile');
 
+Route::get('/jobs', function () {
+    return Inertia::render('Jobs');
+})->name('jobs');
+
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth', 'verified', 'not_admin'])->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'not_admin'])->group(function () {
     // Basic Profile Routes
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -50,5 +56,20 @@ Route::middleware('auth')->group(function () {
     Route::put('/profile/educations/{education}', [ProfileController::class, 'updateEducation'])->name('profile.educations.update');
     Route::delete('/profile/educations/{education}', [ProfileController::class, 'deleteEducation'])->name('profile.educations.delete');
 });
+
+// Admin Routes - Protected by IsAdmin middleware
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    
+    Route::get('/users', [AdminController::class, 'users'])->name('users');
+    
+    Route::get('/jobs', [AdminController::class, 'jobs'])->name('jobs');
+    
+    Route::get('/analytics', [AdminController::class, 'analytics'])->name('analytics');
+});
+
+// Google Authentication Routes
+Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('google.redirect');
+Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('google.callback');
 
 require __DIR__.'/auth.php';

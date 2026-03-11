@@ -55,8 +55,8 @@ function Nav({ auth }) {
                     </div>
                 ) : (
                     <div className="auth-links">
-                        <a href="/signin">Sign In</a>
-                        <button className="get-started">Get Started</button>
+                        <a href="/login">Sign In</a>
+                        <button className="get-started" onClick={() => window.location.href = '/register'}>Get Started</button>
                     </div>
                 )}
                 <div 
