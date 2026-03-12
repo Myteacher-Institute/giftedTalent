@@ -87,7 +87,7 @@ class AdminController extends Controller
     {
         $period = $request->get('period', 'week'); // week, month, year
 
-        $stats = match($period) {
+        $stats = match ($period) {
             'week' => [
                 'users' => \App\Models\User::whereBetween('created_at', [now()->startOfWeek(), now()])->count(),
                 'profiles' => \App\Models\Profile::whereBetween('created_at', [now()->startOfWeek(), now()])->count(),

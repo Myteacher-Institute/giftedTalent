@@ -3,11 +3,11 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Inter', sans-serif;
 }
 
 body {
-    background: #F5F7FB;
+    background: linear-gradient(180deg, #FFFFFF 0%, #EFF6FF 100%);
     color: #1A1E24;
 }
 
@@ -17,11 +17,48 @@ body {
     min-height: 100vh;
 }
 
+nav {
+    width: 235px;
+    background: #FFFFFF;
+    border-top: 6px solid #EDF2F7;
+    border-right: 6px solid #EDF2F7;
+    border-left: 6px solid #EDF2F7;
+    gap: 2rem;
+    margin-top: 3.2rem;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+}
+
+nav div {
+    padding: 1rem 2rem 0 1rem;
+    text-align: center;
+    border-top: 1px solid #EDF2F7;
+    border-bottom: 6px solid #EDF2F7;
+    border-right: 1px solid #EDF2F7;
+    border-left: 1px solid #EDF2F7;
+    border-top-left-radius: 15px;
+}
+
+nav div h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #4B5563;
+}
+
+nav div p {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #64748B;
+    margin-top: 0.25rem;
+    margin-bottom: 3rem;
+}
+
 /* ========== SIDEBAR ========== */
 .sidebar {
     width: 260px;
     background: #FFFFFF;
-    border-right: 1px solid #EDF2F7;
+    border-top: 1px solid #EDF2F7;
+    border-left: 1px solid #EDF2F7;
     padding: 2rem 1.5rem;
     position: fixed;
     height: 100vh;
@@ -29,21 +66,30 @@ body {
 }
 
 .sidebar .logo {
-    margin-bottom: 2.5rem;
+    margin-bottom: 2rem;
 }
 
 .sidebar .logo h2 {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
     font-weight: 600;
     color: #4B5563;
 }
 
-.sidebar .logo h2 span {
+.sidebar .logo a {
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+.sidebar .logo a span {
     color: #0A2463;
 }
 
+
 .sidebar-nav ul {
+    width: 100%;
     list-style: none;
+    margin-top: 1.5rem;
+    padding-left: 2rem;
 }
 
 .sidebar-nav li {
@@ -51,7 +97,7 @@ body {
 }
 
 .sidebar-nav a {
-    display: block;
+    display: flex;
     padding: 0.75rem 1rem;
     color: #64748B;
     text-decoration: none;
@@ -64,6 +110,10 @@ body {
 .sidebar-nav a:hover {
     background: #F1F5F9;
     color: #0A2463;
+}
+
+.sidebar-nav img {
+    margin-right: 1rem;
 }
 
 .sidebar-nav li.active a {
@@ -84,11 +134,8 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #FFFFFF;
-    padding: 1rem 1.5rem;
+    padding: 1rem 0;
     border-radius: 12px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-    margin-bottom: 2rem;
 }
 
 .nav-left {
@@ -103,24 +150,52 @@ body {
     display: none;
 }
 
-.breadcrumb a {
+.nav-links {
+    display: flex;
+    gap: 1rem;
+    text-align: center;
+    padding-bottom: 2rem;
+    border: none;
+}
+
+.nav-links a {
     color: #64748B;
     text-decoration: none;
     font-size: 0.95rem;
-    margin: 0 0.25rem;
+    padding: 0 0.4rem;
+    border-right: 4px solid #E2E8F0;
 }
 
-.breadcrumb a:hover {
+.nav-links a:hover {
     color: #0A2463;
+}
+
+.nav-links div {
+    display: flex;
+}
+
+.nav-links div img {
+    width: 12px;
+    text-align: center;
+    margin-top: 0.25rem;
+}
+
+.nav-links .home {
+    border-left: 0;
+}
+
+.nav-links .hire {
+    border: none;
+    padding: 0 0.4rem;
 }
 
 .top-nav .search-bar {
     display: flex;
     align-items: center;
-    background: #F8FAFC;
     border-radius: 8px;
     padding: 0.25rem;
     width: 300px;
+    box-shadow: 0 5px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .top-nav .search-bar input {
@@ -130,10 +205,10 @@ body {
     background: transparent;
     font-size: 0.95rem;
     outline: none;
+    border-radius: 10px;
 }
 
 .top-nav .search-bar button {
-    background: #0A2463;
     color: white;
     border: none;
     padding: 0.6rem 1.2rem;
@@ -206,18 +281,21 @@ body {
     margin-bottom: 1.25rem;
 }
 
-.stat-numbers, .tracker-numbers {
+.stat-numbers,
+.tracker-numbers {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
 }
 
-.stat-item, .tracker-item {
+.stat-item,
+.tracker-item {
     display: flex;
     flex-direction: column;
 }
 
-.stat-value, .tracker-value {
+.stat-value,
+.tracker-value {
     font-size: 1.8rem;
     font-weight: 700;
     color: #0A2463;
@@ -228,7 +306,8 @@ body {
     font-size: 1.5rem;
 }
 
-.stat-label, .tracker-label {
+.stat-label,
+.tracker-label {
     font-size: 0.85rem;
     color: #64748B;
     margin-top: 0.25rem;
@@ -404,7 +483,8 @@ body {
     color: #94A3B8;
 }
 
-.time, .applicants {
+.time,
+.applicants {
     display: flex;
     align-items: center;
     gap: 0.25rem;
@@ -432,7 +512,7 @@ body {
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
     .search-filter input {
         width: 200px;
     }
@@ -444,78 +524,80 @@ body {
         z-index: 1000;
         transition: transform 0.3s ease;
     }
-    
+
     .sidebar.open {
         transform: translateX(0);
     }
-    
+
     .main-content {
         margin-left: 0;
         padding: 1rem;
     }
-    
+
     .top-nav {
         flex-direction: column;
         gap: 1rem;
         align-items: stretch;
     }
-    
+
     .nav-left {
         justify-content: space-between;
     }
-    
+
     .menu-icon {
         display: block;
     }
-    
+
     .breadcrumb {
         font-size: 0.9rem;
     }
-    
+
     .top-nav .search-bar {
         width: 100%;
     }
-    
+
     .stats-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .section-header {
         flex-direction: column;
         align-items: stretch;
     }
-    
+
     .search-filter {
         flex-direction: column;
         align-items: stretch;
     }
-    
+
     .search-filter input,
     .search-filter select,
     .advanced-filter {
         width: 100%;
     }
-    
+
     .job-card-footer {
         flex-direction: column;
         gap: 1rem;
         align-items: flex-start;
     }
-    
+
     .view-applicants {
         width: 100%;
     }
 }
 
 @media (max-width: 480px) {
-    .stat-numbers, .tracker-numbers {
+
+    .stat-numbers,
+    .tracker-numbers {
         grid-template-columns: 1fr;
     }
-    
+
     .user-profile span {
         display: none;
     }
-    
+
     .job-meta {
         flex-direction: column;
         gap: 0.5rem;
