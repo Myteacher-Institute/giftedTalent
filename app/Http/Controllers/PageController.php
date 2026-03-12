@@ -47,5 +47,13 @@ public function userProfile(): Response
     return Inertia::render('userProfile');
 }
 
+/**
+ * Display the Easy Apply Job page.
+ */
+public function easyApplyJob(): Response
+{
+    return Inertia::render('EasyApplyJob');
+}
+
 }
 
