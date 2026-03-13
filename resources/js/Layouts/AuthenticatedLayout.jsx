@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import NavLink from '@/js/Components/NavLink';
-import Dropdown from '@/js/Components/Dropdown';
+import NavLink from '@/Components/NavLink';
+import Dropdown from '@/Components/Dropdown';
 import { Link, usePage } from '@inertiajs/react';
-import ResponsiveNavLink from '@/js/Components/ResponsiveNavLink';
+import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 
 export default function AuthenticatedLayout({ header, children }) {
     const user = usePage().props.auth.user;
