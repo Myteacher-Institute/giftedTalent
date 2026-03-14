@@ -23,6 +23,9 @@ Route::get('/find-talents', [PageController::class, 'findTalents'])->name('pages
 Route::get('/how-it-works', [PageController::class, 'howItWorks'])->name('pages.howItWorks');
 Route::get('/about', [PageController::class, 'about'])->name('pages.about');
 Route::get('/user-profile', [PageController::class, 'userProfile'])->name('pages.userProfile');
+Route::get('/easy-apply-job', [PageController::class, 'easyApplyJob'])->middleware(['auth', 'verified'])->name('pages.easyApplyJob');
+
+Route::get('/search-jobs', [PageController::class, 'searchJobs'])->middleware(['auth', 'verified'])->name('pages.searchJobs');
 
 Route::get('/jobs', function () {
     return Inertia::render('Jobs');

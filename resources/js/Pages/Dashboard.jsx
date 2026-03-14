@@ -115,6 +115,31 @@ export default function Dashboard({ auth }) {
                         <button>Advanced Filter</button>
                     </div>
 
+                    <h2>Recommended Jobs</h2>
+
+                    <div className="jobs">
+                        {jobs.map((job) => (
+                            <JobCard key={job.id} job={job} />
+                        ))}
+                    </div>
+                </main>
+
+                {/* RIGHT PANEL*/}
+                <aside className="right-panel">
+
+                    <div className="progress-card">
+                        <h3>Complete Your Profile</h3>
+
+                        <div className="progress-circle">
+                            75%
+                        </div>
+                        <ul>
+                            <li>Add Portfolio Link</li>
+                            <li>Upddate Experience</li>
+                            <li className="done">Verify Email</li>
+                        </ul>
+                    </div>
+
                     <div className="tracker">
 
                         <h3>Application Tracker</h3>
@@ -141,33 +166,6 @@ export default function Dashboard({ auth }) {
                             </div>
                         </div>
                     </div>
-
-                    <h2>Recommended Jobs</h2>
-
-                    <div className="jobs">
-                        {jobs.map((job) => (
-                            <JobCard key={job.id} job={job} />
-                        ))}
-                    </div>
-                </main>
-
-                {/* RIGHT PANEL*/}
-                <aside className="right-panel">
-
-                    <div className="progress-card">
-                        <h3>Complete Your Profile</h3>
-
-                        <div className="progress-circle">
-                            75%
-                        </div>
-                        <ul>
-                            <li>Add Portfolio Link</li>
-                            <li>Upddate Experience</li>
-                            <li className="done">Verify Email</li>
-                        </ul>
-                    </div>
-
-                    
                 </aside>
             </div>
         </AuthenticatedLayout>
