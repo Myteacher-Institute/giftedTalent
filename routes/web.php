@@ -38,19 +38,19 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    
+
     // Extended Profile Routes
     Route::patch('/profile/extended', [ProfileController::class, 'updateExtendedProfile'])->name('profile.updateExtended');
-    
+
     // Skills Routes
     Route::post('/profile/skills', [ProfileController::class, 'addSkill'])->name('profile.skills.add');
     Route::delete('/profile/skills/{skillId}', [ProfileController::class, 'removeSkill'])->name('profile.skills.remove');
-    
+
     // Experience Routes
     Route::post('/profile/experiences', [ProfileController::class, 'addExperience'])->name('profile.experiences.add');
     Route::put('/profile/experiences/{experience}', [ProfileController::class, 'updateExperience'])->name('profile.experiences.update');
     Route::delete('/profile/experiences/{experience}', [ProfileController::class, 'deleteExperience'])->name('profile.experiences.delete');
-    
+
     // Education Routes
     Route::post('/profile/educations', [ProfileController::class, 'addEducation'])->name('profile.educations.add');
     Route::put('/profile/educations/{education}', [ProfileController::class, 'updateEducation'])->name('profile.educations.update');
@@ -58,13 +58,13 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
 });
 
 // Admin Routes - Protected by IsAdmin middleware
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'admin'])->prefix('Admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
-    
+
     Route::get('/users', [AdminController::class, 'users'])->name('users');
-    
+
     Route::get('/jobs', [AdminController::class, 'jobs'])->name('jobs');
-    
+
     Route::get('/analytics', [AdminController::class, 'analytics'])->name('analytics');
 });
 
@@ -72,4 +72,4 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('google.redirect');
 Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('google.callback');
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
