@@ -31,21 +31,39 @@ class PageController extends Controller
         return Inertia::render('HowItWorks');
     }
 
-/**
- * Display the About page.
- */
-public function about(): Response
-{
-    return Inertia::render('About');
-}
+    /**
+     * Display the About page.
+     */
+    public function about(): Response
+    {
+        return Inertia::render('About');
+    }
 
-/**
- * Display the User Profile page.
- */
-public function userProfile(): Response
-{
-    return Inertia::render('userProfile');
-}
+    /**
+     * Display the User Profile page.
+     */
+    public function userProfile(): Response
+    {
+        return Inertia::render('userProfile');
+    }
+
+    /**
+     * Display the Easy Apply Job page.
+     */
+    public function easyApplyJob(): Response
+    {
+        return Inertia::render('EasyApplyJob');
+    }
+
+    /**
+     * Display the Search Jobs page.
+     */
+    public function searchJobs(): Response
+    {
+        return Inertia::render('search-job', [
+            'auth' => ['user' => auth()->user()]
+        ]);
+    }
 
 }
 
