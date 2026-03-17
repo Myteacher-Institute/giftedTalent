@@ -79,58 +79,38 @@ export default function AdminDashboard() {
                         <div className="stat-card">
                             <h3>Your Job Posts</h3>
                             <div className="stat-numbers">
-                                <div className="stat-item">
+                                <div id='stat-item-1' className="stat-item">
                                     <span className="stat-value">2</span>
                                     <span className="stat-label">Active Jobs</span>
                                 </div>
-                                <div className="stat-item">
+                                <div id='stat-item-2' className="stat-item">
                                     <span className="stat-value">5</span>
                                     <span className="stat-label">Passed</span>
                                 </div>
-                                <div className="stat-item">
+                                <div id='stat-item-3' className="stat-item">
                                     <span className="stat-value">12</span>
                                     <span className="stat-label">Under Review</span>
                                 </div>
-                                <div className="stat-item">
+                                <div id='stat-item-4' className="stat-item">
                                     <span className="stat-value">8</span>
                                     <span className="stat-label">Hired</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="stat-card">
+                        <div className="stat-card-post-job">
                             <h3>Post a new Job</h3>
+                            <img src="/assets/svg/hero-image.jpg" alt="" className="hero-image" />
                             <button className="post-job-btn">+ Create New Job Post</button>
                         </div>
 
-                        <div className="stat-card">
-                            <h3>Application Tracker</h3>
-                            <div className="tracker-numbers">
-                                <div className="tracker-item">
-                                    <span className="tracker-value">320%</span>
-                                    <span className="tracker-label">Shortlisted</span>
-                                </div>
-                                <div className="tracker-item">
-                                    <span className="tracker-value">250</span>
-                                    <span className="tracker-label">Interview Stage</span>
-                                </div>
-                                <div className="tracker-item">
-                                    <span className="tracker-value">128</span>
-                                    <span className="tracker-label">Total Rejected</span>
-                                </div>
-                                <div className="tracker-item">
-                                    <span className="tracker-value">45</span>
-                                    <span className="tracker-label">Under Review</span>
-                                </div>
-                            </div>
-                        </div>
                     </section>
 
                     {/* Recent Job Posts Section */}
                     <section className="recent-jobs">
                         <div className="section-header">
-                            <h2>Recent Job Posts</h2>
-                            <div className="search-filter">
+                            <h3>Recent Job Posts</h3>
+                            {/* <div className="search-filter">
                                 <input type="text" placeholder="Search job titles or keypad" />
                                 <select name="status" id="status">
                                     <option value="all">All Status ▼</option>
@@ -140,76 +120,195 @@ export default function AdminDashboard() {
                                 </select>
                                 <button className="advanced-filter">Advanced Filter</button>
                             </div>
-                        </div>
+                         </div> */}
 
-                        <div className="jobs-list">
-                            {/* Job Card 1 */}
-                            <div className="job-card">
-                                <div className="job-card-header">
-                                    <div className="company-info">
-                                        <h3>BoyAlone Studio</h3>
-                                        <p className="company-location">@Ozuba PH</p>
+                            <div className="jobs-list">
+                                {/* Job Card 1 */}
+                                <div className="job-card">
+                                    <div className="job-card-header">
+                                        <div className="company-info">
+                                            <div className="user-profile">
+                                                <div className="avatar">MI</div>
+                                            </div>
+
+                                            <div className="company-info-header">
+                                                <h3>BoyAlone Studio</h3>
+
+                                                <div className='location'>
+                                                    <img src="/assets/svg/location.svg" alt="" className="location-icon" />
+                                                    <p className="company-location">Ozuoba PH</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className='job-details'>
+                                            <div className='jobs-info'>
+                                                <div>
+                                                    <h4 className="job-type">Full-Time</h4>
+                                                    <p className="job-salary">| N180,000/ <span>Month</span></p>
+                                                </div>
+                                                <div className="job-meta">
+                                                    <div className='job-details-container'>
+                                                        <p className="time">6 hours ago</p>
+                                                        <div className="applicants">
+                                                            <img src="/assets/svg/message.svg" alt="" className="message-icon" />
+                                                            <p> 27</p>
+                                                        </div>
+
+                                                        <button className="view-applicants">View Applicants</button>
+
+                                                        <img src="/assets/svg/menu.svg" alt="" id="menu-icon" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <p className="job-description">Senior Software Engineer. Full <br /> Stack. JS</p> <hr />
+                                        </div>
                                     </div>
-                                    <span className="job-type">Full-Time</span>
                                 </div>
 
-                                <p className="job-salary">N180,000/ Month</p>
-                                <p className="job-description">Senior Software Engineer. Full Stack. JS</p>
+                                {/* Job Card 2 */}
+                                <div className="job-card">
+                                    <div className="job-card-header">
+                                        <div className="company-info">
+                                            <div className="user-profile">
+                                                <div className="avatar">MI</div>
+                                            </div>
 
-                                <div className="job-card-footer">
-                                    <div className="job-meta">
-                                        <span className="time">6 hours ago</span>
-                                        <span className="applicants">📧 27</span>
+                                            <div className="company-info-header">
+                                                <h3>BoyAlone Studio</h3>
+
+                                                <div className='location'>
+                                                    <img src="/assets/svg/location.svg" alt="" className="location-icon" />
+                                                    <p className="company-location">Ozuoba PH</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className='job-details'>
+                                            <div className='jobs-info'>
+                                                <div>
+                                                    <h4 className="job-type">Full-Time</h4>
+                                                    <p className="job-salary">| N180,000/ <span>Month</span></p>
+                                                </div>
+                                                <div className="job-meta">
+                                                    <div className='job-details-container'>
+                                                        <p className="time">6 hours ago</p>
+                                                        <div className="applicants">
+                                                            <img src="/assets/svg/message.svg" alt="" className="message-icon" />
+                                                            <p> 27</p>
+                                                        </div>
+
+                                                        <button className="view-applicants">View Applicants</button>
+
+                                                        <img src="/assets/svg/menu.svg" alt="" id="menu-icon" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <p className="job-description">Senior Software Engineer. Full <br /> Stack. JS</p> <hr />
+                                        </div>
                                     </div>
-                                    <button className="view-applicants">View Applicants</button>
                                 </div>
-                            </div>
 
-                            {/* Job Card 2 */}
-                            <div className="job-card">
-                                <div className="job-card-header">
-                                    <div className="company-info">
-                                        <h3>BoyAlone Studio</h3>
-                                        <p className="company-location">@Ozuba PH</p>
+                                {/* Job Card 3 */}
+                                <div className="job-card">
+                                    <div className="job-card-header">
+                                        <div className="company-info">
+                                            <div className="user-profile">
+                                                <div className="avatar">MI</div>
+                                            </div>
+
+                                            <div className="company-info-header">
+                                                <h3>BoyAlone Studio</h3>
+
+                                                <div className='location'>
+                                                    <img src="/assets/svg/location.svg" alt="" className="location-icon" />
+                                                    <p className="company-location">Ozuoba PH</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className='job-details'>
+                                            <div className='jobs-info'>
+                                                <div>
+                                                    <h4 className="job-type">Full-Time</h4>
+                                                    <p className="job-salary">| N180,000/ <span>Month</span></p>
+                                                </div>
+                                                <div className="job-meta">
+                                                    <div className='job-details-container'>
+                                                        <p className="time">6 hours ago</p>
+                                                        <div className="applicants">
+                                                            <img src="/assets/svg/message.svg" alt="" className="message-icon" />
+                                                            <p> 27</p>
+                                                        </div>
+
+                                                        <button className="view-applicants">View Applicants</button>
+
+                                                        <img src="/assets/svg/menu.svg" alt="" id="menu-icon" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <p className="job-description">Senior Software Engineer. Full <br /> Stack. JS</p>
+                                        </div>
                                     </div>
-                                    <span className="job-type">Full-Time</span>
-                                </div>
-
-                                <p className="job-salary">N180,000/ Month</p>
-                                <p className="job-description">Senior Software Engineer. Full Stack. JS</p>
-
-                                <div className="job-card-footer">
-                                    <div className="job-meta">
-                                        <span className="time">6 hours ago</span>
-                                        <span className="applicants">📧 27</span>
-                                    </div>
-                                    <button className="view-applicants">View Applicants</button>
-                                </div>
-                            </div>
-
-                            {/* Job Card 3 */}
-                            <div className="job-card">
-                                <div className="job-card-header">
-                                    <div className="company-info">
-                                        <h3>BoyAlone Studio</h3>
-                                        <p className="company-location">@Ozuba PH</p>
-                                    </div>
-                                    <span className="job-type">Full-Time</span>
-                                </div>
-
-                                <p className="job-salary">N180,000/ Month</p>
-                                <p className="job-description">Senior Software Engineer. Full Stack. JS</p>
-
-                                <div className="job-card-footer">
-                                    <div className="job-meta">
-                                        <span className="time">6 hours ago</span>
-                                        <span className="applicants">📧 27</span>
-                                    </div>
-                                    <button className="view-applicants">View Applicants</button>
                                 </div>
                             </div>
                         </div>
                     </section>
+
+                    {/* <div className="search-bar">
+                            
+                            <input type="text" placeholder="Search for jobs..." />
+                            <button className="search-btn"></button>
+                        </div> */}
+
+                    <section class="search-section">
+
+                        <div class="search-box">
+
+                            <div class="search-input">
+                                <div>
+                                    <img src="/assets/svg/search.svg" alt="" className="search-icon" />
+                                </div>
+                                <input type="text" placeholder="Search job titles or keypad" />
+                            </div>
+
+                            <div class="status-filter">
+                                <select>
+                                    <option>All Status</option>
+                                    <option>Full Time</option>
+                                    <option>Part Time</option>
+                                    <option>Remote</option>
+                                </select>
+                                <img src="/assets/svg/arrow-down.svg" alt="" className="arrow-down-icon" />
+                            </div>
+                        </div>
+
+
+                    </section>
+                    {/* FOOTER */}
+                    <footer>
+                        <div className="footer-left">
+                            <a href="#" className="brand">GiftedTalents<span>.online</span></a>
+                            <div>
+                                <p>©</p>
+                                <span>
+                                    2026
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="footer-right">
+                            <a href="#">About</a>
+                            <a href="#">Contact</a>
+                            <a href="#">Privacy Policy</a>
+                            <a href="#">Community Guideline</a>
+                        </div>
+
+                    </footer>
+
                 </main>
             </div>
         </>
