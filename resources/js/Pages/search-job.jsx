@@ -9,7 +9,7 @@ export default function SearchJob({ auth }) {
     return (
         <AuthenticatedLayout
             user={auth.user}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Search Jobs</h2>}
+            // header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Search Jobs</h2>}
         >
             <Head title="Search Jobs" />
 
@@ -100,8 +100,8 @@ export default function SearchJob({ auth }) {
                                 <span>Senior Software Engineer. Full Stack. JS</span>
                                 <div className="job-meta">
                                     <span>1 day ago</span>
-                                    <span>Easy Apply <i className="fa-solid fa-paper-plane ml-1"></i></span>
-                                    <span>Save Job <i className="fa-solid fa-bookmark ml-1"></i></span>
+                                    <span className="easy-apply-span">Easy Apply <i className="fa-solid fa-paper-plane ml-1"></i></span>
+                                    <span className="save-job-span">Save Job <i className="fa-solid fa-bookmark ml-1"></i></span>
                                 </div>
                             </div>
                             <i className="fa-solid fa-times-circle close"></i>
@@ -115,8 +115,8 @@ export default function SearchJob({ auth }) {
                                 <span>Senior Software Engineer. Full Stack. JS</span>
                                 <div className="job-meta">
                                     <span>1 day ago</span>
-                                    <span>Easy Apply <i className="fa-solid fa-paper-plane ml-1"></i></span>
-                                    <span>Save Job <i className="fa-solid fa-bookmark ml-1"></i></span>
+                                    <span className="easy-apply-span">Easy Apply <i className="fa-solid fa-paper-plane ml-1"></i></span>
+                                    <span className="save-job-span">Save Job <i className="fa-solid fa-bookmark ml-1"></i></span>
                                 </div>
                             </div>
                             <i className="fa-solid fa-times-circle close"></i>
@@ -130,8 +130,8 @@ export default function SearchJob({ auth }) {
                                 <span>Senior Software Engineer. Full Stack. JS</span>
                                 <div className="job-meta">
                                     <span>1 day ago</span>
-                                    <span>Easy Apply <i className="fa-solid fa-paper-plane ml-1"></i></span>
-                                    <span>Save Job <i className="fa-solid fa-bookmark ml-1"></i></span>
+                                    <span className="easy-apply-span">Easy Apply <i className="fa-solid fa-paper-plane ml-1"></i></span>
+                                    <span className="save-job-span">Save Job <i className="fa-solid fa-bookmark ml-1"></i></span>
                                 </div>
                             </div>
                             <i className="fa-solid fa-times-circle close"></i>
@@ -157,7 +157,7 @@ export default function SearchJob({ auth }) {
                                 <span>Senior Software Engineer. Full Stack. JS</span>
                                 <div className="job-meta">
                                     <span>1 day ago</span>
-                                    <span>Easy Apply <i className="fa-solid fa-paper-plane ml-1"></i></span>
+                                    <span className="easy-apply-span">Easy Apply <i className="fa-solid fa-paper-plane ml-1"></i></span>
                                 </div>
                             </div>
                             <i className="fa-solid fa-times-circle close"></i>
@@ -171,7 +171,7 @@ export default function SearchJob({ auth }) {
                                 <span>Senior Software Engineer. Full Stack. JS</span>
                                 <div className="job-meta">
                                     <span>1 day ago</span>
-                                    <span>Easy Apply <i className="fa-solid fa-paper-plane ml-1"></i></span>
+                                    <span className="easy-apply-span">Easy Apply <i className="fa-solid fa-paper-plane ml-1"></i></span>
                                 </div>
                             </div>
                             <i className="fa-solid fa-times-circle close"></i>
