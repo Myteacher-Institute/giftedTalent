@@ -4,6 +4,8 @@ import Dropdown from '@/Components/Dropdown';
 import { Link, usePage } from '@inertiajs/react';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 
+import Notification from '@/Components/Notification';
+
 export default function AuthenticatedLayout({ header, children }) {
     const user = usePage().props.auth.user;
 
@@ -169,6 +171,7 @@ export default function AuthenticatedLayout({ header, children }) {
                 </header>
             )}
 
+            <Notification />
             <main>{children}</main>
         </div>
     );

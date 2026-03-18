@@ -19,6 +19,15 @@ export default function Register() {
 
         post(route('register'), {
             onFinish: () => reset('password', 'password_confirmation'),
+            preserveState: true,
+            onSuccess: () => {
+                // Welcome message on successful register
+                setTimeout(() => {
+                    if (window.alertify) {
+                        alertify.success('Registration successful! Welcome to GiftedTalents!', 3);
+                    }
+                }, 500);
+            },
         });
     };
 

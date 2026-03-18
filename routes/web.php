@@ -22,7 +22,7 @@ Route::get('/find-jobs', [PageController::class, 'findJobs'])->name('pages.findJ
 Route::get('/find-talents', [PageController::class, 'findTalents'])->name('pages.findTalents');
 Route::get('/how-it-works', [PageController::class, 'howItWorks'])->name('pages.howItWorks');
 Route::get('/about', [PageController::class, 'about'])->name('pages.about');
-Route::get('/user-profile', [PageController::class, 'userProfile'])->name('pages.userProfile');
+Route::get('/user-profile', [\App\Http\Controllers\ProfileController::class, 'show'])->middleware('auth')->name('pages.userProfile');
 Route::get('/easy-apply-job', [PageController::class, 'easyApplyJob'])->middleware(['auth', 'verified'])->name('pages.easyApplyJob');
 
 Route::get('/search-jobs', [PageController::class, 'searchJobs'])->middleware(['auth', 'verified'])->name('pages.searchJobs');
@@ -31,9 +31,7 @@ Route::get('/jobs', function () {
     return Inertia::render('Jobs');
 })->name('jobs');
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified', 'not_admin'])->name('dashboard');
+Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->middleware(['auth', 'verified', 'not_admin'])->name('dashboard');
 
 Route::middleware(['auth', 'not_admin'])->group(function () {
     // Basic Profile Routes

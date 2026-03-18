@@ -1,4 +1,4 @@
-<?php
+an<?php
 
 namespace App\Http\Controllers;
 
@@ -13,27 +13,35 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
-use Inertia\Inertia;
+
 use Inertia\Response;
+use App\Http\Controllers\Controller;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display the user's profile.
-     */
-    public function show(Request $request): Response
+    public function index(Request $request)
     {
-        $user = $request->user()->load(['profile', 'skills', 'experiences', 'educations', 'resumes']);
-        
+        $user = $request->user();
+
         return Inertia::render('Profile', [
             'user' => $user,
         ]);
     }
 
-    /**
-     * Display the user's profile form for editing.
-     */
-    public function edit(Request $request): Response
+    public function edit(Request $request)
+    {
+        $user = $request->user()->load(['profile', 'skills', 'experiences', 'educations', 'resumes']);
+        
+        return Inertia::render('Profile/Edit', [
+
+        
+        return Inertia::render('Profile', [
+            'user' => $user,
+        ]);
+        )
+    }
+
+
     {
         $user = $request->user()->load(['profile', 'skills', 'experiences', 'educations', 'resumes']);
         
@@ -47,6 +55,7 @@ class ProfileController extends Controller
 
     /**
      * Update the user's profile information.
+    
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
@@ -89,7 +98,14 @@ class ProfileController extends Controller
             $validated
         );
 
-        return Redirect::route('profile.edit')->with('success', 'Profile updated successfully.');
+        // Check if profile now complete
+        $completion = app(DashboardController::class)->calculateProfileCompletion($profile);
+        $message = 'Profile updated successfully.';
+        if ($completion === 100) {
+            $message = 'Congratulations! Your profile is now 100% complete!';
+        }
+
+        return Redirect::route('profile.edit')->with('success', $message);
     }
 
     /**

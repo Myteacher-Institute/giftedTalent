@@ -93,4 +93,20 @@ class User extends Authenticatable
     {
         return $this->hasMany(Resume::class);
     }
+
+    /**
+     * Get the user's applications.
+     */
+    public function applications(): HasMany
+    {
+        return $this->hasMany(Application::class);
+    }
+
+    /**
+     * Get the user's posted jobs.
+     */
+    public function jobs(): HasMany
+    {
+        return $this->hasMany(Job::class);
+    }
 }

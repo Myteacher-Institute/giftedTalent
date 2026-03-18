@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import '../../css/Dashboard.css';
+
+window.alertify = window.alertify || alertify;
 
 // Job Card Component
 function JobCard({ job }) {
@@ -45,14 +47,17 @@ function JobCard({ job }) {
     );
 }
 
-export default function Dashboard({ auth }) {
+export default function Dashboard({ auth, profileComplete = 75, stats = { applied: 8, review: 3, interview: 1, rejected: 2 }, jobs = [] }) {
     const [activeMenu, setActiveMenu] = useState(null);
 
-    const jobs = [
-        { id: 1, company: 'BoyAlone Studio', title: 'Software Engineer', tags: 'Senior Software Engineer. Full Stack . Js', time: '6 hours ago', image: 'https://i.pravatar.cc/40' },
-        { id: 2, company: 'Tech Innovators', title: 'Frontend Developer', tags: 'React. TypeScript. Remote', time: '2 hours ago', image: 'https://i.pravatar.cc/40' },
-        { id: 3, company: 'Digital Solutions', title: 'Full Stack Developer', tags: 'Node.js. MongoDB. Full Time', time: '1 day ago', image: 'https://i.pravatar.cc/40' },
-    ];
+    useEffect(() => {
+        // Profile complete celebration (one-time)
+        const hasShown = localStorage.getItem('profileCompleteShown');
+        if (profileComplete === 100 && !hasShown) {
+            alertify.success('Congratulations! Your profile is 100% complete! 🎉', 3);
+            localStorage.setItem('profileCompleteShown', 'true');
+        }
+    }, [profileComplete]);
 
     return (
         <AuthenticatedLayout user={auth.user}>
@@ -84,9 +89,9 @@ export default function Dashboard({ auth }) {
             <div className="container">
                 <aside className="sidebar">
                     <div className="profile">
-                        <img src="https://i.pravatar.cc/40" alt="" />
-                        <h3>Kelvi Nnaji</h3>
-                        <p>Software Engineer</p>
+                        <img src={auth.user.avatar || `https://i.pravatar.cc/40?img=${auth.user.id}`} alt="" />
+                        <h3>{auth.user.name}</h3>
+                        <p>{auth.user.role || 'Software Engineer'}</p>
                         <button><Link href="/user-profile" className="profile-button">Edit Profile</Link></button>
                     </div>
 
@@ -101,11 +106,11 @@ export default function Dashboard({ auth }) {
                 </aside>
 
                 <main className="main">
-                    <h1>Welcome back, Kelvin</h1>
+                    <h1>Welcome back, {auth.user.name.split(' ')[0]}</h1>
 
                     <div className="status-bar">
-                        <span className="success">CV Uploaded</span>
-                        <span>Skills: Front End Dev, Software Eng.</span>
+                        <span className="success">{auth.user.profile?.cv_uploaded ? 'CV Uploaded' : 'Upload CV'}</span>
+                        <span>Skills: {auth.user.skills?.slice(0,2).map(s => s.name).join(', ') || 'No skills added'}</span>
                         <button><Link href="/user-profile" className="status-button">Edit Profile</Link></button>
                     </div>
 
@@ -129,7 +134,7 @@ export default function Dashboard({ auth }) {
                         <h3>Complete Your Profile</h3>
 
                         <div className="progress-circle">
-                            <h2>75%</h2>
+                            <h2>{profileComplete}%</h2>
                         </div>
                         <ul>
                             <li>Add Portfolio Link</li>
@@ -143,22 +148,22 @@ export default function Dashboard({ auth }) {
 
                         <div className="grid">
                             <div className="box blue">
-                                <h2>8</h2>
+                                <h2>{stats.applied}</h2>
                                 <p>Applied</p>
                             </div>
 
                             <div className="box orange">
-                                <h2>3</h2>
+                                <h2>{stats.review}</h2>
                                 <p>Under Review</p>
                             </div>
 
                             <div className="box green">
-                                <h2>1</h2>
+                                <h2>{stats.interview}</h2>
                                 <p>Interview</p>
                             </div>
 
                             <div className="box red">
-                                <h2>2</h2>
+                                <h2>{stats.rejected}</h2>
                                 <p>Rejected</p>
                             </div>
                         </div>
