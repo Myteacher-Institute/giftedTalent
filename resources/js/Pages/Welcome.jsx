@@ -75,7 +75,7 @@ function Hero() {
             <div className="circle2"></div>
             <div className="hero-left">
                 <h1>Discover opportunities. <span>Showcase Your Talent.</span></h1>
-                <p>Connect with top employers and talented professionals. Your dream job or ideal candidate is just a click away.</p>
+                <p>Connecting skilled talents with verified employers worldwide.</p>
                 <div className="hero-buttons">
                     <button className="btn-primary">Find Jobs</button>
                     <button className="btn-secondary">Hire Talent</button>

@@ -1,13 +1,1 @@
-# Task Progress: Link Sign In/Get Started to Auth Pages
-
-**Approved Plan**:
-- Edit Welcome.jsx: Convert guest auth links to Inertia `<Link>` (SPA navigation)
-- Destinations: Sign In → /login, Get Started → /register  
-- Dependent: None
-- Followup: `npm run dev`, test guest navigation
-
-**Steps**:
-- [x] 1. Create TODO.md
-- [x] 2. Edit Welcome.jsx auth links
-- [ ] 3. Test
-- [ ] 4. Complete
+# Task: Make hero-left p text single line (no wrap)\n\n## Steps:\n1. ~~Create TODO.md~~\n2. Edit resources/css/hero.css to add white-space: nowrap; to .hero-left p.\n3. Update TODO.md.\n4. ~~Previous gap task~~\n5. Complete.

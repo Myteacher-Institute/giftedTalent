@@ -7,7 +7,7 @@
 }
 
 body {
-    background: #f0f2f5;
+    background: #FFFFFF;
 }
 
 /* NAVBAR */
@@ -23,14 +23,15 @@ body {
     z-index: 100;
 }
 
-.logo {
+.logo .blue {
+    color: #0A2463;
     font-size: 22px;
     font-weight: 700;
     letter-spacing: -0.5px;
 }
 
-.logo .blue {
-    color: #4f46e5;
+.logo {
+color: #3B82F6;
 }
 
 .navbar nav {
@@ -40,15 +41,11 @@ body {
 
 .navbar nav a {
     text-decoration: none;
-    color: #6b7280;
+    color: #374151;
     font-weight: 500;
     font-size: 15px;
     transition: color 0.2s ease;
     position: relative;
-}
-
-.navbar nav a:hover {
-    color: #4f46e5;
 }
 
 .navbar nav a::after {
@@ -97,7 +94,7 @@ body {
 
 .nav-icons i {
     font-size: 20px;
-    color: #6b7280;
+    color: #374151;
     cursor: pointer;
     transition: all 0.2s ease;
     padding: 8px;
@@ -105,7 +102,7 @@ body {
 }
 
 .nav-icons i:hover {
-    color: #4f46e5;
+    color: #0A2463;
     background: #eef2ff;
 }
 
@@ -120,7 +117,7 @@ body {
 }
 
 .nav-icons img:hover {
-    border-color: #4f46e5;
+    border-color: #0A2463;
     transform: scale(1.05);
 }
 
@@ -164,18 +161,18 @@ body {
 
 .profile img:hover {
     transform: scale(1.08);
-    border-color: #4f46e5;
+    border-color: #0A2463;
 }
 
 .profile h3 {
     margin-top: 14px;
     font-size: 17px;
     font-weight: 600;
-    color: #111827;
+    color: #374151;
 }
 
 .profile p {
-    color: #6b7280;
+    color: #374151;
     font-size: 13px;
     margin-top: 4px;
 }
@@ -183,8 +180,8 @@ body {
 .profile button {
     margin-top: 14px;
     padding: 8px 20px;
-    border: 1px solid #4f46e5;
-    color: #4f46e5;
+    border: 1px solid #0A2463;
+    color: #0A2463;
     border-radius: 20px;
     cursor: pointer;
     font-size: 13px;
@@ -194,7 +191,7 @@ body {
 }
 
 .profile button:hover {
-    background: #4f46e5;
+    background: #0A2463;
     color: white;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);

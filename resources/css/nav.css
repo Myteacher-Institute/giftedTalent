@@ -14,7 +14,6 @@
 :root {
   --primary-blue: #0A2463;
   --primary-blue-dark: #06205e;
-  --text-muted: #64748b;
   --border-light: rgba(0,0,0,0.08);
 }
 
@@ -49,10 +48,15 @@
 }
 
 .logo {
+  color: #0A2463;
   font-size: 24px;
   font-weight: 700;
   cursor: pointer;
   transition: transform 0.3s ease;
+}
+
+.logo span {
+  color: #3B82F6;
 }
 
 .logo:hover {
@@ -82,7 +86,7 @@
 }
 
 .nav-link {
-  color: var(--text-muted, #64748b);
+  color: #374151;
   font-weight: 500;
   transition: all 0.3s ease;
   padding: 8px 0;
@@ -141,7 +145,6 @@
 }
 
 .auth-links a {
-  color: var(--text-muted);
   text-decoration: none;
   font-weight: 500;
   padding: 8px 16px;
@@ -155,9 +158,13 @@
   background: rgba(10, 36, 99, 0.05);
 }
 
+.nav-auth-link {
+  color: #0A2463;
+}
+
 .get-started {
-  background: var(--primary-blue);
-  color: white;
+  background: #0A2463;
+  color: #FFFFFF;
   border: none;
   padding: 12px 24px;
   border-radius: 8px;
@@ -165,13 +172,11 @@
   font-size: 15px;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(10, 36, 99, 0.2);
+
 }
 
 .get-started:hover {
-  background: var(--primary-blue-dark);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(10, 36, 99, 0.3);
 }
 
 .get-started:focus-visible {

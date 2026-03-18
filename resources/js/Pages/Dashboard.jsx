@@ -129,7 +129,7 @@ export default function Dashboard({ auth }) {
                         <h3>Complete Your Profile</h3>
 
                         <div className="progress-circle">
-                            75%
+                            <h2>75%</h2>
                         </div>
                         <ul>
                             <li>Add Portfolio Link</li>
