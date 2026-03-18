@@ -41,31 +41,26 @@ function Nav({ auth }) {
                 GiftedTalent<span>.Online</span>
             </div>
             <ul className={`nav-links ${isActive ? 'active' : ''}`}>
-                <li><a href="/">Home</a></li>
-                <li><a href="/find-jobs">Find Jobs</a></li>
-                <li><a href="/find-talents">Find Talents</a></li>
-                <li><a href="/how-it-works">How It Works</a></li>
-                <li><a href="/about">About</a></li>
+                <li><Link href="/" className="nav-link">Home</Link></li>
+                <li><Link href="/find-jobs" className="nav-link">Find Jobs</Link></li>
+                <li><Link href="/find-talents" className="nav-link">Find Talents</Link></li>
+                <li><Link href="/how-it-works" className="nav-link">How It Works</Link></li>
+                <li><Link href="/about" className="nav-link">About</Link></li>
             </ul>
             <div className="nav-right">
-                {auth?.user ? (
-                    <div className="auth-links">
-                        <a href="/dashboard">Dashboard</a>
-                        <a href="/profile">Profile</a>
-                    </div>
-                ) : (
-                    <div className="auth-links">
-                        <a href="/login">Sign In</a>
-                        <button className="get-started" onClick={() => window.location.href = '/register'}>Get Started</button>
-                    </div>
-                )}
-                <div 
-                    className={`hamburger ${isActive ? 'active' : ''}`} 
+
+                <div className="auth-links">
+                    <Link href={route('login')} className="nav-auth-link">Sign In</Link>
+                    <Link href={route('register')} className="get-started">Get Started</Link>
+                </div>
+
+                <div
+                    className={`hamburger ${isActive ? 'active' : ''}`}
                     onClick={() => setIsActive(!isActive)}
                 >
                     <span></span>
                     <span></span>
-                    <span></span>e 
+                    <span></span>
                 </div>
             </div>
         </nav>
@@ -95,56 +90,84 @@ function Hero() {
 
 const featuresData = [
     {
-        name: "Micheal Chen",
         image: sample1,
-        role: "Full Stack Developer",
-        tech: ['Node.js', 'React', 'mongoDB'],
-        bg: { background: 'linear-gradient(135deg, #EFF6FF 0%, #FFFFFF 70.71%)' },
-        border: {border: '1px solid #DBEAFE'},
-        rating: 48,
+        name: 'Sarah Johnson',
+        role: 'Senior Frontend Developer',
         stars: 5,
-        fullStar: true,
-        icon: starIcon
+        halfStar: false,
+        icon: starIcon,
+        halfStarIcon: halfStarIcon,
+        rating: '5.0',
+        tech: ['React', 'TypeScript', 'Tailwind'],
+        bg: { backgroundColor: '#eff6ff' },
+        border: { borderColor: '#0ea5e9', borderWidth: '1px', borderStyle: 'solid' }
     },
     {
-        name: "Sarah Johnson",
         image: sample2,
-        role: "UI/UX Designer",
-        tech: ['Figma', 'Adobe', 'Prototyping'],
-        border: {border: '1px solid #F3E8FF'},
-        bg: { background: 'linear-gradient(135deg, #FAF5FF 0%, #FFFFFF 70.71%)' },
+        name: 'Michael Chen',
+        role: 'Full Stack Engineer',
         stars: 4,
-        rating: 35,
-        fullStar: false,
         halfStar: true,
         icon: starIcon,
-        halfStarIcon: halfStarIcon
+        halfStarIcon: halfStarIcon,
+        rating: '4.5',
+        tech: ['Node.js', 'Python', 'PostgreSQL'],
+        bg: { backgroundColor: '#f0fdf4' },
+        border: { borderColor: '#10b981', borderWidth: '1px', borderStyle: 'solid' }
     },
     {
-        name: "David Martinez",
-        role: "Data Analyst",
-        bg: { background: 'linear-gradient(135deg, #F0FDF4 0%, #FFFFFF 70.71%)' },
         image: sample3,
-        rating: 52,
-        border: {border: '1px solid #DCFCE7'},
-        tech: ['Python', 'SQL', 'Tebleau'],
-        stars: 5,
-        fullStar: true,
-        icon: starIcon
+        name: 'Emily Rodriguez',
+        role: 'UX/UI Designer',
+        stars: 4,
+        halfStar: false,
+        icon: starIcon,
+        halfStarIcon: halfStarIcon,
+        rating: '4.0',
+        tech: ['Figma', 'Adobe XD', 'Prototyping'],
+        bg: { backgroundColor: '#fdf4ff' },
+        border: { borderColor: '#ec4899', borderWidth: '1px', borderStyle: 'solid' }
     },
     {
-        name: "Emily Wilson",
-        role: "Content Writer",
-        bg: { background: 'linear-gradient(135deg, #FFF7ED 0%, #FFFFFF 70.71%)' },
-        rating: 41,
         image: sample4,
-        tech: ['SEO', 'CopyWriting', 'Blogging'],
-        border: {border: '1px solid #FFEDD5'},
+        name: 'David Kim',
+        role: 'DevOps Specialist',
         stars: 5,
-        fullStar: true,
-        icon: starIcon
+        halfStar: false,
+        icon: starIcon,
+        halfStarIcon: halfStarIcon,
+        rating: '5.0',
+        tech: ['AWS', 'Docker', 'Kubernetes'],
+        bg: { backgroundColor: '#fef3c7' },
+        border: { borderColor: '#f59e0b', borderWidth: '1px', borderStyle: 'solid' }
+    },
+    {
+        image: sample1,
+        name: 'Lisa Wang',
+        role: 'Product Manager',
+        stars: 4,
+        halfStar: true,
+        icon: starIcon,
+        halfStarIcon: halfStarIcon,
+        rating: '4.5',
+        tech: ['Agile', 'Jira', 'Analytics'],
+        bg: { backgroundColor: '#f3f4f6' },
+        border: { borderColor: '#6b7280', borderWidth: '1px', borderStyle: 'solid' }
+    },
+    {
+        image: sample2,
+        name: 'Alex Patel',
+        role: 'Data Scientist',
+        stars: 5,
+        halfStar: false,
+        icon: starIcon,
+        halfStarIcon: halfStarIcon,
+        rating: '5.0',
+        tech: ['Python', 'ML', 'TensorFlow'],
+        bg: { backgroundColor: '#dbeafe' },
+        border: { borderColor: '#3b82f6', borderWidth: '1px', borderStyle: 'solid' }
     }
-]
+];
 
 export default function Welcome({ auth, laravelVersion, phpVersion }) {
 
@@ -364,7 +387,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                         </div>
                     </div>
                 </div>
-                
+
                 <div className="featured-talents">
 
                     <div className="feature-talent-header">
@@ -374,7 +397,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
 
                     <div className="feature-talent-content">
                         {featuresData.map((feature, index) => (
-                            <div className="feature-talent-card" key={index} style={{...feature.bg, ...feature.border}}>
+                            <div className="feature-talent-card" key={index} style={{ ...feature.bg, ...feature.border }}>
                                 <div className="feature-talent-card-header">
                                     <img src={feature.image} alt="" />
                                 </div>
@@ -409,11 +432,11 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                         ))}
 
                     </div>
-                    
+
                     <Link href="" className='browse-all-btn'>Browse All Talents</Link>
                 </div>
-                
+
             </div>
-            </>
+        </>
     );
 }

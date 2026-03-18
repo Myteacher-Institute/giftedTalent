@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import '../../css/Dashboard.css';
 
 // Job Card Component
@@ -27,7 +27,7 @@ function JobCard({ job }) {
                 <div className="menu-trigger" onClick={() => toggleMenu(job.id)}>
                     <i className="fa-solid fa-ellipsis"></i>
                 </div>
-                {showMenu === job.id && (
+{showMenu === job.id && (
                     <div className="dropdown-menu">
                         <button onClick={() => setShowMenu(null)}>
                             <i className="fa-regular fa-eye-slash"></i> Hide Job
@@ -87,12 +87,12 @@ export default function Dashboard({ auth }) {
                         <img src="https://i.pravatar.cc/40" alt="" />
                         <h3>Kelvi Nnaji</h3>
                         <p>Software Engineer</p>
-                        <button>Edit Profile</button>
+                        <button><Link href="/user-profile" className="profile-button">Edit Profile</Link></button>
                     </div>
 
                     <ul className="menu">
                         <li className="active"><i className="fa-solid fa-table"></i>Dashboard</li>
-                        <li><i className="fa-solid fa-magnifying-glass"></i> Search Job</li>
+                        <li><Link href="/search-jobs"><i className="fa-solid fa-magnifying-glass"></i> Search Job</Link></li>
                         <li><i className="fa-solid fa-file"></i> Application</li>
                         <li><i className="fa-regular fa-envelope"></i> Message</li>
                         <li><i className="fa-regular fa-bookmark"></i> Save Jobs</li>
@@ -106,7 +106,7 @@ export default function Dashboard({ auth }) {
                     <div className="status-bar">
                         <span className="success">CV Uploaded</span>
                         <span>Skills: Front End Dev, Software Eng.</span>
-                        <button>Edit Profile</button>
+                        <button><Link href="/user-profile" className="status-button">Edit Profile</Link></button>
                     </div>
 
                     <div className="search-bar">
@@ -124,9 +124,7 @@ export default function Dashboard({ auth }) {
                     </div>
                 </main>
 
-                {/* RIGHT PANEL*/}
                 <aside className="right-panel">
-
                     <div className="progress-card">
                         <h3>Complete Your Profile</h3>
 
@@ -141,7 +139,6 @@ export default function Dashboard({ auth }) {
                     </div>
 
                     <div className="tracker">
-
                         <h3>Application Tracker</h3>
 
                         <div className="grid">
