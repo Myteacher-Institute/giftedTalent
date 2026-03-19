@@ -82,14 +82,14 @@ export default function Dashboard({ auth, profileComplete = 75, stats = { applie
                 <div className="nav-icons">
                     <i className="fa-regular fa-comment"></i>
                     <i className="fa-regular fa-bell"></i>
-                    <img src="https://i.pravatar.cc/40" alt="" />
+                    <img src={auth.user.profile?.avatar_url || `https://i.pravatar.cc/40?img=${auth.user.id}`} alt="" />
                 </div>
             </header>
 
             <div className="container">
                 <aside className="sidebar">
                     <div className="profile">
-                        <img src={auth.user.profile?.avatar_url || auth.user.avatar || `https://i.pravatar.cc/40?img=${auth.user.id}`} alt="" />
+                        <img src={auth.user.profile?.avatar_url || `https://i.pravatar.cc/40?img=${auth.user.id}`} alt="" />
                         <h3>{auth.user.name}</h3>
                         <p>{auth.user.role || 'Software Engineer'}</p>
                         <button className="profile-button" onClick={() => window.location.href = '/user-profile'}>Edit Profile</button>
@@ -111,6 +111,7 @@ export default function Dashboard({ auth, profileComplete = 75, stats = { applie
                     <div className="status-bar">
                         <span className="success">{auth.user.profile?.cv_uploaded ? 'CV Uploaded' : 'Upload CV'}</span>
                         <span>Skills: {auth.user.skills?.slice(0,2).map(s => s.name).join(', ') || 'No skills added'}</span>
+                        <span>Bio: {auth.user.profile?.bio ? auth.user.profile.bio.substring(0,50) + '...' : 'Add bio'}</span>
                         <button><Link href={route('pages.userProfile')} className="status-button">Edit Profile</Link></button>
                     </div>
 

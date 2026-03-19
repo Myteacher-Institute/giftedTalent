@@ -136,26 +136,26 @@ $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'resu
             $validated
         );
 
-$user = $request->user()->loadMissing(['skills', 'experiences', 'educations']);
-
-        // Simple profile completion calculation
+        // Simple profile completion calculation (no load needed for count queries)
         $totalFields = 8;
         $filledFields = 0;
         if (!empty($profile->bio)) $filledFields++;
         if (!empty($profile->phone)) $filledFields++;
         if (!empty($profile->address)) $filledFields++;
-        if ($user->skills()->count() > 0) $filledFields++;
-        if ($user->experiences()->count() > 0) $filledFields++;
+        if ($request->user()->skills()->count() > 0) $filledFields++;
+        if ($request->user()->experiences()->count() > 0) $filledFields++;
         if (!empty($profile->linkedin_url)) $filledFields++;
         if (!empty($profile->github_url)) $filledFields++;
         
         $completion = round(($filledFields / $totalFields) * 100);
-        $message = 'Profile updated successfully.';
+        $message = 'Profile updated successfully!';
         if ($completion >= 80) {
             $message = 'Congratulations! Your profile is now ' . $completion . '% complete!';
         }
 
-        return Redirect::route('profile.edit')->with('success', $message);
+        return Redirect::route('dashboard')->with('success', $message);
+
+
     }
 
     /**

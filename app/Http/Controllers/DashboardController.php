@@ -13,7 +13,7 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user();
+        $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'applications']);
 
         // Profile completion %
         $profileComplete = 0;
@@ -23,32 +23,41 @@ class DashboardController extends Controller
 
         // Application stats
         $stats = [
-            'applied' => $user->applications()->byStatus('applied')->count(),
-            'review' => $user->applications()->byStatus('review')->count(),
-            'interview' => $user->applications()->byStatus('interview')->count(),
-            'rejected' => $user->applications()->byStatus('rejected')->count(),
+            'applied' => $user->applications()->count(),
+            'review' => 0, // Adjust scopes as needed
+            'interview' => 0,
+            'rejected' => 0,
         ];
 
         // Recommended jobs (match skills)
         $userSkills = $user->skills->pluck('name');
-        $jobs = Job::open()
-            ->when($userSkills->isNotEmpty(), fn($q) => $q->recommended($userSkills))
+        $jobs = Job::where('status', 'open')
+            ->when($userSkills->isNotEmpty(), function($q) use ($userSkills) {
+                $q->where(function($subQ) use ($userSkills) {
+                    $subQ->whereJsonContains('skills_required', $userSkills->first())
+                         ->orWhereJsonContains('preferred_skills', $userSkills->first());
+                });
+            })
             ->limit(3)
             ->get();
 
         return Inertia::render('Dashboard', [
+            'auth' => [
+                'user' => $user
+            ],
             'profileComplete' => $profileComplete,
             'stats' => $stats,
             'jobs' => $jobs->map(fn($job) => [
                 'id' => $job->id,
-                'company' => $job->company,
+                'company' => $job->company_name ?? $job->company ?? 'Company',
                 'title' => $job->title,
                 'tags' => implode(', ', $job->tags ?? []),
                 'time' => $job->created_at->diffForHumans(),
-                'image' => 'https://i.pravatar.cc/40?img=' . $job->id,
+                'image' => $job->logo_url ?? 'https://i.pravatar.cc/40?img=' . $job->id,
             ]),
         ]);
     }
+
 
     private function calculateProfileCompletion(Profile $profile): int
     {
