@@ -27,9 +27,7 @@ Route::get('/easy-apply-job', [PageController::class, 'easyApplyJob'])->middlewa
 
 Route::get('/search-jobs', [PageController::class, 'searchJobs'])->middleware(['auth', 'verified'])->name('pages.searchJobs');
 
-Route::get('/jobs', function () {
-    return Inertia::render('Jobs');
-})->name('jobs');
+Route::get('/jobs', [PageController::class, 'jobs'])->name('jobs');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
@@ -64,11 +62,15 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
 Route::middleware(['auth', 'admin'])->prefix('Admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
+    Route::get('/jobs/create', [AdminController::class, 'createJob'])->name('jobs.create');
+
     Route::get('/users', [AdminController::class, 'users'])->name('users');
 
     Route::get('/jobs', [AdminController::class, 'jobs'])->name('jobs');
 
     Route::get('/analytics', [AdminController::class, 'analytics'])->name('analytics');
+
+    Route::post('/jobs', [AdminController::class, 'storeJob'])->name('jobs.store');
 });
 
 // Google Authentication Routes

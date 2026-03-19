@@ -1,0 +1,168 @@
+/* Create Job Page */
+.create-job-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: #FFFFFF;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    border: 1px solid #EDF2F7;
+}
+
+.create-job-container a {
+    width: 7rem;
+    font-weight: 600;
+    font-size: 16px;
+    border-radius: 10px;
+    padding: 1rem;
+    letter-spacing: 1px;
+    background-color: #EDF2F7;
+}
+
+.create-job-container a:hover {
+    color: #E2E8F0;
+    background-color: #0A2463;
+}
+
+.create-job-container h1 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #0A2463;
+    margin: 1.5rem 0;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #EDF2F7;
+}
+
+.job-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    position: relative;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #4B5563;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.form-group select {
+    width: 100%;
+    padding: 12px 40px 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    appearance: none;
+    background: white;
+    font-size: 16px;
+    cursor: pointer;
+    outline: none;
+}
+
+.form-group select:focus {
+    border-color: #0A2463;
+    box-shadow: 0 0 0 2px rgba(10, 36, 99, 0.1);
+}
+
+
+.form-group .form-group-svg {
+    position: absolute;
+    right: 15px;
+    top: 70%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    fill: #666;
+    pointer-events: none;
+    /* This allows clicking through to the select */
+}
+
+.form-group input,
+.form-group textarea {
+    padding: 0.8rem 1rem;
+    border: 2px solid #E2E8F0;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background: #F8FAFC;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #0A2463;
+    background: #FFFFFF;
+    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.1);
+}
+
+.form-group input:hover,
+.form-group textarea:hover {
+    border-color: #94A3B8;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.submit-btn {
+    background: #0A2463;
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 1rem;
+    width: fit-content;
+    min-width: 200px;
+}
+
+.submit-btn:hover {
+    background: #051A44;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px -2px rgba(10, 36, 99, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .create-job-container {
+        margin: 1rem;
+        padding: 1.5rem;
+    }
+
+    .create-job-container h1 {
+        font-size: 1.5rem;
+    }
+
+    .submit-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .create-job-container {
+        padding: 1rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        padding: 0.7rem;
+    }
+}

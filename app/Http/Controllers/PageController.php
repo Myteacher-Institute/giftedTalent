@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Job;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -61,7 +63,15 @@ class PageController extends Controller
     public function searchJobs(): Response
     {
         return Inertia::render('search-job', [
-            'auth' => ['user' => auth()->user()]
+            'auth' => ['user' => Auth::user()]
+        ]);
+    }
+
+    public function jobs()
+    {
+        $jobs = Job::latest()->get();
+        return Inertia::render('Jobs', [
+            'jobs' => $jobs
         ]);
     }
 

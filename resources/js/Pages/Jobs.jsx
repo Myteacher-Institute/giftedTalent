@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
 import '../../css/jobs.css';
 
-export default function Jobs() {
+export default function Jobs({ jobs = [] }) {
     return (
         <>
             <Head title="Jobs" />
@@ -12,7 +12,7 @@ export default function Jobs() {
                     <nav>
                         <div className='logo-search'>
                             <div className="logo">
-                                <a href="#" className="brand">GiftedTalents<span>.online</span></a>
+                                <a href="/" className="brand">GiftedTalents<span>.online</span></a>
                             </div>
 
                             <div className="search-bar">
@@ -53,7 +53,7 @@ export default function Jobs() {
                 {/* JOB SECTION */}
                 <section className="jobs-section">
                     <div className="jobs-header">
-                        <h3>Full-Time or Contract Jobs (895)</h3>
+                        <h3>Full-Time or Contract Jobs ({jobs.length})</h3>
                         <div>
                             <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M480 272C480 317.9 465.1 360.3 440 394.7L566.6 521.4C579.1 533.9 579.1 554.2 566.6 566.7C554.1 579.2 533.8 579.2 521.3 566.7L394.7 440C360.3 465.1 317.9 480 272 480C157.1 480 64 386.9 64 272C64 157.1 157.1 64 272 64C386.9 64 480 157.1 480 272zM272 416C351.5 416 416 351.5 416 272C416 192.5 351.5 128 272 128C192.5 128 128 192.5 128 272C128 351.5 192.5 416 272 416z" /></svg>
 
@@ -61,306 +61,47 @@ export default function Jobs() {
                         </div>
                     </div>
 
-                    {/* JOB GRID */}
+                    {/* JOB GRID - ONLY REAL DATA */}
                     <div className="job-grid">
-                        {/* JOB CARD 1 */}
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
+                        {jobs.map((job) => (
+                            <div key={job.id} className="job-card">
+                                <div className="company">
+                                    {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
+                                    <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
+                                    <div className="company-header">
+                                        <h2>{job.company_name}</h2>
+                                        <div>
+                                            <img src="/assets/svg/location.svg" alt="" className="location-icon" />
+                                            <p>{job.company_location}</p>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <h3>UI/UX Designer</h3>
-                            <p>Wireframe, Prototype, Figma</p>
-                            <div className="job-footer">
-                                <span>1 day ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
-
-                        {/* JOB CARD 2 */}
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
+                                <h3>{job.job_type}</h3>
+                                <p className='job-description'>{job.description}</p>
+                                <div className="job-footer">
+                                    <span>{new Date(job.created_at).toLocaleDateString('en-US', { 
+                                        month: 'short', 
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    })} ago</span>
+                                    <button>Apply now</button>
                                 </div>
                             </div>
-                            <h3>UI/UX Designer</h3>
-                            <p>Wireframe, Prototype, Figma</p>
-                            <div className="job-footer">
-                                <span>1 day ago</span>
-                                <button>Apply now</button>
+                        ))}
+                        
+                        {jobs.length === 0 && (
+                            <div className="no-jobs-message">
+                                <p>No jobs available at the moment. Check back later!</p>
                             </div>
-                        </div>
-
-                        {/* JOB CARD 3 */}
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>Junior Motion Designer</h3>
-                            <p>Junior Motion Designer</p>
-                            <div className="job-footer">
-                                <span>3 days ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>Junior Motion Designer</h3>
-                            <p>Junior Motion Designer</p>
-                            <div className="job-footer">
-                                <span>3 days ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>Junior Motion Designer</h3>
-                            <p>Junior Motion Designer</p>
-                            <div className="job-footer">
-                                <span>3 days ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>Junior Motion Designer</h3>
-                            <p>Junior Motion Designer</p>
-                            <div className="job-footer">
-                                <span>3 days ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>Junior Motion Designer</h3>
-                            <p>Junior Motion Designer</p>
-                            <div className="job-footer">
-                                <span>3 days ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>Junior Motion Designer</h3>
-                            <p>Junior Motion Designer</p>
-                            <div className="job-footer">
-                                <span>3 days ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>Junior Motion Designer</h3>
-                            <p>Junior Motion Designer</p>
-                            <div className="job-footer">
-                                <span>3 days ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>Junior Motion Designer</h3>
-                            <p>Junior Motion Designer</p>
-                            <div className="job-footer">
-                                <span>3 days ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>Junior Motion Designer</h3>
-                            <p>Junior Motion Designer</p>
-                            <div className="job-footer">
-                                <span>3 days ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>Junior Motion Designer</h3>
-                            <p>Junior Motion Designer</p>
-                            <div className="job-footer">
-                                <span>3 days ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>Junior Motion Designer</h3>
-                            <p>Junior Motion Designer</p>
-                            <div className="job-footer">
-                                <span>3 days ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>Junior Motion Designer</h3>
-                            <p>Junior Motion Designer</p>
-                            <div className="job-footer">
-                                <span>3 days ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
-
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>Junior Motion Designer</h3>
-                            <p>Junior Motion Designer</p>
-                            <div className="job-footer">
-                                <span>3 days ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 </section>
 
                 {/* FOOTER */}
                 <footer>
                     <div className="footer-left">
-                        <a href="#" className="brand">GiftedTalents<span>.online</span></a>
+                        <a href="/" className="brand">GiftedTalents<span>.online</span></a>
                         <span>© 2026</span>
                     </div>
 
