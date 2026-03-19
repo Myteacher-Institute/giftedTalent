@@ -16,7 +16,7 @@ export default function EditProfile({ user }) {
         position: user.profile?.position || '',
         education: user.profile?.education || '',
         bio: user.profile?.bio || '',
-city: user.profile?.city || '',
+        city: user.profile?.city || '',
         address: user.profile?.address || '',
         country: user.profile?.country || '',
         linkedin_url: user.profile?.linkedin_url || '',
@@ -90,7 +90,7 @@ city: user.profile?.city || '',
                         </div>
 
                         <div className="profile-section">
-                            <div className="profile-pic-container">
+                            <div className="profile-left">
                                 <div className="profile-image-wrapper">
                                     {user.profile?.avatar_url ? (
                                         <img 
@@ -103,36 +103,36 @@ city: user.profile?.city || '',
                                             {initials}
                                         </div>
                                     )}
+                                    <div className="verified-overlay">
+                                        <i className="fa-solid fa-check-circle"></i>
+                                    </div>
                                 </div>
+                            </div>
+                            <div className="profile-right">
                                 <div className="profile-info">
                                     <div className="profile-name">{user.name}</div>
                                     <div className="profile-experience">
                                         {recentExperience.company} - {recentExperience.job_title}
                                     </div>
-                                    <div className="profile-verified">
-                                        <span className="verified-badge">
-                                            <i className="fa-solid fa-check-circle"></i> Verified
-                                        </span>
-                                    </div>
                                 </div>
-                            </div>
-                            <div className="profile-actions">
-                                <label htmlFor="avatar-upload" className="btn-upload">
-                                    <i className="fa-solid fa-camera"></i> Change Photo
-                                    <input 
-                                        id="avatar-upload"
-                                        type="file" 
-                                        onChange={uploadAvatar}
-                                        accept="image/*"
-                                        className="hidden"
-                                        disabled={uploading}
-                                    />
-                                </label>
-                                {user.profile?.avatar && (
-                                    <button onClick={removeAvatar} className="btn-remove" disabled={uploading}>
-                                        <i className="fa-solid fa-trash"></i> Remove
-                                    </button>
-                                )}
+                                <div className="profile-actions">
+                                    <label htmlFor="avatar-upload" className="btn-upload">
+                                        <i className="fa-solid fa-camera"></i> Change Photo
+                                        <input 
+                                            id="avatar-upload"
+                                            type="file" 
+                                            onChange={uploadAvatar}
+                                            accept="image/*"
+                                            className="hidden"
+                                            disabled={uploading}
+                                        />
+                                    </label>
+                                    {user.profile?.avatar && (
+                                        <button onClick={removeAvatar} className="btn-remove" disabled={uploading}>
+                                            <i className="fa-solid fa-trash"></i> Remove
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
