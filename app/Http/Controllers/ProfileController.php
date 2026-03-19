@@ -80,7 +80,7 @@ $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'resu
     /**
      * Upload user avatar image.
      */
-    public function uploadAvatar(Request $request): \Illuminate\Http\JsonResponse
+    public function uploadAvatar(Request $request): \Illuminate\Http\RedirectResponse
     {
         $request->validate([
             'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -95,17 +95,13 @@ $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'resu
         }
 
         $file = $request->file('avatar');
-        $filename = 'avatars/' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+        $filename = $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
         
         \Illuminate\Support\Facades\Storage::disk('public')->putFileAs('avatars', $file, $filename);
         
         $profile->update(['avatar' => $filename]);
 
-        return response()->json([
-            'success' => true,
-            'avatar_url' => \Illuminate\Support\Facades\Storage::url($filename),
-            'message' => 'Avatar uploaded successfully.'
-        ]);
+        return redirect()->route('profile.show')->with('success', 'Avatar uploaded successfully');
     }
 
     /**
@@ -113,6 +109,13 @@ $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'resu
      */
     public function updateExtendedProfile(Request $request): RedirectResponse
     {
+        $user = $request->user();
+
+        $user->update([
+            'name' => trim($request->first_name . ' ' . $request->last_name),
+            'email' => $request->email,
+        ]);
+
         $validated = $request->validate([
             'bio' => 'nullable|string|max:1000',
             'phone' => 'nullable|string|max:20',
@@ -132,7 +135,7 @@ $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'resu
         ]);
 
         $profile = Profile::updateOrCreate(
-            ['user_id' => $request->user()->id],
+            ['user_id' => $user->id],
             $validated
         );
 
@@ -148,12 +151,7 @@ $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'resu
         if (!empty($profile->github_url)) $filledFields++;
         
         $completion = round(($filledFields / $totalFields) * 100);
-        $message = 'Profile updated successfully!';
-        if ($completion >= 80) {
-            $message = 'Congratulations! Your profile is now ' . $completion . '% complete!';
-        }
-
-        return Redirect::route('dashboard')->with('success', $message);
+        return Redirect::route('dashboard');
 
 
     }

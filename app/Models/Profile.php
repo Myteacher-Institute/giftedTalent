@@ -37,6 +37,16 @@ class Profile extends Model
     ];
 
     /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = [
+        'avatar_url',
+        'cover_image_url',
+    ];
+
+    /**
      * Get avatar URL attribute.
      */
     public function getAvatarUrlAttribute(): ?string

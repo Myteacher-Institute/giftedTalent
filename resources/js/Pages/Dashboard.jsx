@@ -91,7 +91,7 @@ export default function Dashboard({ auth, profileComplete = 75, stats = { applie
                     <div className="profile">
                         <img src={auth.user.profile?.avatar_url || `https://i.pravatar.cc/40?img=${auth.user.id}`} alt="" />
                         <h3>{auth.user.name}</h3>
-                        <p>{auth.user.role || 'Software Engineer'}</p>
+                        <p>{auth.user.profile?.position || 'Add position'}</p>
                         <button className="profile-button" onClick={() => window.location.href = '/user-profile'}>Edit Profile</button>
                     </div>
 

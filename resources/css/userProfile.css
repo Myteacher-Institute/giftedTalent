@@ -61,6 +61,7 @@ body {
   border-radius: 20px;
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--smoke-gray);
+  
   overflow: hidden;
   position: relative;
 }

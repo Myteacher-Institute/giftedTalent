@@ -16,7 +16,7 @@ export default function EditProfile({ user }) {
         position: user.profile?.position || '',
         education: user.profile?.education || '',
         bio: user.profile?.bio || '',
-        location: user.profile?.city || '',
+city: user.profile?.city || '',
         address: user.profile?.address || '',
         country: user.profile?.country || '',
         linkedin_url: user.profile?.linkedin_url || '',
@@ -49,8 +49,11 @@ export default function EditProfile({ user }) {
         try {
             await router.post(route('profile.avatar.upload'), formData, {
                 forceFormData: true,
+                preserveState: true,
+                onSuccess: () => {
+                    router.visit(route('dashboard'), { replace: true });
+                }
             });
-            router.reload({ only: ['user'] });
         } catch (error) {
             console.error('Upload failed', error);
         } finally {
@@ -89,14 +92,17 @@ export default function EditProfile({ user }) {
                         <div className="profile-section">
                             <div className="profile-pic-container">
                                 <div className="profile-image-wrapper">
-                                    <img 
-                                        src={user.profile?.avatar_url || `https://i.pravatar.cc/120?img=${user.id}`} 
-                                        alt="Profile" 
-                                        className="profile-image"
-                                    />
-                                    <div className="profile-initials">
-                                        {initials}
-                                    </div>
+                                    {user.profile?.avatar_url ? (
+                                        <img 
+                                            src={user.profile.avatar_url} 
+                                            alt="Profile" 
+                                            className="profile-image"
+                                        />
+                                    ) : (
+                                        <div className="profile-initials">
+                                            {initials}
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="profile-info">
                                     <div className="profile-name">{user.name}</div>
@@ -231,13 +237,14 @@ export default function EditProfile({ user }) {
 
                             <div className="form-row">
                                 <div className="form-group">
-                                    <label htmlFor="location">City</label>
+                                    <label htmlFor="city">City</label>
                                     <TextInput
-                                        id="location"
-                                        value={data.location}
-                                        onChange={(e) => setData('location', e.target.value)}
+                                        id="city"
+                                        value={data.city}
+                                        onChange={(e) => setData('city', e.target.value)}
                                         className="mt-1 block w-full"
                                     />
+
                                     <InputError message={errors.location} />
                                 </div>
 
