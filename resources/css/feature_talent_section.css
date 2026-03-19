@@ -99,6 +99,8 @@
 .featured-talents>.feature-talent-content>.feature-talent-card>.feature-talent-card-roles {
     display: flex;
     gap: 25px;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .featured-talents>.feature-talent-content>.feature-talent-card>.feature-talent-card-roles>span {
