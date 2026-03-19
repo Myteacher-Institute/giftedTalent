@@ -36,6 +36,22 @@ class Profile extends Model
         'is_verified' => 'boolean',
     ];
 
+    /**
+     * Get avatar URL attribute.
+     */
+    public function getAvatarUrlAttribute(): ?string
+    {
+        return $this->avatar ? \Illuminate\Support\Facades\Storage::url($this->avatar) : null;
+    }
+
+    /**
+     * Get cover image URL attribute.
+     */
+    public function getCoverImageUrlAttribute(): ?string
+    {
+        return $this->cover_image ? \Illuminate\Support\Facades\Storage::url($this->cover_image) : null;
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

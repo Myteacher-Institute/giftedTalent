@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('applications', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('job_id')->constrained()->onDelete('cascade');
+            $table->foreignId('job_id')->constrained('job_postings')->onDelete('cascade');
             $table->enum('status', ['applied', 'review', 'interview', 'rejected', 'offered'])->default('applied');
             $table->timestamp('applied_at')->useCurrent();
             $table->timestamps();

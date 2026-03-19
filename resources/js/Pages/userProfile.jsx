@@ -1,321 +1,247 @@
-import React, { useState } from 'react';
-import { Head, Link, router, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import EditModal from '@/Components/EditModal';
+import { Head, useForm, usePage, router } from '@inertiajs/react';
+import { useState } from 'react';
+import InputError from '@/Components/InputError';
+import InputLabel from '@/Components/InputLabel';
+import PrimaryButton from '@/Components/PrimaryButton';
+import TextInput from '@/Components/TextInput';
 import '../../css/userProfile.css';
 
-const icons = {
-    CheckCircle: ({ size = 18 }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
-            <polyline points="22 4 12 14.01 9 11.01" />
-        </svg>
-    ),
-    Briefcase: ({ size = 18 }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-        </svg>
-    ),
-    Mail: ({ size = 18 }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-            <polyline points="22,6 12,13 2,6" />
-        </svg>
-    ),
-    Phone: ({ size = 18 }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" />
-        </svg>
-    ),
-    MapPin: ({ size = 18 }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-            <circle cx="12" cy="10" r="3" />
-        </svg>
-    ),
-    Layers: ({ size = 18 }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polygon points="12 2 2 7 12 12 22 7 12 2" />
-            <polyline points="2 17 12 22 22 17" />
-            <polyline points="2 12 12 17 22 12" />
-        </svg>
-    ),
-    FileText: ({ size = 18 }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-            <line x1="16" y1="13" x2="8" y2="13" />
-            <line x1="16" y1="17" x2="8" y2="17" />
-            <polyline points="10 9 9 9 8 9" />
-        </svg>
-    ),
-    MessageSquare: ({ size = 18 }) => (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-        </svg>
-    ),
-};
-
-export default function UserProfile({ user, profile, skills, experiences = [], educations = [] }) {
-    const [activeTab, setActiveTab] = useState('view');
-    const [modals, setModals] = useState({
-        experience: false,
-        education: false,
+export default function EditProfile({ user, availableSkills = [] }) {
+    const { data, setData, patch, processing, errors, setError, clearErrors, reset } = useForm({
+        first_name: user.name ? user.name.split(' ')[0] || '' : '',
+        last_name: user.name ? user.name.split(' ').slice(1).join(' ') || '' : '',
+        email: user.email || '',
+        phone: user.profile?.phone || '',
+        position: '', // Add to Profile model if needed
+        education: '', // Single input
+        bio: user.profile?.bio || '',
+        location: user.profile?.city || '',
+        address: user.profile?.address || '',
+        country: user.profile?.country || '',
+        linkedin_url: user.profile?.linkedin_url || '',
+        github_url: user.profile?.github_url || '',
+        portfolio_url: user.profile?.portfolio_url || '',
     });
 
-    const toggleModal = (modal) => {
-        setModals(prev => ({ ...prev, [modal]: !prev[modal] }));
+    const [uploading, setUploading] = useState(false);
+    const [profileComplete, setProfileComplete] = useState(0);
+
+    const submit = (e) => {
+        e.preventDefault();
+        clearErrors();
+        patch(route('profile.updateExtended'), {
+            onSuccess: (page) => {
+                // Refresh props to update dashboard data when navigated back
+                router.reload({ only: ['user'] });
+            }
+        });
     };
 
-    const handleAvailabilityUpdate = (e) => {
+        const uploadAvatar = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setUploading(true);
         const formData = new FormData();
-        formData.append('availability_status', e.target.value);
-        router.post('/profile/extended', Object.fromEntries(formData));
+        formData.append('avatar', file);
+
+        try {
+            await router.post(route('profile.avatar.upload'), formData, {
+                forceFormData: true,
+            });
+            // Refresh user props for immediate UI update
+            router.reload({ only: ['user'] });
+        } catch (error) {
+            console.error('Upload failed', error);
+        } finally {
+            setUploading(false);
+        }
     };
 
-    const removeSkill = (skillId) => {
-        router.delete(`/profile/skills/${skillId}`);
-    };
-
-    if (!user) return <div>Loading...</div>;
-
-    const ViewTab = () => (
-        <div className="profile-container">
-            {/* Header */}
-            <div className="profile-header">
-                <div className="profile-left">
-                    <img src={profile?.avatar || '/assets/img/sample1.jpg'} alt="Profile" className="profile-image" />
-                    <div>
-                        <h1>{user.name}</h1>
-                        <p className="job-title">{profile?.headline || 'Software Developer'}</p>
-                    </div>
-                </div>
-                <div className="availability-badge">
-                    <icons.CheckCircle />
-                    {profile?.availability_status || 'Available'}
-                </div>
-            </div>
-
-            {/* Availability */}
-            <div className="card">
-                <div className="card-holder">
-                    <icons.Briefcase />
-                    <span>Availability</span>
-                </div>
-                <div className="card-body">
-                    <p>Open to work: {profile?.availability_type || 'Full Time'}</p>
-                    <p>Start Date: Available Immediately</p>
-                </div>
-            </div>
-
-            {/* Contact Info */}
-            <div className="card">
-                <div className="card-holder">
-                    <icons.Mail />
-                    <span>Contact Info</span>
-                </div>
-                <div className="contact-row">
-                    <div className="contact-item">
-                        <icons.Mail />
-                        <span>{user.email}</span>
-                    </div>
-                    <div className="contact-item">
-                        <icons.Phone />
-                        <span>{profile?.phone || 'Not provided'}</span>
-                    </div>
-                    <div className="contact-item">
-                        <icons.MapPin />
-                        <span>{profile?.city}, {profile?.country}</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Skills */}
-            <div className="card">
-                <div className="card-holder">
-                    <icons.Layers />
-                    <span>Skills</span>
-                </div>
-                <div className="skills">
-                    {skills?.map(skill => (
-                        <span key={skill.id} className="skill-tag">
-                            {skill.name} 
-                            <button onClick={() => removeSkill(skill.pivot.skill_id)} className="skill-remove">×</button>
-                        </span>
-                    )) || 'No skills'}
-                </div>
-            </div>
-
-            {/* Experience & Education Summary */}
-            <div className="card">
-                <div className="card-holder">
-                    <icons.FileText />
-                    <span>Experience</span>
-                </div>
-                <div className="list-group">
-                    {experiences.slice(0, 3).map(exp => (
-                        <div key={exp.id} className="list-item">
-                            <strong>{exp.job_title}</strong> at {exp.company_name}
-                            <span>{exp.start_date} - {exp.end_date || 'Present'}</span>
-                        </div>
-                    ))}
-                    {experiences.length === 0 && <p>No experience added</p>}
-                </div>
-            </div>
-
-            <div className="card">
-                <div className="card-holder">
-                    <icons.BookOpen />
-                    <span>Education</span>
-                </div>
-                <div className="list-group">
-                    {educations.slice(0, 3).map(edu => (
-                        <div key={edu.id} className="list-item">
-                            <strong>{edu.degree}</strong> - {edu.institution}
-                            <span>{edu.start_date} - {edu.end_date || 'Present'}</span>
-                        </div>
-                    ))}
-                    {educations.length === 0 && <p>No education added</p>}
-                </div>
-            </div>
-        </div>
-    );
-
-    const EditTab = () => (
-        <div className="edit-container">
-            <div className="form-section">
-                <h3>Basic Info</h3>
-                <div className="form-group">
-                    <label>Headline</label>
-                    <input type="text" placeholder="e.g. Full Stack Developer" />
-                </div>
-                <div className="form-row">
-                    <div className="form-group">
-                        <label>Phone</label>
-                        <input type="tel" defaultValue={profile?.phone} />
-                    </div>
-                    <div className="form-group">
-                        <label>Location</label>
-                        <input type="text" defaultValue={profile?.city} />
-                    </div>
-                </div>
-                <div className="form-group">
-                    <label>Bio</label>
-                    <textarea placeholder="Tell us about yourself..." />
-                </div>
-            </div>
-
-            <div className="form-section">
-                <h3>Availability</h3>
-                <div className="form-row">
-                    <div className="form-group">
-                        <label>Status</label>
-                        <select onChange={handleAvailabilityUpdate}>
-                            <option value="available">Available</option>
-                            <option value="open_to_work">Open to Work</option>
-                            <option value="not_available">Not Available</option>
-                        </select>
-                    </div>
-                    <div className="form-group">
-                        <label>Type</label>
-                        <select>
-                            <option>Full Time</option>
-                            <option>Part Time</option>
-                            <option>Contract</option>
-                            <option>Freelance</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div className="form-section">
-                <h3>Links</h3>
-                <div className="form-row">
-                    <div className="form-group">
-                        <label>LinkedIn</label>
-                        <input type="url" />
-                    </div>
-                    <div className="form-group">
-                        <label>GitHub</label>
-                        <input type="url" />
-                    </div>
-                </div>
-                <div className="form-group">
-                    <label>Portfolio</label>
-                    <input type="url" />
-                </div>
-            </div>
-
-            <button className="save-all-btn">Save All Changes</button>
-        </div>
-    );
+    const fullName = `${data.first_name} ${data.last_name}`.trim();
 
     return (
-        <AuthenticatedLayout user={usePage().props.auth.user}>
-            <Head title="User Profile" />
+        <AuthenticatedLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Edit Profile</h2>}>
+            <Head title="Edit Profile" />
 
-            <div className="profile-page">
-                <div className="tabs">
-                    <button 
-                        className={activeTab === 'view' ? 'tab-active' : 'tab'} 
-                        onClick={() => setActiveTab('view')}
-                    >
-                        View Profile
-                    </button>
-                    <button 
-                        className={activeTab === 'edit' ? 'tab-active' : 'tab'} 
-                        onClick={() => setActiveTab('edit')}
-                    >
-                        Edit Profile
-                    </button>
+            <div className="py-12">
+                <div className="max-w-2xl mx-auto sm:px-6 lg:px-8 space-y-6">
+                    <div className="container">
+                        <form onSubmit={submit}>
+                            <div className="header">
+                                <h2>Edit Profile</h2>
+                                <p>Update your personal and professional details</p>
+                            </div>
+
+                            {/* Profile Picture */}
+                            <div className="profile-pic">
+                                <img 
+                                    src={user.profile?.avatar_url || `https://i.pravatar.cc/100?img=${user.id}`} 
+                                    alt="Profile" 
+                                />
+                                <label className="cursor-pointer">
+                                    <span className={uploading ? 'opacity-50 cursor-not-allowed' : ''}>
+                                        {uploading ? 'Uploading...' : 'Change Photo'}
+                                    </span>
+                                    <input 
+                                        type="file" 
+                                        onChange={uploadAvatar}
+                                        accept="image/*"
+                                        className="hidden"
+                                        disabled={uploading}
+                                    />
+                                </label>
+                            </div>
+
+                            <div className="section-title">Personal Information</div>
+
+                            <div className="row">
+                                <div className="form-group">
+                                    <InputLabel htmlFor="first_name" value="First Name" />
+                                    <TextInput
+                                        id="first_name"
+                                        value={data.first_name}
+                                        onChange={(e) => setData('first_name', e.target.value)}
+                                        className="mt-1 block w-full"
+                                        autoComplete="given-name"
+                                    />
+                                    <InputError message={errors.first_name} />
+                                </div>
+
+                                <div className="form-group">
+                                    <InputLabel htmlFor="last_name" value="Last Name" />
+                                    <TextInput
+                                        id="last_name"
+                                        value={data.last_name}
+                                        onChange={(e) => setData('last_name', e.target.value)}
+                                        className="mt-1 block w-full"
+                                        autoComplete="family-name"
+                                    />
+                                    <InputError message={errors.last_name} />
+                                </div>
+                            </div>
+
+                            <div className="form-group">
+                                <InputLabel htmlFor="email" value="Email" />
+                                <TextInput
+                                    id="email"
+                                    type="email"
+                                    value={data.email}
+                                    onChange={(e) => setData('email', e.target.value)}
+                                    className="mt-1 block w-full"
+                                    autoComplete="email"
+                                />
+                                <InputError message={errors.email} />
+                            </div>
+
+                            <div className="form-group">
+                                <InputLabel htmlFor="phone" value="Phone" />
+                                <TextInput
+                                    id="phone"
+                                    value={data.phone}
+                                    onChange={(e) => setData('phone', e.target.value)}
+                                    className="mt-1 block w-full"
+                                />
+                                <InputError message={errors.phone} />
+                            </div>
+
+                            <div className="section-title">Professional Details</div>
+
+                            <div className="form-group">
+                                <InputLabel htmlFor="position" value="Position" />
+                                <TextInput
+                                    id="position"
+                                    placeholder="e.g. Frontend Developer"
+                                    value={data.position}
+                                    onChange={(e) => setData('position', e.target.value)}
+                                    className="mt-1 block w-full"
+                                />
+                                <InputError message={errors.position} />
+                            </div>
+
+                            <div className="form-group">
+                                <InputLabel htmlFor="education" value="Education" />
+                                <TextInput
+                                    id="education"
+                                    placeholder="e.g. B.Sc Computer Science"
+                                    value={data.education}
+                                    onChange={(e) => setData('education', e.target.value)}
+                                    className="mt-1 block w-full"
+                                />
+                                <InputError message={errors.education} />
+                            </div>
+
+                            <div className="form-group">
+                                <InputLabel htmlFor="bio" value="Bio" />
+                                <textarea
+                                    id="bio"
+                                    placeholder="Tell us about yourself..."
+                                    value={data.bio}
+                                    onChange={(e) => setData('bio', e.target.value)}
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    rows="4"
+                                />
+                                <InputError message={errors.bio} />
+                            </div>
+
+                            <div className="section-title">Location</div>
+
+                            <div className="form-group">
+                                <InputLabel htmlFor="location" value="City" />
+                                <TextInput
+                                    id="location"
+                                    value={data.location}
+                                    onChange={(e) => setData('location', e.target.value)}
+                                    className="mt-1 block w-full"
+                                />
+                                <InputError message={errors.location} />
+                            </div>
+
+                            <div className="form-group">
+                                <InputLabel htmlFor="address" value="Address" />
+                                <TextInput
+                                    id="address"
+                                    value={data.address}
+                                    onChange={(e) => setData('address', e.target.value)}
+                                    className="mt-1 block w-full"
+                                />
+                                <InputError message={errors.address} />
+                            </div>
+
+                            <div className="form-group">
+                                <InputLabel htmlFor="country" value="Country" />
+                                <TextInput
+                                    id="country"
+                                    value={data.country}
+                                    onChange={(e) => setData('country', e.target.value)}
+                                    className="mt-1 block w-full"
+                                />
+                                <InputError message={errors.country} />
+                            </div>
+
+                            <div className="form-group">
+                                <InputLabel htmlFor="linkedin_url" value="LinkedIn" />
+                                <TextInput
+                                    id="linkedin_url"
+                                    value={data.linkedin_url}
+                                    onChange={(e) => setData('linkedin_url', e.target.value)}
+                                    className="mt-1 block w-full"
+                                />
+                                <InputError message={errors.linkedin_url} />
+                            </div>
+
+                            <div className="buttons">
+                                <button type="button" onClick={() => window.history.back()} className="cancel">
+                                    Cancel
+                                </button>
+                                <PrimaryButton type="submit" className="save" disabled={processing}>
+                                    {processing ? 'Saving...' : 'Save Changes'}
+                                </PrimaryButton>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-
-                <div className="tab-content">
-                    {activeTab === 'view' && <ViewTab />}
-                    {activeTab === 'edit' && <EditTab />}
-                </div>
-
-                {/* Modals */}
-                <EditModal 
-                    isOpen={modals.experience}
-                    onClose={() => toggleModal('experience')}
-                    title="Add Experience"
-                    submitUrl="/profile/experiences"
-                >
-                    <div className="form-group">
-                        <label>Company</label>
-                        <input name="company_name" required />
-                    </div>
-                    <div className="form-group">
-                        <label>Job Title</label>
-                        <input name="job_title" required />
-                    </div>
-                    <div className="form-group">
-                        <label>Start Date</label>
-                        <input type="date" name="start_date" required />
-                    </div>
-                </EditModal>
-
-                <EditModal 
-                    isOpen={modals.education}
-                    onClose={() => toggleModal('education')}
-                    title="Add Education"
-                    submitUrl="/profile/educations"
-                >
-                    <div className="form-group">
-                        <label>Institution</label>
-                        <input name="institution" required />
-                    </div>
-                    <div className="form-group">
-                        <label>Degree</label>
-                        <input name="degree" required />
-                    </div>
-                    <div className="form-group">
-                        <label>Start Date</label>
-                        <input type="date" name="start_date" />
-                    </div>
-                </EditModal>
             </div>
         </AuthenticatedLayout>
     );

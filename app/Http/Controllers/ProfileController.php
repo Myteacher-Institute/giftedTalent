@@ -1,9 +1,8 @@
-an<?php
+<?php
 
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
-use App\Models\Education;
 use App\Models\Experience;
 use App\Models\Profile;
 use App\Models\Resume;
@@ -13,8 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
-
-use Inertia\Response;
+use Inertia\Inertia;
 use App\Http\Controllers\Controller;
 
 class ProfileController extends Controller
@@ -28,23 +26,33 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function edit(Request $request)
+    /**
+     * Display the user's profile.
+     */
+    public function show(Request $request)
     {
-        $user = $request->user()->load(['profile', 'skills', 'experiences', 'educations', 'resumes']);
-        
-        return Inertia::render('Profile/Edit', [
-
-        
-        return Inertia::render('Profile', [
-            'user' => $user,
+        $user = $request->user()->loadMissing([
+            'profile',
+            'skills',
+            'experiences',
+            'resumes'
         ]);
-        )
+
+        if (!$user->profile) {
+            $profile = \App\Models\Profile::firstOrCreate(['user_id' => $user->id]);
+            $user->setRelation('profile', $profile);
+        }
+
+        return Inertia::render('userProfile', [
+            'user' => $user,
+            'availableSkills' => \App\Models\Skill::where('is_active', true)->get(),
+        ]);
     }
 
-
+    public function edit(Request $request): \Inertia\Response
     {
-        $user = $request->user()->load(['profile', 'skills', 'experiences', 'educations', 'resumes']);
-        
+$user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'resumes']);
+
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
@@ -55,7 +63,6 @@ class ProfileController extends Controller
 
     /**
      * Update the user's profile information.
-    
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
@@ -68,6 +75,37 @@ class ProfileController extends Controller
         $request->user()->save();
 
         return Redirect::route('profile.edit');
+    }
+
+    /**
+     * Upload user avatar image.
+     */
+    public function uploadAvatar(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $user = $request->user();
+        $profile = Profile::firstOrCreate(['user_id' => $user->id]);
+
+        // Delete old avatar if exists
+        if ($profile->avatar && \Illuminate\Support\Facades\Storage::disk('public')->exists($profile->avatar)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($profile->avatar);
+        }
+
+        $file = $request->file('avatar');
+        $filename = 'avatars/' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+        
+        \Illuminate\Support\Facades\Storage::disk('public')->putFileAs('avatars', $file, $filename);
+        
+        $profile->update(['avatar' => $filename]);
+
+        return response()->json([
+            'success' => true,
+            'avatar_url' => \Illuminate\Support\Facades\Storage::url($filename),
+            'message' => 'Avatar uploaded successfully.'
+        ]);
     }
 
     /**
@@ -98,11 +136,23 @@ class ProfileController extends Controller
             $validated
         );
 
-        // Check if profile now complete
-        $completion = app(DashboardController::class)->calculateProfileCompletion($profile);
+$user = $request->user()->loadMissing(['skills', 'experiences', 'educations']);
+
+        // Simple profile completion calculation
+        $totalFields = 8;
+        $filledFields = 0;
+        if (!empty($profile->bio)) $filledFields++;
+        if (!empty($profile->phone)) $filledFields++;
+        if (!empty($profile->address)) $filledFields++;
+        if ($user->skills()->count() > 0) $filledFields++;
+        if ($user->experiences()->count() > 0) $filledFields++;
+        if (!empty($profile->linkedin_url)) $filledFields++;
+        if (!empty($profile->github_url)) $filledFields++;
+        
+        $completion = round(($filledFields / $totalFields) * 100);
         $message = 'Profile updated successfully.';
-        if ($completion === 100) {
-            $message = 'Congratulations! Your profile is now 100% complete!';
+        if ($completion >= 80) {
+            $message = 'Congratulations! Your profile is now ' . $completion . '% complete!';
         }
 
         return Redirect::route('profile.edit')->with('success', $message);
@@ -197,64 +247,7 @@ class ProfileController extends Controller
         return Redirect::route('profile.edit')->with('success', 'Experience deleted successfully.');
     }
 
-    /**
-     * Add education.
-     */
-    public function addEducation(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'institution' => 'required|string|max:255',
-            'degree' => 'required|string|max:255',
-            'field_of_study' => 'nullable|string|max:255',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date',
-            'is_current' => 'boolean',
-            'description' => 'nullable|string|max:2000',
-        ]);
 
-        $request->user()->educations()->create($validated);
-
-        return Redirect::route('profile.edit')->with('success', 'Education added successfully.');
-    }
-
-    /**
-     * Update education.
-     */
-    public function updateEducation(Request $request, Education $education): RedirectResponse
-    {
-        if (!$education->isOwnedBy($request->user())) {
-            return Redirect::back()->with('error', 'Unauthorized action.');
-        }
-
-        $validated = $request->validate([
-            'institution' => 'required|string|max:255',
-            'degree' => 'required|string|max:255',
-            'field_of_study' => 'nullable|string|max:255',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date',
-            'is_current' => 'boolean',
-            'description' => 'nullable|string|max:2000',
-        ]);
-
-        $education->update($validated);
-
-        return Redirect::route('profile.edit')->with('success', 'Education updated successfully.');
-    }
-
-
-    /**
-     * Delete education.
-     */
-    public function deleteEducation(Request $request, Education $education): RedirectResponse
-    {
-        if (!$education->isOwnedBy($request->user())) {
-            return Redirect::back()->with('error', 'Unauthorized action.');
-        }
-
-        $education->delete();
-
-        return Redirect::route('profile.edit')->with('success', 'Education deleted successfully.');
-    }
 
     /**
      * Delete the user's account.
@@ -277,4 +270,3 @@ class ProfileController extends Controller
         return Redirect::to('/');
     }
 }
-

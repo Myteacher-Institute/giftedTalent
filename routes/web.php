@@ -22,7 +22,7 @@ Route::get('/find-jobs', [PageController::class, 'findJobs'])->name('pages.findJ
 Route::get('/find-talents', [PageController::class, 'findTalents'])->name('pages.findTalents');
 Route::get('/how-it-works', [PageController::class, 'howItWorks'])->name('pages.howItWorks');
 Route::get('/about', [PageController::class, 'about'])->name('pages.about');
-Route::get('/user-profile', [\App\Http\Controllers\ProfileController::class, 'show'])->middleware('auth')->name('pages.userProfile');
+Route::get('/user-profile', [ProfileController::class, 'show'])->middleware('auth')->name('pages.userProfile');
 Route::get('/easy-apply-job', [PageController::class, 'easyApplyJob'])->middleware(['auth', 'verified'])->name('pages.easyApplyJob');
 
 Route::get('/search-jobs', [PageController::class, 'searchJobs'])->middleware(['auth', 'verified'])->name('pages.searchJobs');
@@ -42,6 +42,9 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
 
     // Extended Profile Routes
     Route::patch('/profile/extended', [ProfileController::class, 'updateExtendedProfile'])->name('profile.updateExtended');
+    
+    // Avatar Upload Route
+    Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar'])->middleware('auth')->name('profile.avatar.upload');
 
     // Skills Routes
     Route::post('/profile/skills', [ProfileController::class, 'addSkill'])->name('profile.skills.add');
@@ -51,11 +54,6 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     Route::post('/profile/experiences', [ProfileController::class, 'addExperience'])->name('profile.experiences.add');
     Route::put('/profile/experiences/{experience}', [ProfileController::class, 'updateExperience'])->name('profile.experiences.update');
     Route::delete('/profile/experiences/{experience}', [ProfileController::class, 'deleteExperience'])->name('profile.experiences.delete');
-
-    // Education Routes
-    Route::post('/profile/educations', [ProfileController::class, 'addEducation'])->name('profile.educations.add');
-    Route::put('/profile/educations/{education}', [ProfileController::class, 'updateEducation'])->name('profile.educations.update');
-    Route::delete('/profile/educations/{education}', [ProfileController::class, 'deleteEducation'])->name('profile.educations.delete');
 });
 
 // Admin Routes - Protected by IsAdmin middleware

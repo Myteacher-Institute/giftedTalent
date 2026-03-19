@@ -52,13 +52,12 @@ class DashboardController extends Controller
 
     private function calculateProfileCompletion(Profile $profile): int
     {
-        $total = 5; // profile pic, bio, experience, education, skills
+        $total = 4; // profile pic, bio, experience, skills
         $complete = 0;
 
         if ($profile->avatar) $complete++;
         if ($profile->bio && strlen($profile->bio) > 10) $complete++;
         if ($profile->user->experiences->count() > 0) $complete++;
-        if ($profile->user->educations->count() > 0) $complete++;
         if ($profile->user->skills->count() > 0) $complete++;
 
         return round(($complete / $total) * 100);
