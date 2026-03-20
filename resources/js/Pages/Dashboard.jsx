@@ -47,7 +47,7 @@ function JobCard({ job }) {
     );
 }
 
-export default function Dashboard({ auth, profileComplete = 75, stats = { applied: 8, review: 3, interview: 1, rejected: 2 }, jobs = [] }) {
+export default function Dashboard({ auth, profileComplete = 75, profileStatus = {}, stats = { applied: 8, review: 3, interview: 1, rejected: 2 }, jobs = [] }) {
     const [activeMenu, setActiveMenu] = useState(null);
 
     useEffect(() => {
@@ -112,7 +112,7 @@ export default function Dashboard({ auth, profileComplete = 75, stats = { applie
                         <span className="success">{auth.user.profile?.cv_uploaded ? 'CV Uploaded' : 'Upload CV'}</span>
                         <span>Skills: {auth.user.skills?.slice(0,2).map(s => s.name).join(', ') || 'No skills added'}</span>
                         <span>Bio: {auth.user.profile?.bio ? auth.user.profile.bio.substring(0,50) + '...' : 'Add bio'}</span>
-                        <button><Link href={route('pages.userProfile')} className="status-button">Edit Profile</Link></button>
+                        <button><Link href="/cv" className="status-button">Upload Your CV</Link></button>
                     </div>
 
                     <div className="search-bar">
@@ -138,9 +138,18 @@ export default function Dashboard({ auth, profileComplete = 75, stats = { applie
                             <h2>{profileComplete}%</h2>
                         </div>
                         <ul>
-                            <li>Add Portfolio Link</li>
-                            <li>Upddate Experience</li>
-                            <li className="done">Verify Email</li>
+                            <li className={profileStatus.status?.portfolio ? 'done' : ''} onClick={() => window.location.href = '/profile'}>
+                                {profileStatus.status?.portfolio ? '✓ Portfolio Added' : '➤ Add Portfolio Link'}
+                            </li>
+                            <li className={profileStatus.status?.experience ? 'done' : ''} onClick={() => window.location.href = '/profile'}>
+                                {profileStatus.status?.experience ? '✓ Experience Added' : '➤ Update Experience'}
+                            </li>
+                            <li className={profileStatus.status?.email_verified ? 'done' : ''}>
+                                {profileStatus.status?.email_verified ? '✓ Email Verified' : '➤ Verify Email'}
+                            </li>
+                            <li className={profileStatus.status?.skills ? 'done' : ''} onClick={() => window.location.href = '/profile'}>
+                                {profileStatus.status?.skills ? '✓ Skills Added' : '➤ Add Skills'}
+                            </li>
                         </ul>
                     </div>
 

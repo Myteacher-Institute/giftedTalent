@@ -1,16 +1,25 @@
-# Fix ProfileController Syntax Error - Progress Tracker
+ # Fix ProfileController - Progress Tracker
 
-Current Status: Step 4 completed - Laravel caches cleared
+Current Status: Step 1/7 - TODO created ✅
 
 ## Steps:
-- [x] Step 1: User confirmed syntax error fix plan  
-- [x] Step 2: Create TODO.md file for tracking  
-- [x] Step 3: Edit ProfileController.php to add missing closing brace after uploadAvatar method  
-- [x] Step 4: Clear Laravel caches  
-- [ ] Step 5: Test server functionality  
-- [ ] Step 6: Update TODO.md with completion status  
-- [ ] Step 7: Attempt task completion  
+- [x] 1. User approved plan
+- [x] 2. Edit ProfileController.php: Add Storage import, removeAvatar() method, null-safety ✅
+- [x] 3. `php artisan route:clear`
+- [x] 4. `npm run dev`
+- [ ] 5. Test upload/remove avatar in /profile/edit
+- [ ] 6. Verify no console/route errors
+- [ ] 7. Update TODO complete + attempt_completion
+- [ ] 6. Verify no console/route errors
+- [ ] 7. Update TODO complete + attempt_completion
 
-**Next**: Step 5 - Testing recommended by starting the server if not running: `php artisan serve`. The syntax error should now be resolved.
+**Status**: ProfileController fixes complete ✅
 
+- Added `removeAvatar()` method 
+- Added `use Storage;`
+- Enhanced null-safety in uploadAvatar()
+- Cleared routes, running `npm run dev`
 
+Test: Visit `/profile/edit` → upload/remove avatar → no errors.
+
+**Next**: User test + verification.

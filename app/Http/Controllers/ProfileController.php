@@ -12,6 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use App\Http\Controllers\Controller;
 
@@ -87,7 +88,7 @@ $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'resu
         ]);
 
         $user = $request->user();
-        $profile = Profile::firstOrCreate(['user_id' => $user->id]);
+        $profile = $user->profile ?? Profile::firstOrCreate(['user_id' => $user->id]);
 
         // Delete old avatar if exists
         if ($profile->avatar && \Illuminate\Support\Facades\Storage::disk('public')->exists($profile->avatar)) {
@@ -119,6 +120,8 @@ $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'resu
         $validated = $request->validate([
             'bio' => 'nullable|string|max:1000',
             'phone' => 'nullable|string|max:20',
+            'position' => 'nullable|string|max:255',
+            'education' => 'nullable|string|max:255',
             'address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:100',
             'country' => 'nullable|string|max:100',
@@ -133,6 +136,7 @@ $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'resu
             'github_url' => 'nullable|url|max:255',
             'portfolio_url' => 'nullable|url|max:255',
         ]);
+
 
         $profile = Profile::updateOrCreate(
             ['user_id' => $user->id],
@@ -248,6 +252,23 @@ $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'resu
 
 
     /**
+     * Remove user avatar.
+     */
+    public function removeAvatar(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        $profile = $user->profile;
+
+        if ($profile && $profile->avatar && Storage::disk('public')->exists($profile->avatar)) {
+            Storage::disk('public')->delete($profile->avatar);
+        }
+
+        $profile->update(['avatar' => null]);
+
+        return redirect()->route('profile.show')->with('success', 'Avatar removed successfully');
+    }
+
+    /**
      * Delete the user's account.
      */
     public function destroy(Request $request): RedirectResponse
@@ -266,5 +287,58 @@ $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'resu
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
+    }
+
+    /**
+     * CV Upload Page
+     */
+    public function cv(Request $request)
+    {
+        $user = $request->user()->loadMissing(['profile', 'resumes']);
+        return Inertia::render('cv', [
+            'user' => $user,
+            'resumes' => $user->resumes ?? [],
+        ]);
+    }
+
+    /**
+     * Store CV upload
+     */
+    public function storeResume(Request $request)
+    {
+        $request->validate([
+            'cv' => 'required|file|mimes:pdf,doc,docx|max:2048',
+            'title' => 'nullable|string|max:255',
+        ]);
+
+        $user = $request->user();
+        
+        $file = $request->file('cv');
+        $title = $request->title ?: $file->getClientOriginalName();
+        $filename = $user->id . '_' . time() . '_' . $file->getClientOriginalName();
+        
+        $path = $file->storeAs('resumes', $filename, 'public');
+        
+        $resume = $user->resumes()->create([
+            'title' => $title,
+            'file_path' => $path,
+            'file_size' => $file->getSize(),
+        ]);
+
+        return back()->with('success', 'CV uploaded successfully');
+    }
+
+    /**
+     * Delete CV
+     */
+    public function destroyResume(Request $request, $id)
+    {
+        $user = $request->user();
+        $resume = $user->resumes()->findOrFail($id);
+        
+        Storage::disk('public')->delete($resume->file_path);
+        $resume->delete();
+
+        return back()->with('success', 'CV deleted');
     }
 }

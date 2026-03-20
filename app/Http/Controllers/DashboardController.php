@@ -15,10 +15,13 @@ class DashboardController extends Controller
     {
         $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'applications']);
 
-        // Profile completion %
+        // Profile completion status
+        $profileStatus = ['percent' => 0, 'status' => []];
         $profileComplete = 0;
         if ($user->profile) {
-            $profileComplete = $this->calculateProfileCompletion($user->profile);
+            $completion = $this->calculateProfileCompletion($user->profile);
+            $profileStatus = $completion;
+            $profileComplete = $completion['percent'];
         }
 
         // Application stats
@@ -46,6 +49,7 @@ class DashboardController extends Controller
                 'user' => $user
             ],
             'profileComplete' => $profileComplete,
+            'profileStatus' => $profileStatus,
             'stats' => $stats,
             'jobs' => $jobs->map(fn($job) => [
                 'id' => $job->id,
@@ -59,16 +63,21 @@ class DashboardController extends Controller
     }
 
 
-    private function calculateProfileCompletion(Profile $profile): int
+    private function calculateProfileCompletion(Profile $profile): array
     {
-        $total = 4; // profile pic, bio, experience, skills
-        $complete = 0;
+        $status = [
+            'portfolio' => !empty($profile->portfolio_url),
+            'experience' => $profile->user->experiences()->count() > 0,
+            'skills' => $profile->user->skills()->count() > 0,
+            'email_verified' => $profile->user->email_verified_at !== null,
+        ];
 
-        if ($profile->avatar) $complete++;
-        if ($profile->bio && strlen($profile->bio) > 10) $complete++;
-        if ($profile->user->experiences->count() > 0) $complete++;
-        if ($profile->user->skills->count() > 0) $complete++;
-
-        return round(($complete / $total) * 100);
+        $total = count($status);
+        $complete = array_sum(array_map(fn($v) => $v ? 1 : 0, $status));
+        
+        return [
+            'percent' => round(($complete / $total) * 100),
+            'status' => $status
+        ];
     }
 }

@@ -11,7 +11,7 @@ class Profile extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
+'user_id',
         'bio',
         'phone',
         'address',
@@ -19,6 +19,8 @@ class Profile extends Model
         'country',
         'avatar',
         'cover_image',
+        'position',
+        'education',
         'availability_status',
         'availability_type',
         'expected_salary',

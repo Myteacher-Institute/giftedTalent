@@ -34,6 +34,9 @@ Route::get('/jobs', function () {
 Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->middleware(['auth', 'verified', 'not_admin'])->name('dashboard');
 
 Route::middleware(['auth', 'not_admin'])->group(function () {
+    Route::get('/cv', [ProfileController::class, 'cv'])->name('cv');
+    Route::post('/profile/resume', [ProfileController::class, 'storeResume'])->name('profile.resume.store');
+    Route::delete('/profile/resume/{id}', [ProfileController::class, 'destroyResume'])->name('profile.resume.destroy');
     // Basic Profile Routes
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -45,6 +48,7 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     
     // Avatar Upload Route
     Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar'])->middleware('auth')->name('profile.avatar.upload');
+    Route::delete('/profile/avatar', [ProfileController::class, 'removeAvatar'])->middleware('auth')->name('profile.avatar.remove');
 
     // Skills Routes
     Route::post('/profile/skills', [ProfileController::class, 'addSkill'])->name('profile.skills.add');
