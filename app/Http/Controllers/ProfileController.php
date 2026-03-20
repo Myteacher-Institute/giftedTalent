@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
-use App\Http\Controllers\Controller;
 
 class ProfileController extends Controller
 {
@@ -52,7 +51,7 @@ class ProfileController extends Controller
 
     public function edit(Request $request): \Inertia\Response
     {
-$user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'resumes']);
+        $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'resumes']);
 
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
@@ -91,14 +90,14 @@ $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'resu
         $profile = $user->profile ?? Profile::firstOrCreate(['user_id' => $user->id]);
 
         // Delete old avatar if exists
-        if ($profile->avatar && \Illuminate\Support\Facades\Storage::disk('public')->exists($profile->avatar)) {
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($profile->avatar);
+        if ($profile->avatar && Storage::disk('public')->exists($profile->avatar)) {
+            Storage::disk('public')->delete($profile->avatar);
         }
 
         $file = $request->file('avatar');
         $filename = $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
         
-        \Illuminate\Support\Facades\Storage::disk('public')->putFileAs('avatars', $file, $filename);
+        Storage::disk('public')->putFileAs('avatars', $file, $filename);
         
         $profile->update(['avatar' => $filename]);
 
@@ -309,6 +308,7 @@ $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'resu
         $request->validate([
             'cv' => 'required|file|mimes:pdf,doc,docx|max:2048',
             'title' => 'nullable|string|max:255',
+            'is_primary' => 'boolean',
         ]);
 
         $user = $request->user();
@@ -319,10 +319,17 @@ $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'resu
         
         $path = $file->storeAs('resumes', $filename, 'public');
         
+        // Demote other resumes if this is primary
+        if ($request->boolean('is_primary')) {
+            $user->resumes()->update(['is_primary' => false]);
+        }
+        
         $resume = $user->resumes()->create([
             'title' => $title,
             'file_path' => $path,
             'file_size' => $file->getSize(),
+            'is_primary' => $request->boolean('is_primary', false),
+            'status' => 'pending',
         ]);
 
         return back()->with('success', 'CV uploaded successfully');

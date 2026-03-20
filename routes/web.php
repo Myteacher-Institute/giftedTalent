@@ -69,6 +69,12 @@ Route::middleware(['auth', 'admin'])->prefix('Admin')->name('admin.')->group(fun
     Route::get('/jobs', [AdminController::class, 'jobs'])->name('jobs');
 
     Route::get('/analytics', [AdminController::class, 'analytics'])->name('analytics');
+
+    // CV Review Routes
+    Route::resource('cv-review', \App\Http\Controllers\Admin\CvReviewController::class)->only(['index', 'show']);
+    Route::patch('cv-review/{resume}', [\App\Http\Controllers\Admin\CvReviewController::class, 'update'])->name('admin.cv-review.update');
+    Route::get('cv-review/{resume}/download', [\App\Http\Controllers\Admin\CvReviewController::class, 'download'])->name('admin.cv-review.download');
+    Route::delete('cv-review/{resume}', [\App\Http\Controllers\Admin\CvReviewController::class, 'destroy'])->name('admin.cv-review.destroy');
 });
 
 // Google Authentication Routes

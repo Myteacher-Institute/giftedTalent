@@ -13,7 +13,7 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'applications']);
+$user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'applications', 'resumes']);
 
         // Profile completion status
         $profileStatus = ['percent' => 0, 'status' => []];
@@ -50,7 +50,13 @@ class DashboardController extends Controller
             ],
             'profileComplete' => $profileComplete,
             'profileStatus' => $profileStatus,
-            'stats' => $stats,
+'stats' => [
+            'applied' => $user->applications()->count(),
+            'pending_cv' => $user->resumes()->pending()->count(),
+            'approved_cv' => $user->resumes()->approved()->count(),
+            'rejected_cv' => $user->resumes()->rejected()->count(),
+        ],
+'resumes' => $user->resumes,
             'jobs' => $jobs->map(fn($job) => [
                 'id' => $job->id,
                 'company' => $job->company_name ?? $job->company ?? 'Company',

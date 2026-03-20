@@ -1,0 +1,1 @@
+# CV.jsx Enhancement TODO\n\n## Plan Breakdown:\n- [ ] Step 1: Fix AppServiceProvider policy registration.\n- [ ] Step 2: Enhance resources/js/Pages/cv.jsx with status, primary, feedback display.\n- [ ] Step 3: Verify.\n- [ ] Step 4: Complete.
