@@ -107,7 +107,7 @@ export default function CvReviewShow({ resume, stats }) {
                         <div className="space-y-6">
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Feedback (optional)
+Feedback *(required)
                                 </label>
                                 <textarea
                                     rows="6"

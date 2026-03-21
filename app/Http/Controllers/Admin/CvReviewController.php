@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Resume;
+use App\Notifications\CvReviewNotification;
 use App\Policies\ResumePolicy;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -74,22 +76,24 @@ class CvReviewController extends Controller
     /**
      * Update resume review status.
      */
-    public function update(Request $request, Resume $resume)
+    public function update(Request $request, Resume $resume): RedirectResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'status' => 'required|in:approved,rejected',
-            'feedback' => 'nullable|string|max:1000',
+            'feedback' => 'required|string|max:1000',
         ]);
 
         $resume->update([
-            'status' => $request->status,
-            'feedback' => $request->feedback,
+            'status' => $validated['status'],
+            'feedback' => $validated['feedback'],
             'reviewed_at' => now(),
             'reviewer_id' => Auth::id(),
         ]);
 
+        $resume->user->notify(new CvReviewNotification($resume));
+
         return redirect()->route('admin.cv-review.index')
-            ->with('success', ucfirst($request->status) . ' CV review completed.');
+            ->with('success', ucfirst($validated['status']) . ' CV reviewed! User notified with feedback.');
     }
 
     /**

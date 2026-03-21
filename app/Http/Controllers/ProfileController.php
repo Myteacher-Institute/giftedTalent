@@ -324,9 +324,10 @@ class ProfileController extends Controller
             $user->resumes()->update(['is_primary' => false]);
         }
         
-        $resume = $user->resumes()->create([
+$resume = $user->resumes()->create([
             'title' => $title,
             'file_path' => $path,
+            'file_name' => $filename,
             'file_size' => $file->getSize(),
             'is_primary' => $request->boolean('is_primary', false),
             'status' => 'pending',

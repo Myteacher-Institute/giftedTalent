@@ -1,4 +1,4 @@
-import { useState } from 'react';
+ import { useState } from 'react';
 import NavLink from '@/Components/NavLink';
 import Dropdown from '@/Components/Dropdown';
 import { Link, usePage } from '@inertiajs/react';
@@ -35,6 +35,12 @@ export default function AuthenticatedLayout({ header, children }) {
                         </div>
 
                         <div className="hidden sm:ms-6 sm:flex sm:items-center">
+                            {!route().current('cv') && (
+                                <>
+                                    <Notification />
+                                    <div className="mx-2" />
+                                </>
+                            )}
                             <div className="relative ms-3">
                                 <Dropdown>
                                     <Dropdown.Trigger>
@@ -171,7 +177,6 @@ export default function AuthenticatedLayout({ header, children }) {
                 </header>
             )}
 
-            <Notification />
             <main>{children}</main>
         </div>
     );

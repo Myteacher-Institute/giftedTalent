@@ -44,19 +44,37 @@ $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'appl
             ->limit(3)
             ->get();
 
+        // Notifications data for bell/navbar
+        $notificationsData = [
+            'unread_count' => $user->unreadNotifications->count(),
+            'recent_unread' => $user->notifications()
+                ->whereNull('read_at')
+                ->latest()
+                ->limit(5)
+                ->get()
+                ->map(fn($n) => [
+                    'id' => $n->id,
+                    'title' => $n->data['title'],
+                    'message' => $n->data['message'],
+                    'time' => $n->created_at->diffForHumans(),
+                    'resume_id' => $n->data['resume_id'] ?? null,
+                    'status' => $n->data['status'] ?? null,
+                ]),
+        ];
+
         return Inertia::render('Dashboard', [
             'auth' => [
                 'user' => $user
             ],
             'profileComplete' => $profileComplete,
             'profileStatus' => $profileStatus,
-'stats' => [
-            'applied' => $user->applications()->count(),
-            'pending_cv' => $user->resumes()->pending()->count(),
-            'approved_cv' => $user->resumes()->approved()->count(),
-            'rejected_cv' => $user->resumes()->rejected()->count(),
-        ],
-'resumes' => $user->resumes,
+            'stats' => [
+                'applied' => $user->applications()->count(),
+                'pending_cv' => $user->resumes()->pending()->count(),
+                'approved_cv' => $user->resumes()->approved()->count(),
+                'rejected_cv' => $user->resumes()->rejected()->count(),
+            ],
+            'resumes' => $user->resumes,
             'jobs' => $jobs->map(fn($job) => [
                 'id' => $job->id,
                 'company' => $job->company_name ?? $job->company ?? 'Company',
@@ -65,6 +83,7 @@ $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'appl
                 'time' => $job->created_at->diffForHumans(),
                 'image' => $job->logo_url ?? 'https://i.pravatar.cc/40?img=' . $job->id,
             ]),
+            'notifications' => $notificationsData,
         ]);
     }
 

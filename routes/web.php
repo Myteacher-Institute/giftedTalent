@@ -34,6 +34,10 @@ Route::get('/jobs', function () {
 Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->middleware(['auth', 'verified', 'not_admin'])->name('dashboard');
 
 Route::middleware(['auth', 'not_admin'])->group(function () {
+    Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'read'])->name('notifications.read');
+    Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'readAll'])->name('notifications.readAll');
+    
     Route::get('/cv', [ProfileController::class, 'cv'])->name('cv');
     Route::post('/profile/resume', [ProfileController::class, 'storeResume'])->name('profile.resume.store');
     Route::delete('/profile/resume/{id}', [ProfileController::class, 'destroyResume'])->name('profile.resume.destroy');

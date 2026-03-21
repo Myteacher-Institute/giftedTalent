@@ -7,8 +7,6 @@ export default function Cv({ user, resumes = [] }) {
     const [uploading, setUploading] = useState(false);
     const [message, setMessage] = useState(null);
     const fileInputRef = useRef(null);
-    const { post, delete: destroy, processing, errors } = useForm();
-
     const handleFileSelect = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -28,21 +26,29 @@ export default function Cv({ user, resumes = [] }) {
         formData.append('cv', file);
         formData.append('title', file.name.split('.')[0].substring(0, 50));
 
-        post('/profile/resume', {
+        router.post(route('profile.resume.store'), formData, {
             forceFormData: true,
+            preserveState: true,
+            preserveScroll: true,
             onSuccess: () => {
-                setMessage({ type: 'success', text: 'CV uploaded successfully!' });
+                alertify.success('CV uploaded successfully and sent to Admin review!', 3);
+                setMessage({ type: 'success', text: 'CV uploaded to Admin review!' });
                 router.reload({ only: ['resumes'] });
                 fileInputRef.current.value = ''; // Reset input
             },
-            onError: () => setMessage({ type: 'error', text: 'Upload failed. Please try again.' }),
+            onError: (errors) => {
+                const errorMsg = Object.values(errors)[0] || 'Upload failed. Please try again.';
+                alertify.error(errorMsg, 3);
+                setMessage({ type: 'error', text: errorMsg });
+            },
             onFinish: () => setUploading(false),
         });
     };
 
     const handleDelete = (resumeId) => {
         if (!confirm('Are you sure you want to delete this CV?')) return;
-        destroy(`/profile/resume/${resumeId}`, {
+        router.delete(route('profile.resume.destroy', resumeId), {
+            preserveState: true,
             onSuccess: () => setMessage({ type: 'success', text: 'CV deleted successfully!' }),
             onFinish: () => setUploading(false),
         });
@@ -62,13 +68,13 @@ export default function Cv({ user, resumes = [] }) {
     };
 
     const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('en-US', { 
-            year: 'numeric', month: 'short', day: 'numeric' 
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric', month: 'short', day: 'numeric'
         });
     };
 
     return (
-        <AuthenticatedLayout 
+        <AuthenticatedLayout
             header={
                 <h2 className="text-2xl font-bold text-gray-900">
                     CV Manager
@@ -76,7 +82,7 @@ export default function Cv({ user, resumes = [] }) {
             }
         >
             <Head title="CV Manager" />
-            
+
             <div className="cv-page">
                 <div className="cv-container">
                     {/* Header */}
@@ -99,20 +105,20 @@ export default function Cv({ user, resumes = [] }) {
                             <span className="text-lg font-semibold text-gray-900 block mb-1">Upload New CV</span>
                             <span className="text-sm text-gray-500">Supports PDF, DOCX • Maximum 2MB</span>
                         </label>
-                        
+
                         <div className="upload-input-wrapper">
-                            <input 
+                            <input
                                 ref={fileInputRef}
-                                type="file" 
+                                type="file"
                                 className="upload-input"
                                 accept=".pdf,.doc,.docx"
                                 onChange={handleFileSelect}
-                                disabled={uploading || processing}
+                                disabled={uploading}
                             />
                         </div>
-                        <button 
+                        <button
                             className="upload-button"
-                            disabled={uploading || processing}
+                            disabled={uploading}
                         >
                             {uploading ? (
                                 <>
@@ -129,19 +135,12 @@ export default function Cv({ user, resumes = [] }) {
                     {message && (
                         <div className={message.type === 'success' ? 'success-message' : 'error-message'}>
                             {message.text}
-                            <button 
-                                className="ml-auto text-sm hover:text-current" 
+                            <button
+                                className="ml-auto text-sm hover:text-current"
                                 onClick={() => setMessage(null)}
                             >
                                 ×
                             </button>
-                        </div>
-                    )}
-                    {Object.keys(errors).length > 0 && (
-                        <div className="error-message">
-                            {Object.values(errors).map((error, i) => (
-                                <div key={i}>{error}</div>
-                            ))}
                         </div>
                     )}
 
@@ -179,24 +178,24 @@ export default function Cv({ user, resumes = [] }) {
                                             </div>
                                         </div>
                                         <div className="resume-actions">
-                                            <a 
-                                                href={`/storage/${resume.file_path}`} 
+                                            <a
+                                                href={`/storage/${resume.file_path}`}
                                                 className="btn-download"
                                                 download
                                             >
                                                 Download
                                             </a>
-                                            <button 
+                                            <button
                                                 className="btn-replace"
                                                 onClick={() => fileInputRef.current?.click()}
                                                 disabled={uploading}
                                             >
                                                 Replace
                                             </button>
-                                            <button 
-                                                className={`btn-delete ${processing ? 'loading' : ''}`}
+                                            <button
+                                                className={`btn-delete ${uploading ? 'loading' : ''}`}
                                                 onClick={() => handleDelete(resume.id)}
-                                                disabled={processing}
+                                                disabled={uploading}
                                             >
                                                 Delete
                                             </button>
