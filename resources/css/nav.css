@@ -44,16 +44,8 @@
 }
 
 .navbar.scrolled {
-<<<<<<< HEAD
-    padding: 15px 90px;
-    background: rgba(255, 255, 255, 0.95);
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
-=======
   padding: 12px 40px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.1);
->>>>>>> bff056283396ac65c2937a6df5ab4258a17e181a
 }
 
 .logo {

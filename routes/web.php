@@ -1,24 +1,28 @@
 <?php
 
-use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
+use App\Models\Job;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
+     $jobs = Job::latest()->take(6)->get();
+     
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
+        'jobs' => $jobs,
     ]);
 })->name('home');
 
 // Navigation Pages
-Route::get('/find-jobs', [PageController::class, 'findJobs'])->name('pages.findJobs');
+Route::get('/jobs', [PageController::class, 'findJobs'])->name('pages.findJobs');
 Route::get('/find-talents', [PageController::class, 'findTalents'])->name('pages.findTalents');
 Route::get('/how-it-works', [PageController::class, 'howItWorks'])->name('pages.howItWorks');
 Route::get('/about', [PageController::class, 'about'])->name('pages.about');
