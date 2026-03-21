@@ -31,6 +31,6 @@ $app->singleton(
 */
 
 
-$app->register(\App\Providers\AppServiceProvider::class);
+// Removed duplicate registration: $app->register(\App\Providers\AppServiceProvider::class);
 $app->boot();
 return $app;
