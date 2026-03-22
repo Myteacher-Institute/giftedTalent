@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, router } from '@inertiajs/react';
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -8,32 +8,59 @@ import TextInput from '@/Components/TextInput';
 import '../../css/userProfile.css';
 
 export default function EditProfile({ user }) {
-    const { data, setData, patch, processing, errors, clearErrors } = useForm({
-        first_name: user.name ? user.name.split(' ')[0] || '' : '',
-        last_name: user.name ? user.name.split(' ').slice(1).join(' ') || '' : '',
-        email: user.email || '',
-        phone: user.profile?.phone || '',
-        position: user.profile?.position || '',
-        education: user.profile?.education || '',
-        bio: user.profile?.bio || '',
-        city: user.profile?.city || '',
-        address: user.profile?.address || '',
-        country: user.profile?.country || '',
-        linkedin_url: user.profile?.linkedin_url || '',
-        github_url: user.profile?.github_url || '',
-        portfolio_url: user.profile?.portfolio_url || '',
+    const { data, setData, patch, processing, errors, clearErrors, reset } = useForm({
+        first_name: '',
+        last_name: '',
+        email: '',
+        phone: '',
+        position: '',
+        education: '',
+        bio: '',
+        city: '',
+        address: '',
+        country: '',
+        linkedin_url: '',
+        github_url: '',
+        portfolio_url: '',
     });
+
+    // Populate form with current values on mount
+    useEffect(() => {
+        if (user) {
+            setData({
+                first_name: user.name ? user.name.split(' ')[0] || '' : '',
+                last_name: user.name ? user.name.split(' ').slice(1).join(' ') || '' : '',
+                email: user.email || '',
+                phone: user.profile?.phone || '',
+                position: user.profile?.position || '',
+                education: user.profile?.education || '',
+                bio: user.profile?.bio || '',
+                city: user.profile?.city || '',
+                address: user.profile?.address || '',
+                country: user.profile?.country || '',
+                linkedin_url: user.profile?.linkedin_url || '',
+                github_url: user.profile?.github_url || '',
+                portfolio_url: user.profile?.portfolio_url || '',
+            });
+        }
+    }, [user, setData]);
 
     const [uploading, setUploading] = useState(false);
 
     const submit = (e) => {
         e.preventDefault();
         clearErrors();
-        patch(route('profile.updateExtended'), {
+        patch(route('profile.updateExtended'), data, {
             preserveState: true,
             preserveScroll: true,
             onSuccess: () => {
-                router.reload({ only: ['user'] });
+                alertify.success('Profile updated successfully!');
+                reset();
+                router.visit(route('dashboard'));
+            },
+            onError: (errors) => {
+                console.error('Validation errors:', errors);
+                alertify.error('Please fix the errors below.');
             }
         });
     };
@@ -137,7 +164,10 @@ export default function EditProfile({ user }) {
                         </div>
 
                         <form onSubmit={submit}>
-                            <div className="section-title">Personal Information</div>
+<div className="section-title">
+    <i className="fas fa-user-circle text-teal-500 mr-2"></i>
+    Personal Information
+</div>
 
                             <div className="form-row">
                                 <div className="form-group">
@@ -190,7 +220,10 @@ export default function EditProfile({ user }) {
                                 </div>
                             </div>
 
-                            <div className="section-title">Professional Details</div>
+<div className="section-title">
+    <i className="fas fa-briefcase text-blue-500 mr-2"></i>
+    Professional Details
+</div>
 
                             <div className="form-row">
                                 <div className="form-group">
@@ -233,7 +266,10 @@ export default function EditProfile({ user }) {
                                 </div>
                             </div>
 
-                            <div className="section-title">Location</div>
+<div className="section-title">
+    <i className="fas fa-map-marker-alt text-orange-500 mr-2"></i>
+    Location
+</div>
 
                             <div className="form-row">
                                 <div className="form-group">

@@ -48,6 +48,7 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Extended Profile Routes
+    Route::get('/profile/extended', [ProfileController::class, 'editExtendedProfile'])->name('profile.editExtended');
     Route::patch('/profile/extended', [ProfileController::class, 'updateExtendedProfile'])->name('profile.updateExtended');
     
     // Avatar Upload Route

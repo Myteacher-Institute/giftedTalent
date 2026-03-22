@@ -14,22 +14,14 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use Illuminate\Support\Arr as array_except;
 
 class ProfileController extends Controller
 {
-    public function index(Request $request)
-    {
-        $user = $request->user();
-
-        return Inertia::render('Profile', [
-            'user' => $user,
-        ]);
-    }
-
     /**
      * Display the user's profile.
      */
-    public function show(Request $request)
+    public function show(Request $request): Response
     {
         $user = $request->user()->loadMissing([
             'profile',
@@ -39,17 +31,17 @@ class ProfileController extends Controller
         ]);
 
         if (!$user->profile) {
-            $profile = \App\Models\Profile::firstOrCreate(['user_id' => $user->id]);
+            $profile = Profile::firstOrCreate(['user_id' => $user->id]);
             $user->setRelation('profile', $profile);
         }
 
         return Inertia::render('userProfile', [
             'user' => $user,
-            'availableSkills' => \App\Models\Skill::where('is_active', true)->get(),
+            'availableSkills' => Skill::where('is_active', true)->get(),
         ]);
     }
 
-    public function edit(Request $request): \Inertia\Response
+    public function edit(Request $request): Response
     {
         $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'resumes']);
 
@@ -62,25 +54,78 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update the user's profile information.
+     * Display extended profile edit form.
+     */
+    public function editExtendedProfile(Request $request): Response
+    {
+        $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'resumes']);
+
+        return Inertia::render('userProfile', [
+            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+            'status' => session('status'),
+            'user' => $user,
+            'availableSkills' => Skill::where('is_active', true)->get(),
+        ]);
+    }
+
+    /**
+     * Update the user's basic profile information.
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $user->fill($request->validated());
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
+        $user->save();
 
         return Redirect::route('profile.edit');
     }
 
     /**
+     * Update extended profile information.
+     */
+    public function updateExtendedProfile(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:100',
+            'last_name' => 'required|string|max:100',
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+            ],
+            'phone' => 'nullable|string|max:20',
+            'bio' => 'nullable|string|max:1000',
+            'address' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:100',
+            'country' => 'nullable|string|max:100',
+            'linkedin_url' => 'nullable|url|max:255',
+            'github_url' => 'nullable|url|max:255',
+            'portfolio_url' => 'nullable|url|max:255',
+        ]);
+
+        $user = $request->user();
+        $user->forceFill([
+            'name' => trim($validated['first_name'] . ' ' . $validated['last_name']),
+            'email' => $validated['email'],
+        ])->save();
+
+        Profile::updateOrCreate(
+            ['user_id' => $user->id],
+            array_except($validated, ['first_name', 'last_name', 'email'])
+        );
+
+        return Redirect::route('profile.show')->with('success', 'Profile updated successfully!');
+    }
+
+    /**
      * Upload user avatar image.
      */
-    public function uploadAvatar(Request $request): \Illuminate\Http\RedirectResponse
+    public function uploadAvatar(Request $request): RedirectResponse
     {
         $request->validate([
             'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -101,62 +146,23 @@ class ProfileController extends Controller
         
         $profile->update(['avatar' => $filename]);
 
-        return redirect()->route('profile.show')->with('success', 'Avatar uploaded successfully');
+        return Redirect::route('profile.edit')->with('success', 'Avatar uploaded successfully.');
     }
 
     /**
-     * Update the user's extended profile.
+     * Remove user avatar.
      */
-    public function updateExtendedProfile(Request $request): RedirectResponse
+    public function removeAvatar(Request $request): RedirectResponse
     {
         $user = $request->user();
+        $profile = $user->profile;
 
-        $user->update([
-            'name' => trim($request->first_name . ' ' . $request->last_name),
-            'email' => $request->email,
-        ]);
+        if ($profile && $profile->avatar && Storage::disk('public')->exists($profile->avatar)) {
+            Storage::disk('public')->delete($profile->avatar);
+            $profile->update(['avatar' => null]);
+        }
 
-        $validated = $request->validate([
-            'bio' => 'nullable|string|max:1000',
-            'phone' => 'nullable|string|max:20',
-            'position' => 'nullable|string|max:255',
-            'education' => 'nullable|string|max:255',
-            'address' => 'nullable|string|max:255',
-            'city' => 'nullable|string|max:100',
-            'country' => 'nullable|string|max:100',
-            'avatar' => 'nullable|string|max:255',
-            'cover_image' => 'nullable|string|max:255',
-            'availability_status' => 'nullable|in:available,not_available,open_to_work',
-            'availability_type' => 'nullable|in:full_time,part_time,contract,freelance,internship',
-            'expected_salary' => 'nullable|numeric|min:0',
-            'currency' => 'nullable|string|size:3',
-            'years_experience' => 'nullable|integer|min:0',
-            'linkedin_url' => 'nullable|url|max:255',
-            'github_url' => 'nullable|url|max:255',
-            'portfolio_url' => 'nullable|url|max:255',
-        ]);
-
-
-        $profile = Profile::updateOrCreate(
-            ['user_id' => $user->id],
-            $validated
-        );
-
-        // Simple profile completion calculation (no load needed for count queries)
-        $totalFields = 8;
-        $filledFields = 0;
-        if (!empty($profile->bio)) $filledFields++;
-        if (!empty($profile->phone)) $filledFields++;
-        if (!empty($profile->address)) $filledFields++;
-        if ($request->user()->skills()->count() > 0) $filledFields++;
-        if ($request->user()->experiences()->count() > 0) $filledFields++;
-        if (!empty($profile->linkedin_url)) $filledFields++;
-        if (!empty($profile->github_url)) $filledFields++;
-        
-        $completion = round(($filledFields / $totalFields) * 100);
-        return Redirect::route('dashboard');
-
-
+        return Redirect::route('profile.show')->with('success', 'Avatar removed successfully.');
     }
 
     /**
@@ -248,25 +254,6 @@ class ProfileController extends Controller
         return Redirect::route('profile.edit')->with('success', 'Experience deleted successfully.');
     }
 
-
-
-    /**
-     * Remove user avatar.
-     */
-    public function removeAvatar(Request $request): RedirectResponse
-    {
-        $user = $request->user();
-        $profile = $user->profile;
-
-        if ($profile && $profile->avatar && Storage::disk('public')->exists($profile->avatar)) {
-            Storage::disk('public')->delete($profile->avatar);
-        }
-
-        $profile->update(['avatar' => null]);
-
-        return redirect()->route('profile.show')->with('success', 'Avatar removed successfully');
-    }
-
     /**
      * Delete the user's account.
      */
@@ -279,7 +266,6 @@ class ProfileController extends Controller
         $user = $request->user();
 
         Auth::logout();
-
         $user->delete();
 
         $request->session()->invalidate();
@@ -303,7 +289,7 @@ class ProfileController extends Controller
     /**
      * Store CV upload
      */
-    public function storeResume(Request $request)
+    public function storeResume(Request $request): RedirectResponse
     {
         $request->validate([
             'cv' => 'required|file|mimes:pdf,doc,docx|max:2048',
@@ -324,7 +310,7 @@ class ProfileController extends Controller
             $user->resumes()->update(['is_primary' => false]);
         }
         
-$resume = $user->resumes()->create([
+        $user->resumes()->create([
             'title' => $title,
             'file_path' => $path,
             'file_name' => $filename,
@@ -339,7 +325,7 @@ $resume = $user->resumes()->create([
     /**
      * Delete CV
      */
-    public function destroyResume(Request $request, $id)
+    public function destroyResume(Request $request, $id): RedirectResponse
     {
         $user = $request->user();
         $resume = $user->resumes()->findOrFail($id);

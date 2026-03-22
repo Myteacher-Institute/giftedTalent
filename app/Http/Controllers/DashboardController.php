@@ -90,11 +90,17 @@ $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'appl
 
     private function calculateProfileCompletion(Profile $profile): array
     {
+        $user = $profile->user;
+        
         $status = [
+            'email_verified' => $user->email_verified_at !== null,
+            'bio' => !empty($profile->bio) && strlen(trim($profile->bio)) > 20,
+            'skills' => $user->skills()->count() >= 3,
+            'experience' => $user->experiences()->count() > 0,
+'education' => false, // Add Education model/relation if needed
             'portfolio' => !empty($profile->portfolio_url),
-            'experience' => $profile->user->experiences()->count() > 0,
-            'skills' => $profile->user->skills()->count() > 0,
-            'email_verified' => $profile->user->email_verified_at !== null,
+            'position' => !empty($profile->position),
+            'cv_uploaded' => $user->resumes()->count() > 0,
         ];
 
         $total = count($status);

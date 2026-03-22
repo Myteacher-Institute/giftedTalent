@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import '../../css/Dashboard.css';
+import Notification from '@/Components/Notification';
 
 window.alertify = window.alertify || alertify;
 
@@ -81,7 +82,7 @@ export default function Dashboard({ auth, profileComplete = 75, profileStatus = 
 
                 <div className="nav-icons">
                     <i className="fa-regular fa-comment"></i>
-                    <i className="fa-regular fa-bell"></i>
+                    <Notification />
                     <img src={auth.user.profile?.avatar_url || `https://i.pravatar.cc/40?img=${auth.user.id}`} alt="" />
                 </div>
             </header>
@@ -92,7 +93,8 @@ export default function Dashboard({ auth, profileComplete = 75, profileStatus = 
                         <img src={auth.user.profile?.avatar_url || `https://i.pravatar.cc/40?img=${auth.user.id}`} alt="" />
                         <h3>{auth.user.name}</h3>
                         <p>{auth.user.profile?.position || 'Add position'}</p>
-                        <button className="profile-button" onClick={() => window.location.href = '/user-profile'}>Edit Profile</button>
+                        <Link href={route('profile.editExtended')} className="profile-button">Edit Profile</Link>
+
                     </div>
 
                     <ul className="menu">
@@ -134,22 +136,28 @@ export default function Dashboard({ auth, profileComplete = 75, profileStatus = 
                     <div className="progress-card">
                         <h3>Complete Your Profile</h3>
 
-                        <div className="progress-circle">
-                            <h2>{profileComplete}%</h2>
+                        <div className="progress-circle" style={{'--progress': `${profileComplete / 100}`}}>
+                            <div className="flex flex-col items-center">
+                                <h2 className="text-2xl font-bold text-indigo-600 mb-1">{profileComplete}%</h2>
+                                <span className="text-xs text-gray-500 font-medium uppercase tracking-wide">Complete</span>
+                            </div>
                         </div>
                         <ul>
-                            <li className={profileStatus.status?.portfolio ? 'done' : ''} onClick={() => window.location.href = '/profile'}>
+                            <li className={profileStatus.status?.portfolio ? 'done' : ''} onClick={() => router.visit(route('profile.editExtended'))}>
                                 {profileStatus.status?.portfolio ? '✓ Portfolio Added' : '➤ Add Portfolio Link'}
                             </li>
-                            <li className={profileStatus.status?.experience ? 'done' : ''} onClick={() => window.location.href = '/profile'}>
+
+                            <li className={profileStatus.status?.experience ? 'done' : ''} onClick={() => router.visit(route('profile.editExtended'))}>
                                 {profileStatus.status?.experience ? '✓ Experience Added' : '➤ Update Experience'}
                             </li>
+
                             <li className={profileStatus.status?.email_verified ? 'done' : ''}>
                                 {profileStatus.status?.email_verified ? '✓ Email Verified' : '➤ Verify Email'}
                             </li>
-                            <li className={profileStatus.status?.skills ? 'done' : ''} onClick={() => window.location.href = '/profile'}>
+                            <li className={profileStatus.status?.skills ? 'done' : ''} onClick={() => router.visit(route('profile.editExtended'))}>
                                 {profileStatus.status?.skills ? '✓ Skills Added' : '➤ Add Skills'}
                             </li>
+
                         </ul>
                     </div>
 
