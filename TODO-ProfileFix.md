@@ -1,0 +1,1 @@
+- [x] Step 2: Edit ProfileController.php - fix imports, indentation, FQN, add primary CV logic in storeResume (demote others).\n

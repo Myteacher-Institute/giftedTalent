@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import '../../css/Dashboard.css';
+import Notification from '@/Components/Notification';
+
+window.alertify = window.alertify || alertify;
 
 // Job Card Component
 function JobCard({ job }) {
@@ -45,14 +48,17 @@ function JobCard({ job }) {
     );
 }
 
-export default function Dashboard({ auth }) {
+export default function Dashboard({ auth, profileComplete = 75, profileStatus = {}, stats = { applied: 8, review: 3, interview: 1, rejected: 2 }, jobs = [] }) {
     const [activeMenu, setActiveMenu] = useState(null);
 
-    const jobs = [
-        { id: 1, company: 'BoyAlone Studio', title: 'Software Engineer', tags: 'Senior Software Engineer. Full Stack . Js', time: '6 hours ago', image: 'https://i.pravatar.cc/40' },
-        { id: 2, company: 'Tech Innovators', title: 'Frontend Developer', tags: 'React. TypeScript. Remote', time: '2 hours ago', image: 'https://i.pravatar.cc/40' },
-        { id: 3, company: 'Digital Solutions', title: 'Full Stack Developer', tags: 'Node.js. MongoDB. Full Time', time: '1 day ago', image: 'https://i.pravatar.cc/40' },
-    ];
+    useEffect(() => {
+        // Profile complete celebration (one-time)
+        const hasShown = localStorage.getItem('profileCompleteShown');
+        if (profileComplete === 100 && !hasShown) {
+            alertify.success('Congratulations! Your profile is 100% complete! 🎉', 3);
+            localStorage.setItem('profileCompleteShown', 'true');
+        }
+    }, [profileComplete]);
 
     return (
         <AuthenticatedLayout user={auth.user}>
@@ -76,18 +82,19 @@ export default function Dashboard({ auth }) {
 
                 <div className="nav-icons">
                     <i className="fa-regular fa-comment"></i>
-                    <i className="fa-regular fa-bell"></i>
-                    <img src="https://i.pravatar.cc/40" alt="" />
+                    <Notification />
+                    <img src={auth.user.profile?.avatar_url || `https://i.pravatar.cc/40?img=${auth.user.id}`} alt="" />
                 </div>
             </header>
 
             <div className="container">
                 <aside className="sidebar">
                     <div className="profile">
-                        <img src="https://i.pravatar.cc/40" alt="" />
-                        <h3>Kelvi Nnaji</h3>
-                        <p>Software Engineer</p>
-                        <button><Link href="/user-profile" className="profile-button">Edit Profile</Link></button>
+                        <img src={auth.user.profile?.avatar_url || `https://i.pravatar.cc/40?img=${auth.user.id}`} alt="" />
+                        <h3>{auth.user.name}</h3>
+                        <p>{auth.user.profile?.position || 'Add position'}</p>
+                        <Link href={route('profile.editExtended')} className="profile-button">Edit Profile</Link>
+
                     </div>
 
                     <ul className="menu">
@@ -103,12 +110,13 @@ export default function Dashboard({ auth }) {
                 </aside>
 
                 <main className="main">
-                    <h1>Welcome back, Kelvin</h1>
+                    <h1>Welcome back, {auth.user.name.split(' ')[0]}</h1>
 
                     <div className="status-bar">
-                        <span className="success">CV Uploaded</span>
-                        <span>Skills: Front End Dev, Software Eng.</span>
-                        <button><Link href="/user-profile" className="status-button">Edit Profile</Link></button>
+                        <span className="success">{auth.user.profile?.cv_uploaded ? 'CV Uploaded' : 'Upload CV'}</span>
+                        <span>Skills: {auth.user.skills?.slice(0,2).map(s => s.name).join(', ') || 'No skills added'}</span>
+                        <span>Bio: {auth.user.profile?.bio ? auth.user.profile.bio.substring(0,50) + '...' : 'Add bio'}</span>
+                        <button><Link href="/cv" className="status-button">Upload Your CV</Link></button>
                     </div>
 
                     <div className="search-bar">
@@ -130,13 +138,28 @@ export default function Dashboard({ auth }) {
                     <div className="progress-card">
                         <h3>Complete Your Profile</h3>
 
-                        <div className="progress-circle">
-                            75%
+                        <div className="progress-circle" style={{'--progress': `${profileComplete / 100}`}}>
+                            <div className="flex flex-col items-center">
+                                <h2 className="text-2xl font-bold text-indigo-600 mb-1">{profileComplete}%</h2>
+                                <span className="text-xs text-gray-500 font-medium uppercase tracking-wide">Complete</span>
+                            </div>
                         </div>
                         <ul>
-                            <li>Add Portfolio Link</li>
-                            <li>Upddate Experience</li>
-                            <li className="done">Verify Email</li>
+                            <li className={profileStatus.status?.portfolio ? 'done' : ''} onClick={() => router.visit(route('profile.editExtended'))}>
+                                {profileStatus.status?.portfolio ? '✓ Portfolio Added' : '➤ Add Portfolio Link'}
+                            </li>
+
+                            <li className={profileStatus.status?.experience ? 'done' : ''} onClick={() => router.visit(route('profile.editExtended'))}>
+                                {profileStatus.status?.experience ? '✓ Experience Added' : '➤ Update Experience'}
+                            </li>
+
+                            <li className={profileStatus.status?.email_verified ? 'done' : ''}>
+                                {profileStatus.status?.email_verified ? '✓ Email Verified' : '➤ Verify Email'}
+                            </li>
+                            <li className={profileStatus.status?.skills ? 'done' : ''} onClick={() => router.visit(route('profile.editExtended'))}>
+                                {profileStatus.status?.skills ? '✓ Skills Added' : '➤ Add Skills'}
+                            </li>
+
                         </ul>
                     </div>
 
@@ -145,22 +168,22 @@ export default function Dashboard({ auth }) {
 
                         <div className="grid">
                             <div className="box blue">
-                                <h2>8</h2>
+                                <h2>{stats.applied}</h2>
                                 <p>Applied</p>
                             </div>
 
                             <div className="box orange">
-                                <h2>3</h2>
+                                <h2>{stats.review}</h2>
                                 <p>Under Review</p>
                             </div>
 
                             <div className="box green">
-                                <h2>1</h2>
+                                <h2>{stats.interview}</h2>
                                 <p>Interview</p>
                             </div>
 
                             <div className="box red">
-                                <h2>2</h2>
+                                <h2>{stats.rejected}</h2>
                                 <p>Rejected</p>
                             </div>
                         </div>

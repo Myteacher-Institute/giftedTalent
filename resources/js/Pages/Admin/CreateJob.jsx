@@ -9,30 +9,104 @@ export default function CreateJob() {
         company_location: '',
         job_title: '',
         job_type: 'Full-Time',
-        salary_range: '',
+        salary_currency: 'NGN',
+        salary_amount: '',
+        salary_period: 'month', // Add period option
         description: ''
     });
 
     const [processing, setProcessing] = useState(false);
 
+    // Currency options
+    const currencies = [
+        { code: 'NGN', symbol: '₦', name: 'Nigerian Naira' },
+        { code: 'USD', symbol: '$', name: 'US Dollar' },
+        { code: 'EUR', symbol: '€', name: 'Euro' },
+        { code: 'GBP', symbol: '£', name: 'British Pound' },
+        { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
+        { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' }
+    ];
+
+    // Period options
+    const periods = [
+        { value: 'hour', label: 'Per Hour' },
+        { value: 'day', label: 'Per Day' },
+        { value: 'week', label: 'Per Week' },
+        { value: 'month', label: 'Per Month' },
+        { value: 'year', label: 'Per Annum' }
+    ];
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleSalaryAmountChange = (e) => {
+        const amount = e.target.value;
+        setFormData(prev => ({
+            ...prev,
+            salary_amount: amount
+        }));
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        if (!formData.salary_amount) {
+            alert('Please enter a salary amount');
+            return;
+        }
+
+        if (parseFloat(formData.salary_amount) <= 0) {
+            alert('Please enter a valid salary amount greater than 0');
+            return;
+        }
+
+        // Optional: Check if it's a valid number
+        if (isNaN(parseFloat(formData.salary_amount))) {
+            alert('Please enter a valid number');
+            return;
+        }
+
         setProcessing(true);
 
-        router.post('/Admin/jobs', formData, {
+        // Format salary range with 2 decimal places for currency
+        const formattedAmount = parseFloat(formData.salary_amount).toLocaleString('en-US', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+        });
+
+        // Format salary range
+        const salaryRange = `${formData.salary_currency} ${formData.salary_amount} / ${formData.salary_period}`;
+
+        const submitData = {
+            company_name: formData.company_name,
+            company_location: formData.company_location,
+            job_title: formData.job_title,
+            job_type: formData.job_type,
+            salary_range: salaryRange,
+            description: formData.description
+        };
+
+        router.post('/Admin/jobs', submitData, {
             onSuccess: () => {
                 setProcessing(false);
-                // Optionally reset form
                 setFormData({
                     company_name: '',
                     company_location: '',
                     job_title: '',
                     job_type: 'Full-Time',
-                    salary_range: '',
+                    salary_currency: 'NGN',
+                    salary_amount: '',
+                    salary_period: 'month',
                     description: ''
                 });
+                alert('Job created successfully!');
             },
-            onError: () => {
+            onError: (errors) => {
                 setProcessing(false);
                 alert('There was an error creating the job. Please try again.');
             }
@@ -52,10 +126,12 @@ export default function CreateJob() {
                         <label>Company Name</label>
                         <input
                             type="text"
+                            name="company_name"
                             value={formData.company_name}
-                            onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
+                            onChange={handleChange}
                             required
                             disabled={processing}
+                            placeholder="e.g., TechCorp Solutions"
                         />
                     </div>
 
@@ -63,10 +139,12 @@ export default function CreateJob() {
                         <label>Company Location</label>
                         <input
                             type="text"
+                            name="company_location"
                             value={formData.company_location}
-                            onChange={(e) => setFormData({ ...formData, company_location: e.target.value })}
+                            onChange={handleChange}
                             required
                             disabled={processing}
+                            placeholder="e.g., Lagos, Nigeria"
                         />
                     </div>
 
@@ -74,51 +152,113 @@ export default function CreateJob() {
                         <label>Job Title</label>
                         <input
                             type="text"
+                            name="job_title"
                             value={formData.job_title}
-                            onChange={(e) => setFormData({ ...formData, job_title: e.target.value })}
+                            onChange={handleChange}
                             required
                             disabled={processing}
+                            placeholder="e.g., Senior Frontend Developer"
                         />
                     </div>
 
                     <div className="form-group">
                         <label>Job Type</label>
-                        <select
-                            value={formData.job_type}
-                            onChange={(e) => setFormData({ ...formData, job_type: e.target.value })}
-                            disabled={processing}
-                        >
-                            <option>Full-Time</option>
-                            <option>Part-Time</option>
-                            <option>Contract</option>
-                            <option>Remote</option>
-                        </select>
-
-                        <svg className='form-group-svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
-                            <path d="M300.3 440.8C312.9 451 331.4 450.3 343.1 438.6L471.1 310.6C480.3 301.4 483 287.7 478 275.7C473 263.7 461.4 256 448.5 256L192.5 256C179.6 256 167.9 263.8 162.9 275.8C157.9 287.8 160.7 301.5 169.9 310.6L297.9 438.6L300.3 440.8z" />
-                        </svg>
+                        <div className="select-wrapper">
+                            <select
+                                name="job_type"
+                                value={formData.job_type}
+                                onChange={handleChange}
+                                disabled={processing}
+                            >
+                                <option value="Full-Time">Full-Time</option>
+                                <option value="Part-Time">Part-Time</option>
+                                <option value="Contract">Contract</option>
+                                <option value="Remote">Remote</option>
+                                <option value="Internship">Internship</option>
+                            </select>
+                            <svg className='form-group-svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+                                <path d="M300.3 440.8C312.9 451 331.4 450.3 343.1 438.6L471.1 310.6C480.3 301.4 483 287.7 478 275.7C473 263.7 461.4 256 448.5 256L192.5 256C179.6 256 167.9 263.8 162.9 275.8C157.9 287.8 160.7 301.5 169.9 310.6L297.9 438.6L300.3 440.8z" />
+                            </svg>
+                        </div>
                     </div>
 
+                    {/* Salary Section */}
                     <div className="form-group">
-                        <label>Salary Range</label>
-                        <input
-                            type="text"
-                            value={formData.salary_range}
-                            onChange={(e) => setFormData({ ...formData, salary_range: e.target.value })}
-                            placeholder="e.g. N180,000/Month"
-                            required
-                            disabled={processing}
-                        />
+                        <label>Salary *</label>
+                        <div className="salary-input-group">
+                            {/* Currency Selector */}
+                            <div className="currency-select">
+                                <div className="select-wrapper">
+                                    <select
+                                        name="salary_currency"
+                                        value={formData.salary_currency}
+                                        onChange={handleChange}
+                                        disabled={processing}
+                                    >
+                                        {currencies.map(currency => (
+                                            <option key={currency.code} value={currency.code}>
+                                                {currency.symbol} {currency.code}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <svg className='form-group-svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+                                        <path d="M300.3 440.8C312.9 451 331.4 450.3 343.1 438.6L471.1 310.6C480.3 301.4 483 287.7 478 275.7C473 263.7 461.4 256 448.5 256L192.5 256C179.6 256 167.9 263.8 162.9 275.8C157.9 287.8 160.7 301.5 169.9 310.6L297.9 438.6L300.3 440.8z" />
+                                    </svg>
+                                </div>
+                            </div>
+
+                            {/* Amount Input */}
+                            <div className="amount-input">
+                                <input
+                                    type="number"
+                                    name="salary_amount"
+                                    value={formData.salary_amount}
+                                    onChange={handleSalaryAmountChange}
+                                    required
+                                    disabled={processing}
+                                    placeholder="Amount"
+                                    min="1"
+                                />
+                            </div>
+
+                            {/* Period Selector */}
+                            <div className="period-select">
+                                <div className="select-wrapper">
+                                    <select
+                                        name="salary_period"
+                                        value={formData.salary_period}
+                                        onChange={handleChange}
+                                        disabled={processing}
+                                    >
+                                        {periods.map(period => (
+                                            <option key={period.value} value={period.value}>
+                                                {period.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <svg className='form-group-svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+                                        <path d="M300.3 440.8C312.9 451 331.4 450.3 343.1 438.6L471.1 310.6C480.3 301.4 483 287.7 478 275.7C473 263.7 461.4 256 448.5 256L192.5 256C179.6 256 167.9 263.8 162.9 275.8C157.9 287.8 160.7 301.5 169.9 310.6L297.9 438.6L300.3 440.8z" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        <small className="form-hint">
+                            Example: {formData.salary_currency === 'NGN' ? '₦' : currencies.find(c => c.code === formData.salary_currency)?.symbol}
+                            {formData.salary_amount || '50,000'}
+                            {periods.find(p => p.value === formData.salary_period)?.label}
+                        </small>
                     </div>
 
                     <div className="form-group">
                         <label>Description</label>
                         <textarea
+                            name="description"
                             rows="5"
                             value={formData.description}
-                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                            onChange={handleChange}
                             required
                             disabled={processing}
+                            placeholder="Describe the role, responsibilities, and what the job entails..."
                         />
                     </div>
 

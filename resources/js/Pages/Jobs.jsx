@@ -79,17 +79,22 @@ export default function Jobs({ jobs = [] }) {
                                 <h3>{job.job_type}</h3>
                                 <p className='job-description'>{job.description}</p>
                                 <div className="job-footer">
-                                    <span>{new Date(job.created_at).toLocaleDateString('en-US', { 
-                                        month: 'short', 
-                                        day: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                    })} ago</span>
-                                    <button>Apply now</button>
+                                    <div className="job-footer-left">
+                                        <span className="job-salary">{job.salary_range || job.salary}</span>
+                                    </div>
+                                    <div className="job-footer-right">
+                                        <span className="job-date">{new Date(job.created_at).toLocaleDateString('en-US', {
+                                            month: 'short',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })}</span>
+                                        <button className="apply-btn">Apply now</button>
+                                    </div>
                                 </div>
                             </div>
                         ))}
-                        
+
                         {jobs.length === 0 && (
                             <div className="no-jobs-message">
                                 <p>No jobs available at the moment. Check back later!</p>

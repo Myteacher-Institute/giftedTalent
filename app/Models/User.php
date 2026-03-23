@@ -79,13 +79,7 @@ class User extends Authenticatable
         return $this->hasMany(Experience::class);
     }
 
-    /**
-     * Get the user's education history.
-     */
-    public function educations(): HasMany
-    {
-        return $this->hasMany(Education::class);
-    }
+
 
     /**
      * Get the user's resumes.
@@ -96,18 +90,18 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the jobs posted by the user.
-     */
-    public function jobs(): HasMany
-    {
-        return $this->hasMany(Job::class);
-    }
-
-    /**
-     * Get the job applications submitted by the user.
+     * Get the user's applications.
      */
     public function applications(): HasMany
     {
-        return $this->hasMany(JobApplication::class);
+        return $this->hasMany(Application::class);
+    }
+
+    /**
+     * Get the user's posted jobs.
+     */
+    public function jobs(): HasMany
+    {
+        return $this->hasMany(Job::class, 'job_postings');
     }
 }

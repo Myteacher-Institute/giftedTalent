@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
@@ -59,7 +58,7 @@ class AdminController extends Controller
                     break;
                 case 'month':
                     $query->whereMonth('created_at', now()->month)
-                          ->whereYear('created_at', now()->year);
+                        ->whereYear('created_at', now()->year);
                     break;
             }
         }
@@ -74,32 +73,32 @@ class AdminController extends Controller
             ->get()
             ->map(function ($job) {
                 return [
-                    'id' => $job->id,
-                    'company_name' => $job->company_name,
-                    'location' => $job->company_location,
-                    'job_type' => $job->job_type,
-                    'salary' => $job->salary_range,
-                    'description' => $job->description,
-                    'applicants' => $job->applicants_count,
-                    'posted_at' => $job->posted_at ? $job->posted_at->diffForHumans() : $job->created_at->diffForHumans(),
-                    'created_at' => $job->created_at,
-                    'status' => $job->status ?? 'active',
+                    'id'               => $job->id,
+                    'company_name'     => $job->company_name,
+                    'location'         => $job->company_location,
+                    'job_type'         => $job->job_type,
+                    'salary'           => $job->salary_range,
+                    'description'      => $job->description,
+                    'applicants'       => $job->applicants_count,
+                    'posted_at'        => $job->posted_at ? $job->posted_at->diffForHumans() : $job->created_at->diffForHumans(),
+                    'created_at'       => $job->created_at,
+                    'status'           => $job->status ?? 'active',
                     'experience_level' => $job->experience_level ?? 'mid',
                 ];
             });
 
         // Job posts statistics (unfiltered - for cards)
         $jobStats = [
-            'active' => Job::where('status', 'active')->count(),
-            'passed' => Job::where('status', 'passed')->count(),
+            'active'       => Job::where('status', 'active')->count(),
+            'passed'       => Job::where('status', 'passed')->count(),
             'under_review' => Job::where('status', 'under_review')->count(),
-            'hired' => Job::where('status', 'hired')->count(),
+            'hired'        => Job::where('status', 'hired')->count(),
         ];
 
         return Inertia::render('Admin/Dashboard', [
-            'jobStats' => $jobStats,
+            'jobStats'   => $jobStats,
             'recentJobs' => $recentJobs,
-            'filters' => $request->all(),
+            'filters'    => $request->all(),
         ]);
     }
 
@@ -130,19 +129,19 @@ class AdminController extends Controller
         $analytics = [
             'user_growth' => [
                 'this_month' => User::whereMonth('created_at', now()->month)
-                                    ->whereYear('created_at', now()->year)
-                                    ->count(),
+                    ->whereYear('created_at', now()->year)
+                    ->count(),
                 'last_month' => User::whereMonth('created_at', now()->subMonth()->month)
-                                    ->whereYear('created_at', now()->subMonth()->year)
-                                    ->count(),
+                    ->whereYear('created_at', now()->subMonth()->year)
+                    ->count(),
             ],
-            'job_growth' => [
+            'job_growth'  => [
                 'this_month' => Job::whereMonth('created_at', now()->month)
-                                   ->whereYear('created_at', now()->year)
-                                   ->count(),
+                    ->whereYear('created_at', now()->year)
+                    ->count(),
                 'last_month' => Job::whereMonth('created_at', now()->subMonth()->month)
-                                   ->whereYear('created_at', now()->subMonth()->year)
-                                   ->count(),
+                    ->whereYear('created_at', now()->subMonth()->year)
+                    ->count(),
             ],
         ];
 
@@ -154,11 +153,11 @@ class AdminController extends Controller
     public function updateJobStatus(Request $request, Job $job)
     {
         $request->validate([
-            'status' => 'required|in:active,passed,under_review,hired'
+            'status' => 'required|in:active,passed,under_review,hired',
         ]);
 
         $job->update([
-            'status' => $request->status
+            'status' => $request->status,
         ]);
 
         return response()->json(['message' => 'Job status updated successfully']);
@@ -172,53 +171,49 @@ class AdminController extends Controller
     public function storeJob(Request $request)
     {
         $request->validate([
-            'company_name' => 'required|string|max:255',
+            'company_name'     => 'required|string|max:255',
             'company_location' => 'required|string|max:255',
-            'job_title' => 'required|string|max:255',
-            'job_type' => 'required|string|max:255',
-            'salary_range' => 'required|string|max:255',
-            'description' => 'required|string',
-            'requirements' => 'nullable|string',
-            'experience_level' => 'nullable|string',
+            'job_title'        => 'required|string|max:255',
+            'job_type'         => 'required|string|max:255',
+            'salary_range'     => 'required|string|max:255',
+            'description'      => 'required|string',
         ]);
 
         $job = Job::create([
-            'user_id' => Auth::id(),
-            'company_name' => $request->company_name,
+            'user_id'          => Auth::id(),
+            'company_name'     => $request->company_name,
             'company_location' => $request->company_location,
-            'job_title' => $request->job_title,
-            'job_type' => $request->job_type,
-            'salary_range' => $request->salary_range,
-            'description' => $request->description,
-            'requirements' => $request->requirements,
-            'status' => 'active',
-            'posted_by' => Auth::id(),
-            'posted_at' => now(),
+            'job_title'        => $request->job_title,
+            'job_type'         => $request->job_type,
+            'salary_range'     => $request->salary_range, // This will be like "₦ 250,000"
+            'description'      => $request->description,
+            'status'           => 'active',
+            'posted_at'        => now(),
             'applicants_count' => 0,
         ]);
 
-        return redirect()->route('admin.dashboard')->with('success', 'Job created successfully!');
+        return redirect()->route('admin.jobs')->with('success', 'Job created successfully!');
     }
 
     public function editJob($id)
     {
         $job = Job::findOrFail($id);
-        
+
         return Inertia::render('Admin/EditJob', [
-            'job' => $job
+            'job' => $job,
         ]);
     }
 
     public function updateJob(Request $request, $id)
     {
         $job = Job::findOrFail($id);
-        
+
         $request->validate([
-            'company_name' => 'required|string|max:255',
+            'company_name'     => 'required|string|max:255',
             'company_location' => 'required|string|max:255',
-            'job_type' => 'required|string|max:255',
-            'salary_range' => 'required|string|max:255',
-            'description' => 'required|string',
+            'job_type'         => 'required|string|max:255',
+            'salary_range'     => 'required|string|max:255',
+            'description'      => 'required|string',
         ]);
 
         $job->update($request->all());
