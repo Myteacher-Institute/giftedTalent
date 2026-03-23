@@ -320,6 +320,26 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                     <Link href="" className='browse-all-btn'>Browse All Talents</Link>
                 </div>
 
+                {/* FOOTER */}
+                <footer>
+                    <div className="footer-left">
+                        <a href="#" className="brand" onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
+                            GiftedTalents<span>.online</span>
+                        </a>
+                        <div>
+                            <p>©</p>
+                            <span>2026</span>
+                        </div>
+                    </div>
+
+                    <div className="footer-right">
+                        <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/about'); }}>About</a>
+                        <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/contact'); }}>Contact</a>
+                        <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/privacy'); }}>Privacy Policy</a>
+                        <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/guidelines'); }}>Community Guideline</a>
+                    </div>
+                </footer>
+
             </div>
         </>
     );

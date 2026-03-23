@@ -97,6 +97,8 @@ export default function Dashboard({ auth }) {
                         <li><i className="fa-regular fa-envelope"></i> Message</li>
                         <li><i className="fa-regular fa-bookmark"></i> Save Jobs</li>
                         <li><i className="fa-solid fa-gear"></i> Settings</li>
+
+                        
                     </ul>
                 </aside>
 
