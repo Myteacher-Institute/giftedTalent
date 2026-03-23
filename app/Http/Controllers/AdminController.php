@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Job;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -10,30 +12,100 @@ use Inertia\Response;
 
 class AdminController extends Controller
 {
-    /**
-     * Display the admin dashboard.
-     */
-    public function dashboard(): Response
+    public function dashboard(Request $request): Response
     {
-        // Get admin statistics
-        $stats = [
-            'total_users' => \App\Models\User::count(),
-            'total_jobs' => 0, // Placeholder until Job model exists
-            'total_profiles' => \App\Models\Profile::count(),
-            'recent_users' => \App\Models\User::latest()->take(5)->get(),
+        $adminUser = Auth::user();
+
+        // Start with base query for recent jobs
+        $query = Job::with('user');
+
+        // Apply filters if they exist
+        if ($request->has('jobType') && $request->jobType && $request->jobType !== '') {
+            $query->where('job_type', $request->jobType);
+        }
+
+        if ($request->has('location') && $request->location && $request->location !== '') {
+            $query->where('company_location', 'like', '%' . $request->location . '%');
+        }
+
+        if ($request->has('salary') && $request->salary && $request->salary !== '') {
+            switch ($request->salary) {
+                case '0-100k':
+                    $query->where('salary_range', '<=', 100000);
+                    break;
+                case '100k-200k':
+                    $query->whereBetween('salary_range', [100001, 200000]);
+                    break;
+                case '200k-300k':
+                    $query->whereBetween('salary_range', [200001, 300000]);
+                    break;
+                case '300k+':
+                    $query->where('salary_range', '>=', 300001);
+                    break;
+            }
+        }
+
+        if ($request->has('experience') && $request->experience && $request->experience !== '') {
+            $query->where('experience_level', $request->experience);
+        }
+
+        if ($request->has('datePosted') && $request->datePosted && $request->datePosted !== '') {
+            switch ($request->datePosted) {
+                case 'today':
+                    $query->whereDate('created_at', today());
+                    break;
+                case 'week':
+                    $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+                    break;
+                case 'month':
+                    $query->whereMonth('created_at', now()->month)
+                          ->whereYear('created_at', now()->year);
+                    break;
+            }
+        }
+
+        if ($request->has('status') && $request->status && $request->status !== '') {
+            $query->where('status', $request->status);
+        }
+
+        // Get recent jobs (with filters applied)
+        $recentJobs = $query->latest()
+            ->take(10)
+            ->get()
+            ->map(function ($job) {
+                return [
+                    'id' => $job->id,
+                    'company_name' => $job->company_name,
+                    'location' => $job->company_location,
+                    'job_type' => $job->job_type,
+                    'salary' => $job->salary_range,
+                    'description' => $job->description,
+                    'applicants' => $job->applicants_count,
+                    'posted_at' => $job->posted_at ? $job->posted_at->diffForHumans() : $job->created_at->diffForHumans(),
+                    'created_at' => $job->created_at,
+                    'status' => $job->status ?? 'active',
+                    'experience_level' => $job->experience_level ?? 'mid',
+                ];
+            });
+
+        // Job posts statistics (unfiltered - for cards)
+        $jobStats = [
+            'active' => Job::where('status', 'active')->count(),
+            'passed' => Job::where('status', 'passed')->count(),
+            'under_review' => Job::where('status', 'under_review')->count(),
+            'hired' => Job::where('status', 'hired')->count(),
         ];
 
         return Inertia::render('Admin/Dashboard', [
-            'stats' => $stats,
+            'jobStats' => $jobStats,
+            'recentJobs' => $recentJobs,
+            'filters' => $request->all(),
         ]);
     }
 
-    /**
-     * Display the users management page.
-     */
     public function users(): Response
     {
-        $users = \App\Models\User::with('profile')
+        $users = User::with('profile')
             ->latest()
             ->paginate(10);
 
@@ -42,36 +114,35 @@ class AdminController extends Controller
         ]);
     }
 
-    /**
-     * Display the jobs management page.
-     */
     public function jobs(): Response
     {
-        // You'll need to create a Job model for this to work
-        $jobs = []; // Placeholder until Job model exists
+        $jobs = Job::with('user')
+            ->latest()
+            ->paginate(10);
 
         return Inertia::render('Admin/Jobs', [
             'jobs' => $jobs,
         ]);
     }
 
-    /**
-     * Display the analytics page.
-     */
     public function analytics(): Response
     {
         $analytics = [
             'user_growth' => [
-                'this_month' => \App\Models\User::whereMonth('created_at', now()->month)->count(),
-                'last_month' => \App\Models\User::whereMonth('created_at', now()->subMonth()->month)->count(),
+                'this_month' => User::whereMonth('created_at', now()->month)
+                                    ->whereYear('created_at', now()->year)
+                                    ->count(),
+                'last_month' => User::whereMonth('created_at', now()->subMonth()->month)
+                                    ->whereYear('created_at', now()->subMonth()->year)
+                                    ->count(),
             ],
-            'profile_completion' => [
-                'completed' => \App\Models\Profile::whereNotNull('bio')->count(),
-                'total' => \App\Models\User::count(),
-            ],
-            'daily_activity' => [
-                'today' => \App\Models\User::whereDate('created_at', today())->count(),
-                'yesterday' => \App\Models\User::whereDate('created_at', now()->subDay()->toDateString())->count(),
+            'job_growth' => [
+                'this_month' => Job::whereMonth('created_at', now()->month)
+                                   ->whereYear('created_at', now()->year)
+                                   ->count(),
+                'last_month' => Job::whereMonth('created_at', now()->subMonth()->month)
+                                   ->whereYear('created_at', now()->subMonth()->year)
+                                   ->count(),
             ],
         ];
 
@@ -80,29 +151,86 @@ class AdminController extends Controller
         ]);
     }
 
-    /**
-     * Get admin dashboard statistics (AJAX endpoint).
-     */
-    public function getStats(Request $request): \Illuminate\Http\JsonResponse
+    public function updateJobStatus(Request $request, Job $job)
     {
-        $period = $request->get('period', 'week'); // week, month, year
+        $request->validate([
+            'status' => 'required|in:active,passed,under_review,hired'
+        ]);
 
-        $stats = match ($period) {
-            'week' => [
-                'users' => \App\Models\User::whereBetween('created_at', [now()->startOfWeek(), now()])->count(),
-                'profiles' => \App\Models\Profile::whereBetween('created_at', [now()->startOfWeek(), now()])->count(),
-            ],
-            'month' => [
-                'users' => \App\Models\User::whereMonth('created_at', now()->month)->count(),
-                'profiles' => \App\Models\Profile::whereMonth('created_at', now()->month)->count(),
-            ],
-            'year' => [
-                'users' => \App\Models\User::whereYear('created_at', now()->year)->count(),
-                'profiles' => \App\Models\Profile::whereYear('created_at', now()->year)->count(),
-            ],
-            default => [],
-        };
+        $job->update([
+            'status' => $request->status
+        ]);
 
-        return response()->json($stats);
+        return response()->json(['message' => 'Job status updated successfully']);
+    }
+
+    public function createJob()
+    {
+        return Inertia::render('Admin/CreateJob');
+    }
+
+    public function storeJob(Request $request)
+    {
+        $request->validate([
+            'company_name' => 'required|string|max:255',
+            'company_location' => 'required|string|max:255',
+            'job_title' => 'required|string|max:255',
+            'job_type' => 'required|string|max:255',
+            'salary_range' => 'required|string|max:255',
+            'description' => 'required|string',
+            'requirements' => 'nullable|string',
+            'experience_level' => 'nullable|string',
+        ]);
+
+        $job = Job::create([
+            'user_id' => Auth::id(),
+            'company_name' => $request->company_name,
+            'company_location' => $request->company_location,
+            'job_title' => $request->job_title,
+            'job_type' => $request->job_type,
+            'salary_range' => $request->salary_range,
+            'description' => $request->description,
+            'requirements' => $request->requirements,
+            'status' => 'active',
+            'posted_by' => Auth::id(),
+            'posted_at' => now(),
+            'applicants_count' => 0,
+        ]);
+
+        return redirect()->route('admin.dashboard')->with('success', 'Job created successfully!');
+    }
+
+    public function editJob($id)
+    {
+        $job = Job::findOrFail($id);
+        
+        return Inertia::render('Admin/EditJob', [
+            'job' => $job
+        ]);
+    }
+
+    public function updateJob(Request $request, $id)
+    {
+        $job = Job::findOrFail($id);
+        
+        $request->validate([
+            'company_name' => 'required|string|max:255',
+            'company_location' => 'required|string|max:255',
+            'job_type' => 'required|string|max:255',
+            'salary_range' => 'required|string|max:255',
+            'description' => 'required|string',
+        ]);
+
+        $job->update($request->all());
+
+        return redirect()->route('admin.jobs')->with('success', 'Job updated successfully!');
+    }
+
+    public function deleteJob($id)
+    {
+        $job = Job::findOrFail($id);
+        $job->delete();
+
+        return redirect()->route('admin.jobs')->with('success', 'Job deleted successfully!');
     }
 }

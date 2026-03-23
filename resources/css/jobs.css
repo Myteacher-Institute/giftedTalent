@@ -79,7 +79,7 @@ nav {
 }
 
 .logo a span {
-    color: #0A2463;
+    color: #3B82F6;
 }
 
 .logo-search {
@@ -426,6 +426,8 @@ nav {
 
 /* JOB CARD */
 .job-card {
+    width: 100%;
+    max-width: 420px;
     background: #FFFFFF;
     padding: 15px;
     border-radius: 10px;
@@ -453,7 +455,6 @@ nav {
 
 .company {
     display: flex;
-    /* flex-direction: column; */
     gap: 10px;
 }
 
@@ -464,7 +465,6 @@ nav {
     background: #eee;
     display: flex;
     align-items: center;
-    /* justify-content: center; */
 }
 
 .company-header {
@@ -474,9 +474,7 @@ nav {
 
 .company div {
     display: flex;
-    /* align-items: center; */
     flex-wrap: wrap;
-    gap: 10px;
 }
 
 @media (min-width: 1024px) {
@@ -490,6 +488,7 @@ nav {
     padding: 0;
     color: #0A2463;
     font-size: 16px;
+    margin: 4px 0 0 0;
 }
 
 @media (min-width: 1024px) {
@@ -503,10 +502,13 @@ nav {
     color: #4B5563;
 }
 
-.job-card p {
+.job-card .job-description {
     font-size: 14px;
     color: #4B5563;
-    margin: 5px 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 95%;
 }
 
 @media (min-width: 1024px) {
@@ -612,7 +614,7 @@ footer {
 }
 
 .footer-left .brand span {
-    color: #0A2463;
+    color: #3B82F6;
 }
 
 .footer-right {

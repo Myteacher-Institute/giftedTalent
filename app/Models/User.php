@@ -26,6 +26,7 @@ class User extends Authenticatable
         'password',
         'is_admin',
         'google_id',
+        'email_verified_at'
     ];
 
     /**
@@ -66,8 +67,8 @@ class User extends Authenticatable
     public function skills(): BelongsToMany
     {
         return $this->belongsToMany(Skill::class, 'user_skills')
-                    ->withPivot('proficiency_level', 'years_experience')
-                    ->withTimestamps();
+            ->withPivot('proficiency_level', 'years_experience')
+            ->withTimestamps();
     }
 
     /**
