@@ -11,7 +11,8 @@ export default function CreateJob() {
         job_type: 'Full-Time',
         salary_currency: 'NGN',
         salary_amount: '',
-        salary_period: 'month', // Add period option
+        salary_period: 'month',
+        application_link: '',
         description: ''
     });
 
@@ -65,6 +66,17 @@ export default function CreateJob() {
             return;
         }
 
+        if (!formData.application_link) {
+            alert('Please enter the application link where users can apply');
+            return;
+        }
+
+        // Validate URL
+        if (!formData.application_link.startsWith('http://') && !formData.application_link.startsWith('https://')) {
+            alert('Please enter a valid URL starting with http:// or https://');
+            return;
+        }
+
         // Optional: Check if it's a valid number
         if (isNaN(parseFloat(formData.salary_amount))) {
             alert('Please enter a valid number');
@@ -88,7 +100,8 @@ export default function CreateJob() {
             job_title: formData.job_title,
             job_type: formData.job_type,
             salary_range: salaryRange,
-            description: formData.description
+            description: formData.description,
+            application_link: formData.application_link
         };
 
         router.post('/Admin/jobs', submitData, {
@@ -102,6 +115,7 @@ export default function CreateJob() {
                     salary_currency: 'NGN',
                     salary_amount: '',
                     salary_period: 'month',
+                    application_link: '',
                     description: ''
                 });
                 alert('Job created successfully!');
@@ -246,6 +260,23 @@ export default function CreateJob() {
                             Example: {formData.salary_currency === 'NGN' ? '₦' : currencies.find(c => c.code === formData.salary_currency)?.symbol}
                             {formData.salary_amount || '50,000'}
                             {periods.find(p => p.value === formData.salary_period)?.label}
+                        </small>
+                    </div>
+
+                    {/* Application Link Field */}
+                    <div className="form-group">
+                        <label>Application Link *</label>
+                        <input
+                            type="url"
+                            name="application_link"
+                            value={formData.application_link}
+                            onChange={handleChange}
+                            required
+                            disabled={processing}
+                            placeholder="https://company.com/careers/apply"
+                        />
+                        <small className="form-hint">
+                            Enter the URL where users can apply for this job
                         </small>
                     </div>
 

@@ -243,18 +243,20 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                                         <h3 className="job-title">{job.job_title || job.title || 'Job Title'}</h3>
                                         <p className="job-company">{job.company_name || job.company || 'Company Name'}</p>
                                         <div className="job-details">
-                                            
+
                                             <div className="job-location">
                                                 <img src="/assets/svg/location.svg" alt="" className="location-icon" />
                                                 <span>{job.company_location || job.location || 'Location'}</span>
                                             </div>
                                             <span className="job-salary">{job.salary_range || job.salary || 'Salary'}</span>
-                                            <div><span className="job-date">{new Date(job.created_at).toLocaleDateString('en-US', {
+                                        </div>
+                                        <div>
+                                            <span className="job-date">{new Date(job.created_at).toLocaleDateString('en-US', {
                                                 month: 'short',
                                                 day: 'numeric',
                                                 hour: '2-digit',
                                                 minute: '2-digit'
-                                            })}</span></div>
+                                            })}</span>
                                         </div>
 
                                         <button

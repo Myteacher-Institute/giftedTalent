@@ -177,6 +177,7 @@ class AdminController extends Controller
             'job_type'         => 'required|string|max:255',
             'salary_range'     => 'required|string|max:255',
             'description'      => 'required|string',
+            'application_link' => 'required|url|max:500',
         ]);
 
         $job = Job::create([
@@ -187,6 +188,7 @@ class AdminController extends Controller
             'job_type'         => $request->job_type,
             'salary_range'     => $request->salary_range, // This will be like "₦ 250,000"
             'description'      => $request->description,
+            'application_link' => $request->application_link,
             'status'           => 'active',
             'posted_at'        => now(),
             'applicants_count' => 0,

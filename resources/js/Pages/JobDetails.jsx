@@ -80,7 +80,12 @@ export default function JobDetails({ job }) {
                     )}
 
                     <div className="job-details-actions">
-                        <button className="apply-now-btn">Apply Now</button>
+                        <button
+                            className="apply-now-btn"
+                            onClick={() => window.open(job.application_link, '_blank')}
+                        >
+                            Apply Now
+                        </button>
                         <Link href="/jobs" className="back-to-jobs-btn">Back to Jobs</Link>
                     </div>
                 </div>

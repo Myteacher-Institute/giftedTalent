@@ -18,10 +18,9 @@ body {
     width: 100%;
 }
 
-.feature-jobs,
-.featured-talents {
-    padding: 80px 20px;
-    margin: 0 auto;
+.feature-jobs .job-location, .feature-jobs .job-date {
+    margin-left: 10px;
+    color: #4B5563;
 }
 
 /* FEATURED TALENTS SECTION */

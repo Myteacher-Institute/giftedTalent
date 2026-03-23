@@ -89,7 +89,12 @@ export default function Jobs({ jobs = [] }) {
                                             hour: '2-digit',
                                             minute: '2-digit'
                                         })}</span>
-                                        <button className="apply-btn">Apply now</button>
+                                        <button
+                                            className="apply-btn"
+                                            onClick={() => window.open(job.application_link, '_blank')}
+                                        >
+                                            Apply now
+                                        </button>
                                     </div>
                                 </div>
                             </div>

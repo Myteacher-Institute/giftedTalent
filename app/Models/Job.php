@@ -22,7 +22,8 @@ class Job extends Model
         'description',
         'status',
         'applicants_count',
-        'posted_at'
+        'posted_at',
+        'application_link'
     ];
 
     protected $casts = [
