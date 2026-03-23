@@ -61,6 +61,7 @@ nav div p {
     border-left: 1px solid #EDF2F7;
     padding: 2rem 1.5rem;
     position: fixed;
+    margin-bottom: 10rem;
     height: 100vh;
     overflow-y: auto;
 }
@@ -81,9 +82,15 @@ nav div p {
 }
 
 .sidebar .logo a span {
-    color: #0A2463;
+    color: #3B82F6;
 }
 
+.logout-icon {
+    width: 30px;
+    height: 30px;
+    margin-right: 1rem;
+    margin-bottom: 10rem;
+}
 
 .sidebar-nav ul {
     width: 100%;
@@ -112,7 +119,7 @@ nav div p {
     color: #0A2463;
 }
 
-.sidebar-nav img {
+.sidebar-nav img, .logout-icon svg {
     margin-right: 1rem;
 }
 
@@ -202,7 +209,6 @@ nav div p {
 }
 
 .top-nav .search-bar input {
-    flex: 1;
     padding: 0.2rem 1rem;
     border: none;
     background: transparent;
@@ -215,12 +221,15 @@ nav div p {
     border: none;
     padding: 0.6rem 1.2rem;
     cursor: pointer;
+    outline: none;
     font-size: 1rem;
     transition: background 0.2s ease;
 }
 
 .top-nav .search-bar button:hover {
-    background: #051A44;
+    background: #E6F0FF;
+    border-top-right-radius: 15px;
+    border-bottom-right-radius: 14px;
 }
 
 .chats-icon,
@@ -229,17 +238,19 @@ nav div p {
     width: 25px;
 }
 
+.user-profile {
+    padding-bottom: 1rem;
+    margin-right: 0.5rem;
+}
+
 .avatar {
-    width: 40px;
-    height: 40px;
-    background: #0A2463;
+    width: 60px;
+    height: 60px;
     color: white;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 600;
-    font-size: 0.9rem;
 }
 
 /* Welcome Section */
@@ -294,6 +305,7 @@ nav div p {
     justify-content: space-evenly;
     padding: 0.6rem 1.5rem;
     margin-bottom: 0.7rem;
+    border-radius: 10px;
 }
 
 #stat-item-1 {
@@ -301,7 +313,7 @@ nav div p {
 }
 
 #stat-item-2 {
-    background-color: #F4A83B80;
+    background-color: #FC31FC;
 }
 
 #stat-item-3 {
@@ -357,6 +369,116 @@ nav div p {
     background: #051A44;
 }
 
+/* FILTERS SECTION */
+.filters-section {
+    padding: 20px 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.filters-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.filters-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #0A2463;
+}
+
+.clear-filters {
+    background: none;
+    border: 1px solid #ddd;
+    padding: 6px 12px;
+    border-radius: 30px;
+    color: #4B5563;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s ease;
+}
+
+.clear-filters:hover {
+    border-color: #0A2463;
+    color: #0A2463;
+}
+
+.filters-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.filter-item {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 180px;
+}
+
+.filter-select {
+    width: 100%;
+    padding: 10px 35px 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 30px;
+    background: white;
+    color: #4B5563;
+    font-size: 14px;
+    appearance: none;
+    cursor: pointer;
+    outline: none;
+}
+
+.filter-select:focus {
+    border-color: #0A2463;
+}
+
+.filter-item .svg {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    fill: #4B5563;
+    pointer-events: none;
+}
+
+.filter-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 15px;
+}
+
+.apply-filters {
+    background: #0A2463;
+    color: white;
+    border: none;
+    padding: 10px 30px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.apply-filters:hover {
+    background: #051A44;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .filters-grid {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .filter-item {
+        width: 100%;
+    }
+}
+
 /* Recent Jobs Section */
 .recent-jobs {
     background: #FFFFFF;
@@ -382,10 +504,9 @@ nav div p {
     display: flex;
 }
 
-.company-info .user-profile {
+.company-info-header .user-profile {
     width: 20px;
     height: 20px;
-    margin: 2rem 2rem 0 0;
 }
 
 .location {
@@ -460,6 +581,7 @@ hr {
     font-size: 0.95rem;
     color: #64748B;
     line-height: 1.5;
+    margin: 1.5rem 0;
 }
 
 .job-meta {
@@ -486,46 +608,46 @@ hr {
     color: #FFFFFF;
 }
 
-.search-section{
+.search-section {
     width: 100%;
     background-color: #FFFFFF;
-    display:flex;
-    justify-content:center;
+    display: flex;
+    justify-content: center;
     border: 2px solid #E2E8F0;
     border-radius: 10px;
     margin: 3rem 0;
     padding: 1.4rem 1.3rem;
 }
 
-.search-box{
+.search-box {
     width: 100%;
-    display:flex;
-    align-items:center;
-    background:white;
-    border:2px solid #ddd;
-    border-radius:6px;
-    overflow:hidden;
+    display: flex;
+    align-items: center;
+    background: white;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    overflow: hidden;
     margin-right: 1rem;
     margin-top: 0;
 }
 
 /* search input */
 
-.search-input{
-    display:flex;
-    align-items:center;
-    flex:1;
+.search-input {
+    display: flex;
+    align-items: center;
+    flex: 1;
 }
 
-.search-input input{
-    width:100%;
+.search-input input {
+    width: 100%;
     border: none;
-    outline:none;
-    font-size:1rem;
+    outline: none;
+    font-size: 1rem;
     margin-left: 1.8rem;
 }
 
-.search-input div{
+.search-input div {
     width: 6%;
     height: 4rem;
     padding: 0;
@@ -537,24 +659,24 @@ hr {
 .search-input div img {
     width: 20px;
     height: 20px;
-   margin-left: 0.6rem;
-   margin-top: 1.5rem;
+    margin-left: 1.8rem;
+    margin-top: 1.5rem;
 }
 
 /* status dropdown */
 
 .status-filter {
     display: flex;
-    border-left:1px solid #000;
+    border-left: 1px solid #000;
     margin-right: 1.8rem;
 }
 
-.status-filter select{
-    border:none;
-    font-size:14px;
+.status-filter select {
+    border: none;
+    font-size: 14px;
     /* outline:none; */
     margin-left: 0.6rem;
-    background:white;
+    background: white;
 }
 
 .status-filter img {
@@ -605,7 +727,7 @@ footer {
 }
 
 .footer-left .brand span {
-    color: #0A2463;
+    color: #3B82F6;
 }
 
 .footer-left div {
