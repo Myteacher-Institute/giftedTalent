@@ -37,7 +37,7 @@ class AuthenticatedSessionController extends Controller
         $user = Auth::user();
         $isAdmin = $user && $user->is_admin;
 
-        $redirectRoute = $isAdmin ? 'admin.dashboard' : 'dashboard';
+        $redirectRoute = $isAdmin ? 'admin.dashboard' : ($user->profile ? 'dashboard' : 'profile.edit');
         return redirect()->intended(route($redirectRoute, absolute: false));
     }
 

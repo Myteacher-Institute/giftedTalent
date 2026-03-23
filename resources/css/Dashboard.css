@@ -7,7 +7,7 @@
 }
 
 body {
-    background: #f0f2f5;
+    background: white;
 }
 
 /* NAVBAR */
@@ -23,14 +23,16 @@ body {
     z-index: 100;
 }
 
-.logo {
+.logo .blue {
+    color: #0A2463;
     font-size: 22px;
     font-weight: 700;
     letter-spacing: -0.5px;
 }
 
-.logo .blue {
-    color: #4f46e5;
+.logo {
+color: #3B82F6;
+
 }
 
 .navbar nav {
@@ -40,15 +42,11 @@ body {
 
 .navbar nav a {
     text-decoration: none;
-    color: #6b7280;
+    color: #374151;
     font-weight: 500;
     font-size: 15px;
     transition: color 0.2s ease;
     position: relative;
-}
-
-.navbar nav a:hover {
-    color: #4f46e5;
 }
 
 .navbar nav a::after {
@@ -97,7 +95,7 @@ body {
 
 .nav-icons i {
     font-size: 20px;
-    color: #6b7280;
+    color: #374151;
     cursor: pointer;
     transition: all 0.2s ease;
     padding: 8px;
@@ -105,7 +103,7 @@ body {
 }
 
 .nav-icons i:hover {
-    color: #4f46e5;
+    color: #0A2463;
     background: #eef2ff;
 }
 
@@ -120,7 +118,7 @@ body {
 }
 
 .nav-icons img:hover {
-    border-color: #4f46e5;
+    border-color: #0A2463;
     transform: scale(1.05);
 }
 
@@ -164,18 +162,18 @@ body {
 
 .profile img:hover {
     transform: scale(1.08);
-    border-color: #4f46e5;
+    border-color: #0A2463;
 }
 
 .profile h3 {
     margin-top: 14px;
     font-size: 17px;
     font-weight: 600;
-    color: #111827;
+    color: #374151;
 }
 
 .profile p {
-    color: #6b7280;
+    color: #374151;
     font-size: 13px;
     margin-top: 4px;
 }
@@ -183,8 +181,8 @@ body {
 .profile button {
     margin-top: 14px;
     padding: 8px 20px;
-    border: 1px solid #4f46e5;
-    color: #4f46e5;
+    border: 1px solid #3B82F6;
+    color: #0B1152;
     border-radius: 20px;
     cursor: pointer;
     font-size: 13px;
@@ -194,7 +192,7 @@ body {
 }
 
 .profile button:hover {
-    background: #4f46e5;
+    background: #0A2463;
     color: white;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
@@ -216,10 +214,11 @@ body {
     gap: 12px;
     font-size: 14px;
     font-weight: 500;
-    color: #6b7280;
+    color: #000000;
 }
 
 .menu li i {
+    color: #0A66C2;
     width: 18px;
     font-size: 16px;
 }
@@ -237,6 +236,7 @@ body {
     font-weight: 600;
 }
 
+
 /* MAIN CONTENT */
 .main {
     min-width: 0;
@@ -248,6 +248,7 @@ body {
     font-weight: 700;
     color: #111827;
 }
+
 
 .status-bar {
     display: flex;
@@ -292,48 +293,134 @@ body {
     transform: translateY(-1px);
 }
 
-/* Search Bar */
-.main > div:nth-child(3) {
+/* Professional Search Bar */
+.search-bar {
     display: flex;
     gap: 12px;
     margin-bottom: 28px;
     flex-wrap: wrap;
+    background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.9) 100%);
+    backdrop-filter: blur(10px);
+    padding: 4px;
+    border-radius: 20px;
+    border: 1px solid rgba(229,231,235,0.5);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    transition: all 0.3s ease;
 }
 
-.main > div:nth-child(3) input {
+.search-bar:hover {
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    border-color: #0B1152;
+}
+
+.search-bar input {
     flex: 1;
-    min-width: 250px;
-    padding: 14px 20px;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    font-size: 14px;
-    transition: all 0.2s ease;
-    background: #fff;
+    min-width: 300px;
+    padding: 16px 20px 16px 48px;
+    border: 2px solid transparent;
+    border-radius: 16px;
+    font-size: 15px;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(20px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
 }
 
-.main > div:nth-child(3) input:focus {
+.search-bar input::placeholder {
+    color: #9ca3af;
+}
+
+.search-bar input:focus {
     outline: none;
     border-color: #4f46e5;
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(79,70,229,0.15);
+    transform: translateY(-2px);
 }
 
-.main > div:nth-child(3) button {
+.search-bar input:focus + .search-icon {
+    color: #4f46e5;
+}
+
+/* Search icon pseudo-element */
+.search-bar input::before {
+    content: '🔍';
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: #9ca3af;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.search-bar button {
     padding: 14px 24px;
-    border: 1px solid #e5e7eb;
-    background: #fff;
-    border-radius: 12px;
+    border: 1px solid #3B82F6;
+    background: #ffffff;
+    border-radius: 16px;
     cursor: pointer;
     font-size: 14px;
-    font-weight: 500;
-    color: #6b7280;
-    transition: all 0.2s ease;
+    font-weight: 600;
+    color: #0B1152;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
-.main > div:nth-child(3) button:hover {
-    background: #f9fafb;
-    border-color: #d1d5db;
-    color: #111827;
+.search-bar button:hover {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-color: #cbd5e1;
+    color: #1e293b;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+.search-bar button:active {
+    transform: translateY(0);
+}
+
+/* Job Type button with dropdown icon */
+.search-bar button:nth-of-type(1)::after {
+    content: '▼';
+    font-size: 12px;
+    margin-left: 4px;
+    transition: transform 0.2s ease;
+}
+
+.search-bar button:nth-of-type(1):hover::after {
+    transform: rotate(180deg);
+}
+
+/* Advanced Filter button icon */
+.search-bar button:nth-of-type(2)::before {
+    content: '⚙️';
+    font-size: 16px;
+    margin-right: 4px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .search-bar {
+        flex-direction: column;
+        padding: 8px;
+        border-radius: 16px;
+    }
+    
+    .search-bar input {
+        min-width: 100%;
+        padding-left: 48px;
+    }
+    
+    .search-bar button {
+        width: 100%;
+        justify-content: center;
+    }
 }
 
 .main h2 {
@@ -554,33 +641,50 @@ body {
 }
 
 .progress-circle {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    border: 8px solid #eef2ff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-    font-weight: 700;
-    color: #4f46e5;
-    margin: 0 auto 20px;
-    background: conic-gradient(#4f46e5 75%, #eef2ff 0%);
+    --progress: 0%;
+    --ring-thickness: 8px;
+    --ring-color: #eef2ff;
+    --ring-progress-color: #4f46e5;
+    
+    width: 140px;
+    height: 140px;
+    margin: 0 auto 24px;
     position: relative;
 }
 
 .progress-circle::before {
     content: '';
     position: absolute;
-    width: 90px;
-    height: 90px;
-    background: #fff;
+    inset: var(--ring-thickness);
     border-radius: 50%;
+    background: conic-gradient(
+        var(--ring-progress-color) 0deg calc(var(--progress) * 3.6deg),
+        var(--ring-color) calc(var(--progress) * 3.6deg) 360deg
+    );
+    -webkit-mask: radial-gradient(farthest-side,transparent calc(100% - var(--ring-thickness) + 1px),black);
+    mask: radial-gradient(farthest-side,transparent calc(100% - var(--ring-thickness) + 1px),black);
+    -webkit-mask-mode: alpha;
+    mask-mode: alpha;
+    mask-repeat: no-repeat;
+    mask-position: center;
 }
 
-.progress-circle span {
+.progress-circle::after {
+    content: '';
+    position: absolute;
+    inset: calc(var(--ring-thickness) + 2px);
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 0 0 2px white inset;
+}
+
+.progress-circle > * {
     position: relative;
-    z-index: 1;
+    z-index: 2;
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--ring-progress-color);
+    text-shadow: 0 2px 4px rgba(79,70,229,0.3);
 }
 
 .progress-card ul {
@@ -641,16 +745,16 @@ body {
 }
 
 .box.blue { 
-    background: linear-gradient(135deg, #4f46e5 0%, #818cf8 100%);
+    background: #3B82F6;
 }
 .box.orange { 
-    background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+    background: #F4A83B;
 }
 .box.green { 
-    background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+    background: #50AE62;
 }
 .box.red { 
-    background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+    background: #EC624F;
 }
 
 .box h2 {

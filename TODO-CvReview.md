@@ -1,0 +1,1 @@
+# CvReviewController Completion TODO\n\n## Plan Breakdown:\n- [x] Step 1: Create this TODO.\n- [ ] Step 2: Edit app/Http/Controllers/Admin/CvReviewController.php - complete show/update/destroy, add download, auth.\n- [ ] Step 3: Check/add routes in routes/web.php.\n- [ ] Step 4: Verify with dump-autoload/tinker.\n- [ ] Step 5: Complete.\n\nStatus: Implementing controller..."

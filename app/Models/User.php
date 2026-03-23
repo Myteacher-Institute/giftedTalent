@@ -26,6 +26,7 @@ class User extends Authenticatable
         'password',
         'is_admin',
         'google_id',
+        'email_verified_at'
     ];
 
     /**
@@ -66,8 +67,8 @@ class User extends Authenticatable
     public function skills(): BelongsToMany
     {
         return $this->belongsToMany(Skill::class, 'user_skills')
-                    ->withPivot('proficiency_level', 'years_experience')
-                    ->withTimestamps();
+            ->withPivot('proficiency_level', 'years_experience')
+            ->withTimestamps();
     }
 
     /**
@@ -78,13 +79,7 @@ class User extends Authenticatable
         return $this->hasMany(Experience::class);
     }
 
-    /**
-     * Get the user's education history.
-     */
-    public function educations(): HasMany
-    {
-        return $this->hasMany(Education::class);
-    }
+
 
     /**
      * Get the user's resumes.
@@ -92,5 +87,21 @@ class User extends Authenticatable
     public function resumes(): HasMany
     {
         return $this->hasMany(Resume::class);
+    }
+
+    /**
+     * Get the user's applications.
+     */
+    public function applications(): HasMany
+    {
+        return $this->hasMany(Application::class);
+    }
+
+    /**
+     * Get the user's posted jobs.
+     */
+    public function jobs(): HasMany
+    {
+        return $this->hasMany(Job::class, 'job_postings');
     }
 }

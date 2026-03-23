@@ -42,7 +42,7 @@ function Nav({ auth }) {
             </div>
             <ul className={`nav-links ${isActive ? 'active' : ''}`}>
                 <li><Link href="/" className="nav-link">Home</Link></li>
-                <li><Link href="/find-jobs" className="nav-link">Find Jobs</Link></li>
+                <li><Link href="/jobs" className="nav-link">Find Jobs</Link></li>
                 <li><Link href="/find-talents" className="nav-link">Find Talents</Link></li>
                 <li><Link href="/how-it-works" className="nav-link">How It Works</Link></li>
                 <li><Link href="/about" className="nav-link">About</Link></li>
@@ -75,7 +75,7 @@ function Hero() {
             <div className="circle2"></div>
             <div className="hero-left">
                 <h1>Discover opportunities. <span>Showcase Your Talent.</span></h1>
-                <p>Connect with top employers and talented professionals. Your dream job or ideal candidate is just a click away.</p>
+                <p>Connecting skilled talents with verified employers worldwide.</p>
                 <div className="hero-buttons">
                     <button className="btn-primary">Find Jobs</button>
                     <button className="btn-secondary">Hire Talent</button>
@@ -169,7 +169,7 @@ const featuresData = [
     }
 ];
 
-export default function Welcome({ auth, laravelVersion, phpVersion }) {
+export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] }) {
 
     return (
         <>
@@ -228,162 +228,46 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                             <p className="jobs-subtitle">Top opportunities from verified employers</p>
                         </div>
 
-                        {/* Jobs Grid */}
                         <div className="jobs-grid">
-                            {/* Job Card 1 */}
-                            <div className="job-card">
-                                <div className="job-card-header">
-                                    <div className="job-icon gradient-blue">
-                                        <img src="/assets/svg/code.svg" alt="" className="job-icon-img" />
+                            {jobs.length > 0 ? (
+                                jobs.map((job) => (
+                                    <div key={job.id} className="job-card">
+                                        <div className="job-card-header">
+                                            <div className={`job-icon ${job.gradient || 'gradient-blue'}`}>
+                                                <img src={`/assets/svg/${job.icon || 'code.svg'}`} alt="" className="job-icon-img" />
+                                            </div>
+                                            <span className="job-type" id={job.type === 'Contract' ? 'job-type-contract' : 'job-type-fulltime'}>
+                                                {job.job_type || job.type || 'Full-time'}
+                                            </span>
+                                        </div>
+                                        <h3 className="job-title">{job.job_title || job.title || 'Job Title'}</h3>
+                                        <p className="job-company">{job.company_name || job.company || 'Company Name'}</p>
+                                        <div className="job-details">
+                                            <div className="job-location">
+                                                <img src="/assets/svg/location.svg" alt="" className="location-icon" />
+                                                <span>{job.company_location || job.location || 'Location'}</span>
+                                            </div>
+                                            <span className="job-salary">{job.salary_range || job.salary || 'Salary'}</span>
+                                        </div>
+                                        {/* <div className="job-tags">
+                                            {(job.tags || ['Apply Now']).slice(0, 3).map((tag, i) => (
+                                                <span key={i} className="job-tag">{tag}</span>
+                                            ))}
+                                        </div> */}
+                                        <button className="apply-btn">Apply Now</button>
                                     </div>
-                                    <span className="job-type" id="job-type-fulltime">Full-time</span>
+                                ))
+                            ) : (
+                                // Show message if no jobs
+                                <div className="no-jobs-message">
+                                    <p>No jobs posted yet. Check back soon!</p>
                                 </div>
-                                <h3 className="job-title">Senior Frontend Developer</h3>
-                                <p className="job-company">TechCorp Solutions</p>
-                                <div className="job-details">
-                                    <div className="job-location">
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <span>Remote</span>
-                                    </div>
-                                    <span className="job-salary">$80k-$120k</span>
-                                </div>
-                                <div className="job-tags">
-                                    <span className="job-tag">React</span>
-                                    <span className="job-tag">TypeScript</span>
-                                    <span className="job-tag">Tailwind</span>
-                                </div>
-                                <button className="apply-btn">Apply Now</button>
-                            </div>
-
-                            {/* Job Card 2 */}
-                            <div className="job-card">
-                                <div className="job-card-header">
-                                    <div className="job-icon gradient-purple-pink">
-                                        <img src="/assets/svg/pencil.svg" alt="" className="job-icon-img" />
-                                    </div>
-                                    <span className="job-type" id="job-type-contract">Contract</span>
-                                </div>
-                                <h3 className="job-title">UX/UI Designer</h3>
-                                <p className="job-company">Creative Studios Inc</p>
-                                <div className="job-details">
-                                    <div className="job-location">
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <span>New York, NY</span>
-                                    </div>
-                                    <span className="job-salary">$70k-$95k</span>
-                                </div>
-                                <div className="job-tags">
-                                    <span className="job-tag">Figma</span>
-                                    <span className="job-tag">Adobe XD</span>
-                                    <span className="job-tag">Sketch</span>
-                                </div>
-                                <button className="apply-btn">Apply Now</button>
-                            </div>
-
-                            {/* Job Card 3 */}
-                            <div className="job-card">
-                                <div className="job-card-header">
-                                    <div className="job-icon gradient-green-teal">
-                                        <img src="/assets/svg/chart.svg" alt="" className="job-icon-img" />
-                                    </div>
-                                    <span className="job-type" id="job-type-fulltime">Full-time</span>
-                                </div>
-                                <h3 className="job-title">Product Manager</h3>
-                                <p className="job-company">Innovation Labs</p>
-                                <div className="job-details">
-                                    <div className="job-location">
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <span>San Francisco, CA</span>
-                                    </div>
-                                    <span className="job-salary">$100k-$140k</span>
-                                </div>
-                                <div className="job-tags">
-                                    <span className="job-tag">Agile</span>
-                                    <span className="job-tag">Jira</span>
-                                    <span className="job-tag">Analytics</span>
-                                </div>
-                                <button className="apply-btn">Apply Now</button>
-                            </div>
-
-                            {/* Job Card 4 */}
-                            <div className="job-card">
-                                <div className="job-card-header">
-                                    <div className="job-icon gradient-orange-red">
-                                        <img src="/assets/svg/speaker.svg" alt="" className="job-icon-img" />
-                                    </div>
-                                    <span className="job-type" id="job-type-fulltime">Full-time</span>
-                                </div>
-                                <h3 className="job-title">Marketing Specialist</h3>
-                                <p className="job-company">Digital Growth Co</p>
-                                <div className="job-details">
-                                    <div className="job-location">
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <span>Remote</span>
-                                    </div>
-                                    <span className="job-salary">$60k-$85k</span>
-                                </div>
-                                <div className="job-tags">
-                                    <span className="job-tag">SEO</span>
-                                    <span className="job-tag">Content</span>
-                                    <span className="job-tag">Social Media</span>
-                                </div>
-                                <button className="apply-btn">Apply Now</button>
-                            </div>
-
-                            {/* Job Card 5 */}
-                            <div className="job-card">
-                                <div className="job-card-header">
-                                    <div className="job-icon gradient-indigo-purple">
-                                        <img src="/assets/svg/database.svg" alt="" className="job-icon-img" />
-                                    </div>
-                                    <span className="job-type" id="job-type-fulltime">Full-time</span>
-                                </div>
-                                <h3 className="job-title">Data Scientist</h3>
-                                <p className="job-company">AI Innovations Ltd</p>
-                                <div className="job-details">
-                                    <div className="job-location">
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <span>Boston, MA</span>
-                                    </div>
-                                    <span className="job-salary">$110k-$150k</span>
-                                </div>
-                                <div className="job-tags">
-                                    <span className="job-tag">Python</span>
-                                    <span className="job-tag">ML</span>
-                                    <span className="job-tag">TensorFlow</span>
-                                </div>
-                                <button className="apply-btn">Apply Now</button>
-                            </div>
-
-                            {/* Job Card 6 */}
-                            <div className="job-card">
-                                <div className="job-card-header">
-                                    <div className="job-icon gradient-yellow-orange">
-                                        <img src="/assets/svg/mobile.svg" alt="" className="job-icon-img" />
-                                    </div>
-                                    <span className="job-type" id="job-type-contract">Contract</span>
-                                </div>
-                                <h3 className="job-title">Mobile App Developer</h3>
-                                <p className="job-company">AppWorks Studio</p>
-                                <div className="job-details">
-                                    <div className="job-location">
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <span>Austin, TX</span>
-                                    </div>
-                                    <span className="job-salary">$75k-$105k</span>
-                                </div>
-                                <div className="job-tags">
-                                    <span className="job-tag">React Native</span>
-                                    <span className="job-tag">iOS</span>
-                                    <span className="job-tag">Android</span>
-                                </div>
-                                <button className="apply-btn">Apply Now</button>
-                            </div>
+                            )}
                         </div>
 
                         {/* View All button */}
                         <div className="view-all-container">
-                            <button className="view-all-btn">View All Jobs</button>
+                            <Link href="/jobs" className="view-all-btn">View All Jobs</Link>
                         </div>
                     </div>
                 </div>

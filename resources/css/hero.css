@@ -4,7 +4,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 140px 80px 80px;
-    background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 50%, #BFDBFE 100%);
+    background: linear-gradient(135deg, #EFF6FF 0%, #FFFFFF 50%, #DBEAFE 100%);
     position: relative;
     overflow: hidden;
     min-height: 100vh;
@@ -24,10 +24,10 @@
 .circle1, .circle2 {
     position: absolute;
     border-radius: 50%;
-    background-color: rgba(47, 107, 255, 0.1);
 }
 
 .circle1 {
+    background-color: #0A24630A;
     width: 300px;
     height: 300px;
     top: 180px;
@@ -36,9 +36,10 @@
 }
 
 .circle2 {
-    width: 350px;
-    height: 350px;
-    bottom: 35px;
+    background-color: #0A24630D;
+    width: 310px;
+    height: 310px;
+    bottom: 85px;
     left: 18px;
     animation: float 10s ease-in-out infinite reverse;
 }
@@ -76,22 +77,28 @@
 
 .hero-left h1 {
     font-size: clamp(42px, 8vw, 64px);
-    font-weight: 800;
-    line-height: 1.1;
-    background: linear-gradient(135deg, var(--primary-blue, #0A2463) 0%, #1E40AF 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 24px;
+    font-weight: 700;
+    line-height: 0.8;
+    color: #0A2463;
+    margin-bottom: 20px;
     letter-spacing: -0.02em;
     position: relative;
     z-index: 2;
 }
 
+.hero-left span {
+    line-height: 0.9;
+    color: #1E3A8A;
+    font-weight: 700;
+    position: relative;
+    top: 12px;
+}
+
 .hero-left p {
-    font-size: 18px;
-    color: #4a5c7a;
-    margin-bottom: 30px;
+font-size: 18px;
+color: #4B5563;
+margin-bottom: 30px;
+white-space: nowrap;
 }
 
 .hero-buttons {
@@ -100,7 +107,7 @@
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--primary-blue, #0A2463) 0%, #1E40AF 100%);
+    background: #0A2463;
     color: white;
     border: none;
     padding: 16px 32px;
@@ -179,7 +186,7 @@
     border-radius: 24px;
     position: relative;
     z-index: 10;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid #E5E7EB;
 }
 
 .search-box {
