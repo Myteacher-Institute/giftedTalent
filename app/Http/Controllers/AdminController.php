@@ -190,9 +190,7 @@ class AdminController extends Controller
             'job_type' => $request->job_type,
             'salary_range' => $request->salary_range,
             'description' => $request->description,
-            'requirements' => $request->requirements,
-            'status' => 'active',
-            'posted_by' => Auth::id(),
+'status' => 'active',
             'posted_at' => now(),
             'applicants_count' => 0,
         ]);

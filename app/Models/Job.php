@@ -4,49 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Job extends Model
 {
     use HasFactory;
 
-    protected $table = 'job_postings';
+    protected $table = 'jobs';
 
-    protected $fillable = [
-        'title',
-        'company',
-        'description',
-        'tags',
-        'salary_range',
-        'location',
-        'status',
-    ];
-
-    protected $casts = [
-        'tags' => 'array',
-    ];
-
-    public function users(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class, 'applications');
-    }
-
-    public function scopeOpen($query)
-    {
-        return $query->where('status', 'open');
-    }
-
-    public function scopeRecommended($query, $userSkills)
-    {
-        return $query->where(function ($q) use ($userSkills) {
-            foreach ($userSkills as $skill) {
-                $q->orWhereJsonContains('tags', $skill);
-            }
-        });
-    }
-}
-    protected $table = 'job_posts'; // Use the new table name
-    
     protected $fillable = [
         'user_id',
         'company_name',
@@ -60,18 +26,21 @@ class Job extends Model
         'posted_at'
     ];
 
-    protected $casts = [
-        'posted_at' => 'datetime',
-        'applicants_count' => 'integer'
-    ];
+    protected function casts(): array
+    {
+        return [
+            'posted_at' => 'datetime',
+            'applicants_count' => 'integer',
+        ];
+    }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function applications()
+    public function applications(): HasMany
     {
-        return $this->hasMany(JobApplication::class, 'job_id');
+        return $this->hasMany(JobApplication::class);
     }
 }

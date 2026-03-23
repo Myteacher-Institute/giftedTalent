@@ -68,5 +68,21 @@ class Profile extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    /**
+     * Get the user's resumes.
+     */
+    public function resumes(): HasMany
+    {
+        return $this->hasMany(Resume::class);
+    }
+
+    /**
+     * Check if user has uploaded CV.
+     */
+    public function getCvUploadedAttribute(): bool
+    {
+        return $this->user->resumes()->exists();
+    }
 }
 

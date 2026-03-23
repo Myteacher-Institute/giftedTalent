@@ -50,8 +50,16 @@ function Nav({ auth }) {
             <div className="nav-right">
 
                 <div className="auth-links">
-                    <Link href={route('login')} className="nav-auth-link">Sign In</Link>
-                    <Link href={route('register')} className="get-started">Get Started</Link>
+                    {
+                        auth.user ? (
+                            <Link href='dashboard' className="nav-auth-link">Dashboard</Link>
+                        ) : (
+                            <>
+                                <Link href={route('login')} className="nav-auth-link">Sign In</Link>
+                                <Link href={route('register')} className="get-started">Get Started</Link>
+                            </>
+                        )
+                    }
                 </div>
 
                 <div
