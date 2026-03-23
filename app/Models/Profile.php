@@ -11,7 +11,7 @@ class Profile extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
+'user_id',
         'bio',
         'phone',
         'address',
@@ -19,6 +19,8 @@ class Profile extends Model
         'country',
         'avatar',
         'cover_image',
+        'position',
+        'education',
         'availability_status',
         'availability_type',
         'expected_salary',
@@ -35,6 +37,32 @@ class Profile extends Model
         'years_experience' => 'integer',
         'is_verified' => 'boolean',
     ];
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = [
+        'avatar_url',
+        'cover_image_url',
+    ];
+
+    /**
+     * Get avatar URL attribute.
+     */
+    public function getAvatarUrlAttribute(): ?string
+    {
+        return $this->avatar ? \Illuminate\Support\Facades\Storage::url($this->avatar) : null;
+    }
+
+    /**
+     * Get cover image URL attribute.
+     */
+    public function getCoverImageUrlAttribute(): ?string
+    {
+        return $this->cover_image ? \Illuminate\Support\Facades\Storage::url($this->cover_image) : null;
+    }
 
     public function user(): BelongsTo
     {

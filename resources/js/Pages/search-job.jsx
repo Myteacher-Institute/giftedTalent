@@ -89,7 +89,7 @@ export default function SearchJob({ auth }) {
                     <div className="card">
                         <div className="card-header">
                             <h3>Top Jobs picks for you</h3>
-                            <p>Based on your profile, preferences, and activity</p>
+                            <p>Based on your profile, preferences, and activity like applies and saves</p>
                         </div>
 
                         <div className="job" key="1">
@@ -114,7 +114,7 @@ export default function SearchJob({ auth }) {
                                 <p>Brand Hive. Port Harcourt. (Remote)</p>
                                 <span>Senior Software Engineer. Full Stack. JS</span>
                                 <div className="job-meta">
-                                    <span>1 day ago</span>
+                                    <span>4 day ago</span>
                                     <span className="easy-apply-span">Easy Apply <i className="fa-solid fa-paper-plane ml-1"></i></span>
                                     <span className="save-job-span">Save Job <i className="fa-solid fa-bookmark ml-1"></i></span>
                                 </div>
@@ -129,7 +129,37 @@ export default function SearchJob({ auth }) {
                                 <p>Brand Hive. Port Harcourt. (Remote)</p>
                                 <span>Senior Software Engineer. Full Stack. JS</span>
                                 <div className="job-meta">
-                                    <span>1 day ago</span>
+                                    <span>3 day ago</span>
+                                    <span className="easy-apply-span">Easy Apply <i className="fa-solid fa-paper-plane ml-1"></i></span>
+                                    <span className="save-job-span">Save Job <i className="fa-solid fa-bookmark ml-1"></i></span>
+                                </div>
+                            </div>
+                            <i className="fa-solid fa-times-circle close"></i>
+                        </div>
+
+                        <div className="job" key="3">
+                            <i className="fa-solid fa-building job-company-icon" title="Company"></i>
+                            <div className="job-info">
+                                <h4>UI/UX Designer</h4>
+                                <p>Brand Hive. Port Harcourt. (Remote)</p>
+                                <span>Senior Software Engineer. Full Stack. JS</span>
+                                <div className="job-meta">
+                                    <span>2 day ago</span>
+                                    <span className="easy-apply-span">Easy Apply <i className="fa-solid fa-paper-plane ml-1"></i></span>
+                                    <span className="save-job-span">Save Job <i className="fa-solid fa-bookmark ml-1"></i></span>
+                                </div>
+                            </div>
+                            <i className="fa-solid fa-times-circle close"></i>
+                        </div>
+
+                        <div className="job" key="3">
+                            <i className="fa-solid fa-building job-company-icon" title="Company"></i>
+                            <div className="job-info">
+                                <h4>UI/UX Designer</h4>
+                                <p>Brand Hive. Port Harcourt. (Remote)</p>
+                                <span>Senior Software Engineer. Full Stack. JS</span>
+                                <div className="job-meta">
+                                    <span>last week</span>
                                     <span className="easy-apply-span">Easy Apply <i className="fa-solid fa-paper-plane ml-1"></i></span>
                                     <span className="save-job-span">Save Job <i className="fa-solid fa-bookmark ml-1"></i></span>
                                 </div>
@@ -156,7 +186,7 @@ export default function SearchJob({ auth }) {
                                 <p>Brand Hive. Port Harcourt. (Remote)</p>
                                 <span>Senior Software Engineer. Full Stack. JS</span>
                                 <div className="job-meta">
-                                    <span>1 day ago</span>
+                                    <span>2 day ago</span>
                                     <span className="easy-apply-span">Easy Apply <i className="fa-solid fa-paper-plane ml-1"></i></span>
                                 </div>
                             </div>
@@ -170,7 +200,35 @@ export default function SearchJob({ auth }) {
                                 <p>Brand Hive. Port Harcourt. (Remote)</p>
                                 <span>Senior Software Engineer. Full Stack. JS</span>
                                 <div className="job-meta">
-                                    <span>1 day ago</span>
+                                    <span>4 day ago</span>
+                                    <span className="easy-apply-span">Easy Apply <i className="fa-solid fa-paper-plane ml-1"></i></span>
+                                </div>
+                            </div>
+                            <i className="fa-solid fa-times-circle close"></i>
+                        </div>
+
+                         <div className="job" key="5">
+                            <i className="fa-solid fa-building job-company-icon" title="Company"></i>
+                            <div className="job-info">
+                                <h4>UI/UX Designer</h4>
+                                <p>Brand Hive. Port Harcourt. (Remote)</p>
+                                <span>Senior Software Engineer. Full Stack. JS</span>
+                                <div className="job-meta">
+                                    <span>5 day ago</span>
+                                    <span className="easy-apply-span">Easy Apply <i className="fa-solid fa-paper-plane ml-1"></i></span>
+                                </div>
+                            </div>
+                            <i className="fa-solid fa-times-circle close"></i>
+                        </div>
+
+                         <div className="job" key="5">
+                            <i className="fa-solid fa-building job-company-icon" title="Company"></i>
+                            <div className="job-info">
+                                <h4>UI/UX Designer</h4>
+                                <p>Brand Hive. Port Harcourt. (Remote)</p>
+                                <span>Senior Software Engineer. Full Stack. JS</span>
+                                <div className="job-meta">
+                                    <span>6 day ago</span>
                                     <span className="easy-apply-span">Easy Apply <i className="fa-solid fa-paper-plane ml-1"></i></span>
                                 </div>
                             </div>

@@ -1,0 +1,134 @@
+/* Simple CV Manager - First Design Styles */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+.cv-page {
+  @apply min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8;
+}
+
+.cv-container {
+  @apply max-w-6xl mx-auto;
+}
+
+.cv-header {
+  @apply bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-12;
+}
+
+.cv-title {
+  @apply text-3xl font-bold text-gray-900 mb-2;
+}
+
+.cv-subtitle {
+  @apply text-gray-600 text-lg;
+}
+
+.upload-section {
+  @apply bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-12 text-center;
+}
+
+.upload-label {
+  @apply block text-sm font-medium text-gray-700 mb-2;
+}
+
+.upload-input {
+  @apply block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none focus:border-primary-500 focus:bg-white;
+}
+
+.upload-button {
+  @apply mt-4 inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition duration-200;
+}
+
+.empty-state {
+  @apply bg-white border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center;
+}
+
+.empty-icon {
+  @apply w-24 h-24 mx-auto mb-6 text-gray-400;
+}
+
+.resumes-section {
+  @apply mt-8;
+}
+
+.resumes-title {
+  @apply text-2xl font-bold text-gray-900 mb-6;
+}
+
+.resumes-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+}
+
+.resume-card {
+  @apply bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200;
+}
+
+.resume-header {
+  @apply flex items-start justify-between mb-4;
+}
+
+.resume-icon {
+  @apply w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0;
+}
+
+.resume-details {
+  @apply ml-4 flex-1 min-w-0;
+}
+
+.resume-name {
+  @apply text-lg font-semibold text-gray-900 truncate;
+}
+
+.resume-meta {
+  @apply text-sm text-gray-500 mt-1 flex flex-wrap gap-2;
+}
+
+.resume-actions {
+  @apply flex gap-2 mt-6;
+}
+
+.btn-download {
+  @apply flex-1 inline-flex justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors;
+}
+
+.btn-replace {
+  @apply flex-1 bg-primary-600 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-600 transition-colors;
+}
+
+.btn-delete {
+  @apply flex-1 bg-red-600 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors;
+}
+
+.loading {
+  @apply opacity-75 cursor-not-allowed;
+}
+
+.error-message {
+  @apply bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mt-4;
+}
+
+.success-message {
+  @apply bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mt-4;
+}
+
+@media (max-width: 768px) {
+  .resumes-grid {
+    @apply grid-cols-1 gap-4;
+  }
+  
+  .resume-actions {
+    @apply flex-col gap-2;
+  }
+  
+  .btn-download, .btn-replace, .btn-delete {
+    @apply flex-1;
+  }
+}
+
+/* Primary color utilities (matching dashboard theme) */
+@layer components {
+  .btn-primary {
+    @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow transition-all;
+  }
+}
+

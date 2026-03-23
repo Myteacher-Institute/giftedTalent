@@ -19,6 +19,14 @@ export default function Login({ status, canResetPassword }) {
 
         post(route('login'), {
             onFinish: () => reset('password'),
+            onSuccess: () => {
+                // Welcome message on successful login
+                setTimeout(() => {
+                    if (window.alertify) {
+                        alertify.success('Welcome back! Redirecting to dashboard...', 3);
+                    }
+                }, 500);
+            },
         });
     };
 
