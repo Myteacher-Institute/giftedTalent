@@ -43,4 +43,14 @@ class Job extends Model
     {
         return $this->hasMany(JobApplication::class);
     }
+
+    public function savedByUsers(): HasMany
+    {
+        return $this->hasMany(SavedJob::class, 'job_id');
+    }
+
+    public function isSavedByUser($userId): bool
+    {
+        return $this->savedByUsers()->where('user_id', $userId)->where('is_saved', true)->exists();
+    }
 }

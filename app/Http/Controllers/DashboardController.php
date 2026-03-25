@@ -26,13 +26,30 @@ class DashboardController extends Controller
         
         $profile = Profile::where('user_id', $user->id)->first();
 
+        // CRITICAL: Ensure the profile is attached to the user object
+        if ($profile) {
+            $user->setRelation('profile', $profile);
+            // Also add avatar_url to profile for easy access
+            if ($profile->avatar) {
+                $profile->avatar_url = asset('storage/' . $profile->avatar);
+            }
+        } else {
+            // Create a default profile if none exists
+            $profile = Profile::create(['user_id' => $user->id]);
+            $user->setRelation('profile', $profile);
+            Log::info('Created default profile for user: ' . $user->id);
+        }
+
         // Debug: Log profile status
         Log::info('Dashboard loaded', [
             'user_id' => $user->id,
             'user_name' => $user->name,
             'profile_exists' => $user->profile ? 'yes' : 'no',
+            'profile_id' => $user->profile->id ?? 'null',
             'profile_position' => $user->profile->position ?? 'null',
             'profile_bio' => $user->profile->bio ?? 'null',
+            'avatar' => $user->profile->avatar ?? 'null',
+            'avatar_url' => $user->profile->avatar_url ?? 'null',
         ]);
 
         // Search parameters

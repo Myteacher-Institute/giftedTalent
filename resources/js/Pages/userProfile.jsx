@@ -45,6 +45,7 @@ export default function EditProfile({ user, flash, profile }) {
     const [hasChanges, setHasChanges] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [previewImage, setPreviewImage] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Show success message from flash if any
     useEffect(() => {
@@ -94,8 +95,27 @@ export default function EditProfile({ user, flash, profile }) {
         setHasChanges(hasAnyChanges);
     }, [data]);
 
+    // Listen for profile updates from other components
+    useEffect(() => {
+        const handleProfileUpdate = (event) => {
+            if (event.detail?.profile?.avatar_url) {
+                setPreviewImage(event.detail.profile.avatar_url);
+                // Update initialData to reflect the new image
+                initialData.current.profile_image = event.detail.profile.avatar_url;
+            }
+        };
+
+        window.addEventListener('profileUpdated', handleProfileUpdate);
+        
+        return () => {
+            window.removeEventListener('profileUpdated', handleProfileUpdate);
+        };
+    }, []);
+
     const submit = (e) => {
         e.preventDefault();
+        
+        if (isSubmitting) return; // Prevent double submission
         
         // Find only the fields that have changed
         const changedFields = {};
@@ -113,6 +133,7 @@ export default function EditProfile({ user, flash, profile }) {
         
         console.log('Sending changed fields:', changedFields);
         clearErrors();
+        setIsSubmitting(true);
         
         // Send only the changed fields
         patch(route('profile.updateExtended'), changedFields, {
@@ -120,30 +141,31 @@ export default function EditProfile({ user, flash, profile }) {
             preserveScroll: true,
             onSuccess: (response) => {
                 console.log('Success response:', response);
-                alertify.success('Profile updated successfully! Redirecting to dashboard...');
                 
-                // Dispatch custom event for real-time updates
-                window.dispatchEvent(new CustomEvent('profileUpdated', { 
-                    detail: {
-                        user: user,
-                        profile: {
-                            ...user.profile,
-                            avatar_url: previewImage
-                        },
-                        timestamp: Date.now()
+                // Show success message
+                alertify.success('Profile updated successfully!');
+                
+                // Store a flag in sessionStorage to show success message on dashboard
+                sessionStorage.setItem('profileUpdated', 'true');
+                sessionStorage.setItem('profileUpdateTime', Date.now().toString());
+                
+                // Redirect to dashboard with Inertia
+                router.visit('/dashboard', {
+                    preserveState: false,
+                    preserveScroll: false,
+                    onSuccess: () => {
+                        setIsSubmitting(false);
+                    },
+                    onError: () => {
+                        setIsSubmitting(false);
                     }
-                }));
-                
-                // Redirect to dashboard with a full page refresh
-                setTimeout(() => {
-                    // Use window.location for a full page refresh to ensure all data is fresh
-                    window.location.href = '/dashboard';
-                }, 1000);
+                });
             },
             onError: (errors) => {
                 console.error('Validation errors:', errors);
                 const errorMessages = Object.values(errors).flat().join('\n');
                 alertify.error(errorMessages || 'Please fix the errors and try again.');
+                setIsSubmitting(false);
             }
         });
     };
@@ -210,6 +232,29 @@ export default function EditProfile({ user, flash, profile }) {
         alertify.message('Image will be removed when you save changes');
     };
 
+    // Function to get profile image URL with proper fallback
+    const getProfileImageUrl = () => {
+        // If there's a preview image (new upload), show that
+        if (previewImage) {
+            return previewImage;
+        }
+        // Check if user has profile with avatar_url
+        if (user?.profile?.avatar_url) {
+            return user.profile.avatar_url;
+        }
+        // Check if there's an avatar path
+        if (user?.profile?.avatar) {
+            const avatarPath = user.profile.avatar;
+            if (avatarPath.startsWith('/storage/')) {
+                return avatarPath;
+            }
+            return `/storage/${avatarPath}`;
+        }
+        // Fallback to UI Avatars with user's name
+        const userName = user?.name || 'User';
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
+    };
+
     const initials = user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase() : 'JD';
     const recentExperience = user?.experiences?.[0] || { company: 'No experience added', job_title: 'Add experience' };
 
@@ -227,23 +272,16 @@ export default function EditProfile({ user, flash, profile }) {
                         <div className="profile-section">
                             <div className="profile-left">
                                 <div className="profile-image-wrapper">
-                                    {previewImage ? (
-                                        <img 
-                                            src={previewImage} 
-                                            alt="Profile" 
-                                            className="profile-image"
-                                        />
-                                    ) : user?.profile?.avatar_url ? (
-                                        <img 
-                                            src={user.profile.avatar_url} 
-                                            alt="Profile" 
-                                            className="profile-image"
-                                        />
-                                    ) : (
-                                        <div className="profile-initials">
-                                            {initials}
-                                        </div>
-                                    )}
+                                    <img 
+                                        src={getProfileImageUrl()} 
+                                        alt={user?.name || 'Profile'} 
+                                        className="profile-image"
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                                        onError={(e) => {
+                                            const userName = user?.name || 'User';
+                                            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
+                                        }}
+                                    />
                                     <div className="verified-overlay">
                                         <i className="fa-solid fa-check-circle"></i>
                                     </div>
@@ -266,7 +304,7 @@ export default function EditProfile({ user, flash, profile }) {
                                             onChange={handleImageUpload}
                                             accept="image/jpeg,image/jpg,image/png,image/gif"
                                             className="hidden"
-                                            disabled={uploading}
+                                            disabled={uploading || isSubmitting}
                                         />
                                     </label>
                                     {(previewImage || user?.profile?.avatar) && (
@@ -274,7 +312,7 @@ export default function EditProfile({ user, flash, profile }) {
                                             type="button"
                                             onClick={removeAvatar} 
                                             className="btn-remove" 
-                                            disabled={uploading}
+                                            disabled={uploading || isSubmitting}
                                         >
                                             <i className="fa-solid fa-trash"></i> Remove
                                         </button>
@@ -300,6 +338,7 @@ export default function EditProfile({ user, flash, profile }) {
                                         value={data.first_name}
                                         onChange={(e) => setData('first_name', e.target.value)}
                                         className="mt-1 block w-full"
+                                        disabled={isSubmitting}
                                     />
                                     <InputError message={errors.first_name} />
                                 </div>
@@ -311,6 +350,7 @@ export default function EditProfile({ user, flash, profile }) {
                                         value={data.last_name}
                                         onChange={(e) => setData('last_name', e.target.value)}
                                         className="mt-1 block w-full"
+                                        disabled={isSubmitting}
                                     />
                                     <InputError message={errors.last_name} />
                                 </div>
@@ -325,6 +365,7 @@ export default function EditProfile({ user, flash, profile }) {
                                         value={data.email}
                                         onChange={(e) => setData('email', e.target.value)}
                                         className="mt-1 block w-full"
+                                        disabled={isSubmitting}
                                     />
                                     <InputError message={errors.email} />
                                 </div>
@@ -338,6 +379,7 @@ export default function EditProfile({ user, flash, profile }) {
                                         value={data.phone}
                                         onChange={(e) => setData('phone', e.target.value)}
                                         className="mt-1 block w-full"
+                                        disabled={isSubmitting}
                                     />
                                     <InputError message={errors.phone} />
                                 </div>
@@ -357,6 +399,7 @@ export default function EditProfile({ user, flash, profile }) {
                                         value={data.position}
                                         onChange={(e) => setData('position', e.target.value)}
                                         className="mt-1 block w-full"
+                                        disabled={isSubmitting}
                                     />
                                     <InputError message={errors.position} />
                                 </div>
@@ -369,6 +412,7 @@ export default function EditProfile({ user, flash, profile }) {
                                         value={data.education}
                                         onChange={(e) => setData('education', e.target.value)}
                                         className="mt-1 block w-full"
+                                        disabled={isSubmitting}
                                     />
                                     <InputError message={errors.education} />
                                 </div>
@@ -384,6 +428,7 @@ export default function EditProfile({ user, flash, profile }) {
                                         onChange={(e) => setData('bio', e.target.value)}
                                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                         rows="4"
+                                        disabled={isSubmitting}
                                     />
                                     <InputError message={errors.bio} />
                                 </div>
@@ -402,6 +447,7 @@ export default function EditProfile({ user, flash, profile }) {
                                         value={data.city}
                                         onChange={(e) => setData('city', e.target.value)}
                                         className="mt-1 block w-full"
+                                        disabled={isSubmitting}
                                     />
                                     <InputError message={errors.city} />
                                 </div>
@@ -413,6 +459,7 @@ export default function EditProfile({ user, flash, profile }) {
                                         value={data.country}
                                         onChange={(e) => setData('country', e.target.value)}
                                         className="mt-1 block w-full"
+                                        disabled={isSubmitting}
                                     />
                                     <InputError message={errors.country} />
                                 </div>
@@ -426,6 +473,7 @@ export default function EditProfile({ user, flash, profile }) {
                                         value={data.address}
                                         onChange={(e) => setData('address', e.target.value)}
                                         className="mt-1 block w-full"
+                                        disabled={isSubmitting}
                                     />
                                     <InputError message={errors.address} />
                                 </div>
@@ -445,6 +493,7 @@ export default function EditProfile({ user, flash, profile }) {
                                         onChange={(e) => setData('linkedin_url', e.target.value)}
                                         className="mt-1 block w-full"
                                         placeholder="https://linkedin.com/in/username"
+                                        disabled={isSubmitting}
                                     />
                                     <InputError message={errors.linkedin_url} />
                                 </div>
@@ -457,6 +506,7 @@ export default function EditProfile({ user, flash, profile }) {
                                         onChange={(e) => setData('github_url', e.target.value)}
                                         className="mt-1 block w-full"
                                         placeholder="https://github.com/username"
+                                        disabled={isSubmitting}
                                     />
                                     <InputError message={errors.github_url} />
                                 </div>
@@ -471,6 +521,7 @@ export default function EditProfile({ user, flash, profile }) {
                                         onChange={(e) => setData('portfolio_url', e.target.value)}
                                         className="mt-1 block w-full"
                                         placeholder="https://yourportfolio.com"
+                                        disabled={isSubmitting}
                                     />
                                     <InputError message={errors.portfolio_url} />
                                 </div>
@@ -481,15 +532,15 @@ export default function EditProfile({ user, flash, profile }) {
                                     type="button" 
                                     className="btn-secondary" 
                                     onClick={resetForm}
-                                    disabled={!hasChanges || processing}
+                                    disabled={!hasChanges || processing || isSubmitting}
                                 >
                                     Cancel
                                 </button>
                                 <PrimaryButton 
                                     className="btn-primary" 
-                                    disabled={processing || !hasChanges}
+                                    disabled={processing || !hasChanges || isSubmitting}
                                 >
-                                    {processing ? 'Saving...' : 'Save Changes'}
+                                    {isSubmitting ? 'Saving...' : (processing ? 'Saving...' : 'Save Changes')}
                                 </PrimaryButton>
                             </div>
                         </form>

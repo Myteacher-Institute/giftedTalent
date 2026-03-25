@@ -178,6 +178,122 @@ const featuresData = [
 ];
 
 export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] }) {
+    // State for search inputs
+    const [searchInputs, setSearchInputs] = useState({
+        keyword: '',
+        skill: '',
+        location: ''
+    });
+    
+    // State for search results
+    const [searchResults, setSearchResults] = useState([]);
+    
+    // State for loading and error
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchError, setSearchError] = useState('');
+    
+    // Toast notification state
+    const [toast, setToast] = useState({
+        show: false,
+        message: '',
+        type: 'info' // 'info', 'success', 'error', 'loading'
+    });
+    
+    // Auto-hide toast after 3 seconds
+    useEffect(() => {
+        if (toast.show) {
+            const timer = setTimeout(() => {
+                setToast(prev => ({ ...prev, show: false }));
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [toast.show]);
+    
+    // Function to show toast messages
+    const showToast = (message, type = 'info') => {
+        setToast({
+            show: true,
+            message,
+            type
+        });
+    };
+
+    // Handle input changes
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setSearchInputs(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    // Handle search
+    const handleSearch = () => {
+        // Check if any search input has value
+        const hasSearchCriteria = searchInputs.keyword || searchInputs.skill || searchInputs.location;
+        
+        if (!hasSearchCriteria) {
+            showToast('Please enter at least one search criteria', 'error');
+            return;
+        }
+        
+        setIsSearching(true);
+        setSearchError('');
+        showToast('Searching for jobs...', 'loading');
+        
+        // Simulate minimum loading time for better UX
+        setTimeout(() => {
+            try {
+                // Filter jobs based on search inputs
+                const filtered = jobs.filter(job => {
+                    // Get search values (trim and lowercase for better matching)
+                    const keyword = searchInputs.keyword.toLowerCase().trim();
+                    const skill = searchInputs.skill.toLowerCase().trim();
+                    const location = searchInputs.location.toLowerCase().trim();
+                    
+                    // Get job data (handle null/undefined values)
+                    const jobTitle = (job.job_title || job.title || '').toLowerCase();
+                    const jobSkills = (job.skills_required || job.skills || '').toLowerCase();
+                    const jobLocation = (job.company_location || job.location || '').toLowerCase();
+                    
+                    // Check each field - if field is empty, don't filter by it
+                    let matchesKeyword = true;
+                    let matchesSkill = true;
+                    let matchesLocation = true;
+                    
+                    if (keyword) {
+                        matchesKeyword = jobTitle.includes(keyword);
+                    }
+                    
+                    if (skill) {
+                        matchesSkill = jobSkills.includes(skill);
+                    }
+                    
+                    if (location) {
+                        matchesLocation = jobLocation.includes(location);
+                    }
+                    
+                    // Return true if all active filters match
+                    return matchesKeyword && matchesSkill && matchesLocation;
+                });
+                
+                setSearchResults(filtered);
+                
+                // Show appropriate feedback
+                if (filtered.length > 0) {
+                    showToast(`Found ${filtered.length} job${filtered.length !== 1 ? 's' : ''} matching your criteria`, 'success');
+                } else {
+                    showToast('No jobs found matching your criteria. Try different keywords!', 'error');
+                }
+                
+            } catch (err) {
+                showToast('An error occurred while searching. Please try again.', 'error');
+                console.error('Search error:', err);
+            } finally {
+                setIsSearching(false);
+            }
+        }, 500); // 500ms delay for better UX
+    };
 
     return (
         <>
@@ -201,7 +317,13 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                                     <circle cx="11" cy="11" r="8"></circle>
                                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                                 </svg>
-                                <input type="text" placeholder="Job title or Keyword" />
+                                <input 
+                                    type="text" 
+                                    name="keyword"
+                                    placeholder="Job title or Keyword" 
+                                    value={searchInputs.keyword}
+                                    onChange={handleInputChange}
+                                />
                             </div>
                             <div className="input-with-icon">
                                 {/* briefcase / skill */}
@@ -209,7 +331,13 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                                     <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
                                     <path d="M16 3H8v4h8V3z"></path>
                                 </svg>
-                                <input type="text" placeholder="Skill" />
+                                <input 
+                                    type="text" 
+                                    name="skill"
+                                    placeholder="Skill" 
+                                    value={searchInputs.skill}
+                                    onChange={handleInputChange}
+                                />
                             </div>
                             <div className="input-with-icon">
                                 {/* map pin / location */}
@@ -217,14 +345,92 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                                     <path d="M21 10c0 6-9 13-9 13S3 16 3 10a9 9 0 1118 0z"></path>
                                     <circle cx="12" cy="10" r="3"></circle>
                                 </svg>
-                                <input type="text" placeholder="Location" />
+                                <input 
+                                    type="text" 
+                                    name="location"
+                                    placeholder="Location" 
+                                    value={searchInputs.location}
+                                    onChange={handleInputChange}
+                                />
                             </div>
                         </div>
 
-                        <button className="search-button">Search Jobs</button>
+                        <button className="search-button" onClick={handleSearch}>
+                            {isSearching ? 'Searching...' : 'Search Jobs'}
+                        </button>
                     </div>
                 </div>
 
+                {/* Toast Notification */}
+                {toast.show && (
+                    <div className={`toast-notification toast-${toast.type}`}>
+                        <div className="toast-content">
+                            {toast.type === 'loading' && (
+                                <svg className="toast-icon spinning" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M12 6v6l4 2"></path>
+                                </svg>
+                            )}
+                            {toast.type === 'success' && (
+                                <svg className="toast-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M20 6L9 17l-5-5"></path>
+                                </svg>
+                            )}
+                            {toast.type === 'error' && (
+                                <svg className="toast-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                                </svg>
+                            )}
+                            {toast.type === 'info' && (
+                                <svg className="toast-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                </svg>
+                            )}
+                            <span className="toast-message">{toast.message}</span>
+                            <button className="toast-close" onClick={() => setToast(prev => ({ ...prev, show: false }))}>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Search Results */}
+                {searchResults.length > 0 && (
+                    <div className="search-results-section">
+                        <h2>Search Results ({searchResults.length})</h2>
+                        <div className="jobs-grid">
+                            {searchResults.map((job) => (
+                                <div key={job.id} className="job-card">
+                                    <div className="job-card-header">
+                                        <div className={`job-icon ${job.gradient || 'gradient-blue'}`}>
+                                            <img src={`/assets/svg/${job.icon || 'code.svg'}`} alt="" className="job-icon-img" />
+                                        </div>
+                                        <span className="job-type" id={job.type === 'Contract' ? 'job-type-contract' : 'job-type-fulltime'}>
+                                            {job.job_type || job.type || 'Full-time'}
+                                        </span>
+                                    </div>
+                                    <h3 className="job-title">{job.job_title || job.title || 'Job Title'}</h3>
+                                    <p className="job-company">{job.company_name || job.company || 'Company Name'}</p>
+                                    <div className="job-details">
+                                        <div className="job-location">
+                                            <img src="/assets/svg/location.svg" alt="" className="location-icon" />
+                                            <span>{job.company_location || job.location || 'Location'}</span>
+                                        </div>
+                                        <span className="job-salary">{job.salary_range || job.salary || 'Salary'}</span>
+                                    </div>
+                                    <button className="apply-btn">Apply Now</button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* christopher - Featured Jobs Section */}
                 <div className="feature-jobs">

@@ -74,6 +74,13 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     Route::post('/profile/experiences', [ProfileController::class, 'addExperience'])->name('profile.experiences.add');
     Route::put('/profile/experiences/{experience}', [ProfileController::class, 'updateExperience'])->name('profile.experiences.update');
     Route::delete('/profile/experiences/{experience}', [ProfileController::class, 'deleteExperience'])->name('profile.experiences.delete');
+
+      // Saved Jobs Routes
+     Route::get('/saved-jobs', [\App\Http\Controllers\Api\SavedJobController::class, 'index'])->name('saved-jobs.index');
+     Route::post('/saved-jobs/{jobId}', [\App\Http\Controllers\Api\SavedJobController::class, 'store'])->name('saved-jobs.store');
+     Route::delete('/saved-jobs/{jobId}', [\App\Http\Controllers\Api\SavedJobController::class, 'destroy'])->name('saved-jobs.destroy');
+     Route::get('/saved-jobs/check/{jobId}', [\App\Http\Controllers\Api\SavedJobController::class, 'check'])->name('saved-jobs.check');
+     Route::get('/saved-jobs/count', [\App\Http\Controllers\Api\SavedJobController::class, 'count'])->name('saved-jobs.count');
 });
 
 // Admin Routes - Protected by IsAdmin middleware

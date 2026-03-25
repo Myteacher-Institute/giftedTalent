@@ -39,6 +39,14 @@ class ProfileController extends Controller
             Log::info('Found existing profile ID: ' . $profile->id . ' for user: ' . $user->id);
         }
 
+        // Make sure avatar_url is set
+        $avatarUrl = null;
+        if ($profile->avatar) {
+            $avatarUrl = Storage::disk('public')->url($profile->avatar);
+            // Store avatar_url in profile object for easier access
+            $profile->avatar_url = $avatarUrl;
+        }
+
         return Inertia::render('userProfile', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
@@ -99,7 +107,9 @@ class ProfileController extends Controller
 
             // Handle base64 profile image if present
             $avatarUpdated = false;
-            if (isset($validated['profile_image'])) {
+            $newAvatarPath = null;
+            
+            if (array_key_exists('profile_image', $validated)) {
                 $base64Image = $validated['profile_image'];
                 
                 // Check if it's an empty string (remove avatar)
@@ -112,7 +122,7 @@ class ProfileController extends Controller
                     Log::info('Profile image removed');
                 }
                 // Check if it's a valid base64 string (upload new image)
-                elseif (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                elseif ($base64Image && preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
                     $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
                     $imageData = base64_decode($imageData);
                     
@@ -138,6 +148,7 @@ class ProfileController extends Controller
                         
                         // Save the path to profile
                         $profile->avatar = $path;
+                        $newAvatarPath = $path;
                         $avatarUpdated = true;
                         Log::info('Profile image saved to: ' . $path);
                         Log::info('Full URL: ' . Storage::disk('public')->url($path));
@@ -202,27 +213,36 @@ class ProfileController extends Controller
             $user->refresh();
             $user->load('profile');
             
+            // Set the avatar_url on the profile for frontend use
+            if ($profile->avatar) {
+                $avatarUrl = Storage::disk('public')->url($profile->avatar);
+                $user->profile->avatar_url = $avatarUrl;
+                Log::info('Setting avatar_url: ' . $avatarUrl);
+            } else {
+                $user->profile->avatar_url = null;
+            }
+            
             Log::info('=== PROFILE UPDATE COMPLETED ===');
             Log::info('Final avatar path: ' . $profile->avatar);
             Log::info('Final avatar URL: ' . ($profile->avatar ? Storage::disk('public')->url($profile->avatar) : 'none'));
 
-            // Store success message
+            // Store success message in flash
             session()->flash('success', 'Profile updated successfully!');
-
-            return Redirect::route('profile.editExtended');
+            
+            // IMPORTANT: Redirect to dashboard instead of profile edit page
+            // This ensures the dashboard shows the updated profile
+            return Redirect::route('dashboard');
             
         } catch (\Exception $e) {
             Log::error('Profile update error:', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            session()->flash('error', 'An error occurred while updating profile.');
-            return Redirect::route('profile.editExtended')->withErrors(['error' => 'Update failed']);
+            session()->flash('error', 'An error occurred while updating profile: ' . $e->getMessage());
+            return Redirect::route('profile.editExtended')->withErrors(['error' => 'Update failed: ' . $e->getMessage()]);
         }
     }
 
-    // ... keep all your other methods (cv, storeResume, destroyResume, etc.)
-    
     /**
      * Upload user avatar image (keep for backward compatibility)
      */
@@ -252,9 +272,13 @@ class ProfileController extends Controller
         $profile->avatar = $path;
         $profile->save();
 
+        // Refresh user with profile
+        $user->refresh();
+        $user->load('profile');
+        
         session()->flash('success', 'Avatar uploaded successfully!');
         
-        return Redirect::route('profile.editExtended');
+        return Redirect::route('dashboard');
     }
 
     /**
@@ -271,8 +295,12 @@ class ProfileController extends Controller
             $profile->save();
         }
 
+        // Refresh user with profile
+        $user->refresh();
+        $user->load('profile');
+        
         session()->flash('success', 'Avatar removed successfully!');
         
-        return Redirect::route('profile.editExtended');
+        return Redirect::route('dashboard');
     }
 }

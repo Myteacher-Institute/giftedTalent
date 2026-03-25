@@ -9,11 +9,23 @@ import MessageModal from '../Components/MessageModal';
 window.alertify = window.alertify || alertify;
 
 // Job Card Component
-function JobCard({ job }) {
+function JobCard({ job, onSave, onUnsave, isSaved = false }) {
     const [showMenu, setShowMenu] = useState(null);
+    const [saved, setSaved] = useState(isSaved);
 
     const toggleMenu = (index) => {
         setShowMenu(showMenu === index ? null : index);
+    };
+
+    const handleSaveClick = () => {
+        if (saved) {
+            onUnsave(job.id);
+            setSaved(false);
+        } else {
+            onSave(job.id);
+            setSaved(true);
+        }
+        setShowMenu(null);
     };
 
     return (
@@ -55,8 +67,9 @@ function JobCard({ job }) {
                         <button onClick={() => setShowMenu(null)}>
                             <i className="fa-regular fa-paper-plane"></i> Apply Now
                         </button>
-                        <button onClick={() => setShowMenu(null)}>
-                            <i className="fa-regular fa-bookmark"></i> Save Job
+                        <button onClick={handleSaveClick}>
+                            <i className={`fa-regular fa-bookmark`} style={{ color: saved ? '#4F46E5' : '' }}></i> 
+                            {saved ? 'Saved' : 'Save Job'}
                         </button>
                     </div>
                 )}
@@ -83,7 +96,6 @@ export default function Dashboard({
     const [showAdvanced, setShowAdvanced] = useState(false);
     const [loading, setLoading] = useState(false);
     
-    // New state variables for applied jobs and notifications
     const [showAppliedJobs, setShowAppliedJobs] = useState(false);
     const [appliedJobs, setAppliedJobs] = useState([]);
     const [loadingApplied, setLoadingApplied] = useState(false);
@@ -92,34 +104,56 @@ export default function Dashboard({
     const [unreadCount, setUnreadCount] = useState(0);
     const [messages, setMessages] = useState([]);
     const [loadingMessages, setLoadingMessages] = useState(false);
+    const [savedJobs, setSavedJobs] = useState([]);
+    const [savedJobsCount, setSavedJobsCount] = useState(0);
+    const [showSavedJobs, setShowSavedJobs] = useState(false);
+    const [loadingSaved, setLoadingSaved] = useState(false);
 
-    // Get current user data
     const currentUser = user || auth?.user;
 
-    // Show success message from flash if any
     useEffect(() => {
         if (flash?.success) {
             alertify.success(flash.success);
         }
     }, [flash]);
 
-    // Function to get profile image URL with proper fallback
+    useEffect(() => {
+        const profileUpdated = sessionStorage.getItem('profileUpdated');
+        const profileUpdateTime = sessionStorage.getItem('profileUpdateTime');
+        
+        if (profileUpdated === 'true') {
+            const now = Date.now();
+            const updateTime = parseInt(profileUpdateTime);
+            
+            if (updateTime && (now - updateTime) < 10000) {
+                alertify.success('Profile updated successfully! Your changes have been saved.');
+            }
+            
+            sessionStorage.removeItem('profileUpdated');
+            sessionStorage.removeItem('profileUpdateTime');
+        }
+    }, []);
+
     const getProfileImageUrl = () => {
-        // Check if user has profile with avatar_url
         if (currentUser?.profile?.avatar_url) {
             return currentUser.profile.avatar_url;
         }
-        // Check if there's an avatar path
+        
         if (currentUser?.profile?.avatar) {
             const avatarPath = currentUser.profile.avatar;
-            if (avatarPath.startsWith('/storage/')) {
+            
+            if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
                 return avatarPath;
             }
-            return `/storage/${avatarPath}`;
+            
+            const cleanPath = avatarPath.replace(/^\/+/, '');
+            const fullUrl = `/storage/${cleanPath}`;
+            return fullUrl;
         }
-        // Fallback to UI Avatars with user's name
+        
         const userName = currentUser?.name || 'User';
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
+        const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
+        return fallbackUrl;
     };
 
     const handleSearch = (e) => {
@@ -149,11 +183,9 @@ export default function Dashboard({
         router.post('/logout');
     };
 
-    // Function to fetch user's applied jobs
     const fetchAppliedJobs = async () => {
         setLoadingApplied(true);
         try {
-            // TODO: Update this endpoint once you share your routes
             const response = await axios.get('/api/user/applied-jobs');
             setAppliedJobs(response.data);
         } catch (error) {
@@ -164,15 +196,73 @@ export default function Dashboard({
         }
     };
 
-    // Handle showing applied jobs
     const handleShowAppliedJobs = () => {
         setShowAppliedJobs(true);
+        setShowSavedJobs(false);
         fetchAppliedJobs();
     };
 
-    // Handle showing all jobs (feed)
     const handleShowAllJobs = () => {
         setShowAppliedJobs(false);
+        setShowSavedJobs(false);
+    };
+
+    const fetchSavedJobs = async () => {
+        setLoadingSaved(true);
+        try {
+            const response = await axios.get('/saved-jobs');
+            setSavedJobs(response.data.data);
+        } catch (error) {
+            console.error('Error fetching saved jobs:', error);
+            alertify.error('Failed to load saved jobs');
+        } finally {
+            setLoadingSaved(false);
+        }
+    };
+
+    const handleShowSavedJobs = () => {
+        setShowAppliedJobs(false);
+        setShowSavedJobs(true);
+        fetchSavedJobs();
+    };
+
+    const handleSaveJob = async (jobId) => {
+        try {
+            const response = await axios.post(`/saved-jobs/${jobId}`);
+            if (response.data.success) {
+                alertify.success('Job saved successfully');
+                fetchSavedJobsCount();
+            }
+        } catch (error) {
+            if (error.response?.data?.message === 'Job already saved') {
+                alertify.warning('Job already saved');
+            } else {
+                alertify.error('Failed to save job');
+            }
+        }
+    };
+
+    const handleUnsaveJob = async (jobId) => {
+        try {
+            await axios.delete(`/saved-jobs/${jobId}`);
+            alertify.success('Job removed from saved');
+            if (showSavedJobs) {
+                fetchSavedJobs();
+            }
+            fetchSavedJobsCount();
+        } catch (error) {
+            console.error('Error removing saved job:', error);
+            alertify.error('Failed to remove job');
+        }
+    };
+
+    const fetchSavedJobsCount = async () => {
+        try {
+            const response = await axios.get('/saved-jobs/count');
+            setSavedJobsCount(response.data.count);
+        } catch (error) {
+            console.error('Error fetching saved jobs count:', error);
+        }
     };
 
     const fetchUnreadCount = async () => {
@@ -235,11 +325,13 @@ export default function Dashboard({
         return () => clearInterval(interval);
     }, []);
 
-    // Split jobs into recommended and others
+    useEffect(() => {
+        fetchSavedJobsCount();
+    }, []);
+
     const recommendedJobs = jobs.filter(job => job.match_score && job.match_score >= 60);
     const otherJobs = jobs.filter(job => !job.match_score || job.match_score < 60);
 
-    // Get CV count
     const cvCount = currentUser?.resumes?.length || 0;
     const hasCV = cvCount > 0;
 
@@ -285,7 +377,6 @@ export default function Dashboard({
                         }}
                         onClick={() => router.visit('/profile/edit')}
                         onError={(e) => {
-                            // Fallback if image fails to load
                             const userName = currentUser?.name || 'User';
                             e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=40&bold=true`;
                         }}
@@ -296,24 +387,22 @@ export default function Dashboard({
             <div className="container">
                 <aside className="sidebar">
                     <div className="profile">
-                        <img 
-                            src={getProfileImageUrl()} 
-                            alt={currentUser?.name || 'Profile'} 
-                            className="sidebar-profile-image"
-                            style={{ 
-                                width: '80px', 
-                                height: '80px', 
-                                borderRadius: '50%', 
-                                objectFit: 'cover', 
-                                margin: '0 auto',
-                                border: '3px solid white',
-                                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)'
-                            }}
-                            onError={(e) => {
-                                const userName = currentUser?.name || 'User';
-                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=80&bold=true`;
-                            }}
-                        />
+                        <div className="profile-image-wrapper">
+                            <img 
+                                src={getProfileImageUrl()} 
+                                alt={currentUser?.name || 'Profile'} 
+                                className="profile-image"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                                onError={(e) => {
+                                    const userName = currentUser?.name || 'User';
+                                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
+                                }}
+                            />
+                            <div className="verified-overlay">
+                                <i className="fa-solid fa-check-circle"></i>
+                            </div>
+                        </div>
+
                         <h3>{currentUser?.name || 'User'}</h3>
                         <p>{profile?.position || currentUser?.profile?.position || 'Add position'}</p>
                         <button>
@@ -322,7 +411,7 @@ export default function Dashboard({
                     </div>
 
                     <ul className="menu">
-                        <li className={!showAppliedJobs ? 'active' : ''} onClick={handleShowAllJobs} style={{ cursor: 'pointer' }}>
+                        <li className={!showAppliedJobs && !showSavedJobs ? 'active' : ''} onClick={handleShowAllJobs} style={{ cursor: 'pointer' }}>
                             <i className="fa-solid fa-table"></i>Dashboard
                         </li>
                         <li><Link href="/search-jobs"><i className="fa-solid fa-magnifying-glass"></i> Search Job</Link></li>
@@ -337,7 +426,14 @@ export default function Dashboard({
                                 </span>
                             )}
                         </li>
-                        <li><i className="fa-regular fa-bookmark"></i> Save Jobs</li>
+                        <li onClick={handleShowSavedJobs} style={{ cursor: 'pointer', position: 'relative' }}>
+                            <i className="fa-regular fa-bookmark"></i> Save Jobs
+                            {savedJobsCount > 0 && (
+                                <span className="saved-jobs-badge">
+                                    {savedJobsCount > 99 ? '99+' : savedJobsCount}
+                                </span>
+                            )}
+                        </li>
                         <li><i className="fa-solid fa-gear"></i> Settings</li>
                         <li className="logout-item">
                             <a href="/" onClick={(e) => { e.preventDefault(); handleLogout(); }}>
@@ -349,8 +445,52 @@ export default function Dashboard({
                 </aside>
 
                 <main className="main">
-                    {showAppliedJobs ? (
-                        // Applied Jobs View
+                    {showSavedJobs ? (
+                        <>
+                            <div className="flex justify-between items-center mb-4">
+                                <h1>Saved Jobs</h1>
+                                <button
+                                    onClick={handleShowAllJobs}
+                                    className="text-blue-500 hover:text-blue-700"
+                                >
+                                    ← Back to Dashboard
+                                </button>
+                            </div>
+                            {loadingSaved ? (
+                                <div className="flex justify-center py-12">
+                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                                </div>
+                            ) : savedJobs.length > 0 ? (
+                                <div className="jobs">
+                                    {savedJobs.map((job) => (
+                                        <JobCard
+                                            key={job.id}
+                                            job={job}
+                                            onSave={handleSaveJob}
+                                            onUnsave={handleUnsaveJob}
+                                            isSaved={true}
+                                        />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-16 px-8">
+                                    <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-3xl flex items-center justify-center">
+                                        <i className="fa-regular fa-bookmark text-3xl text-purple-500"></i>
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-gray-800 mb-2">No Saved Jobs Yet</h3>
+                                    <p className="text-lg text-gray-600 mb-6 max-w-md mx-auto">
+                                        Save jobs you're interested in to review them later!
+                                    </p>
+                                    <button
+                                        onClick={handleShowAllJobs}
+                                        className="px-8 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl hover:from-purple-600 hover:to-indigo-700 transition-all shadow-lg font-semibold"
+                                    >
+                                        Browse Jobs
+                                    </button>
+                                </div>
+                            )}
+                        </>
+                    ) : showAppliedJobs ? (
                         <>
                             <h1>My Applications</h1>
                             {loadingApplied ? (
@@ -360,11 +500,10 @@ export default function Dashboard({
                             ) : appliedJobs.length > 0 ? (
                                 <div className="jobs">
                                     {appliedJobs.map((job) => (
-                                        <JobCard key={job.id} job={job} />
+                                        <JobCard key={job.id} job={job} onSave={handleSaveJob} onUnsave={handleUnsaveJob} isSaved={false} />
                                     ))}
                                 </div>
                             ) : (
-                                // Empty state for no applications
                                 <div className="text-center py-16 px-8">
                                     <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-3xl flex items-center justify-center">
                                         <i className="fa-solid fa-file text-3xl text-blue-500"></i>
@@ -373,7 +512,7 @@ export default function Dashboard({
                                     <p className="text-lg text-gray-600 mb-6 max-w-md mx-auto">
                                         You haven't applied to any jobs yet. Start browsing and apply to your first job!
                                     </p>
-                                    <button 
+                                    <button
                                         onClick={handleShowAllJobs}
                                         className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg font-semibold"
                                     >
@@ -383,19 +522,12 @@ export default function Dashboard({
                             )}
                         </>
                     ) : (
-                        // Original Dashboard Content
                         <>
                             <h1>Welcome back, {currentUser?.name?.split(' ')[0] || 'User'}</h1>
 
                             <div className="status-bar">
                                 <span className={hasCV ? 'success' : 'warning'}>
                                     {hasCV ? `CV Uploaded (${cvCount})` : 'Upload CV'}
-                                </span>
-                                <span>
-                                    Skills: {currentUser?.skills?.slice(0, 2).map(s => s.name).join(', ') || 'No skills added'}
-                                </span>
-                                <span>
-                                    Bio: {currentUser?.profile?.bio ? currentUser.profile.bio.substring(0, 50) + '...' : 'Add bio'}
                                 </span>
                                 <button onClick={() => router.visit('/cv')}>
                                     <Link href="/cv" className="status-button">
@@ -404,7 +536,6 @@ export default function Dashboard({
                                 </button>
                             </div>
 
-                            {/* Profile completion status */}
                             {profileComplete === 100 ? (
                                 <div className="bg-green-50 border-l-4 border-green-400 p-4 mb-6 rounded-r-lg">
                                     <div className="flex">
@@ -497,7 +628,6 @@ export default function Dashboard({
                                 </div>
                             )}
 
-                            {/* Recommended Jobs Section */}
                             {recommendedJobs.length > 0 && (
                                 <div className="mb-8">
                                     <div className="flex items-center justify-between mb-4">
@@ -510,13 +640,12 @@ export default function Dashboard({
                                     </div>
                                     <div className="jobs">
                                         {recommendedJobs.map((job) => (
-                                            <JobCard key={job.id} job={job} />
+                                            <JobCard key={job.id} job={job} onSave={handleSaveJob} onUnsave={handleUnsaveJob} isSaved={false} />
                                         ))}
                                     </div>
                                 </div>
                             )}
 
-                            {/* Other Jobs Section */}
                             {otherJobs.length > 0 && (
                                 <div className="mb-8">
                                     <h2 className="text-2xl font-bold text-gray-800 mb-4">
@@ -524,13 +653,12 @@ export default function Dashboard({
                                     </h2>
                                     <div className="jobs">
                                         {otherJobs.map((job) => (
-                                            <JobCard key={job.id} job={job} />
+                                            <JobCard key={job.id} job={job} onSave={handleSaveJob} onUnsave={handleUnsaveJob} isSaved={false} />
                                         ))}
                                     </div>
                                 </div>
                             )}
 
-                            {/* No results message */}
                             {recommendedJobs.length === 0 && otherJobs.length === 0 && !loading && (
                                 <div className="text-center py-16 px-8">
                                     <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-3xl flex items-center justify-center">
