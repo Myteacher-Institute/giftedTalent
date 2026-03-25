@@ -6,12 +6,15 @@ import '/resources/css/CreateJob.css';
 export default function CreateJob() {
     const [formData, setFormData] = useState({
         company_name: '',
+        company_logo_url: '',
         company_location: '',
         job_title: '',
         job_type: 'Full-Time',
         salary_currency: 'NGN',
         salary_amount: '',
         salary_period: 'month',
+        salary_range: '',
+        tags: '',
         application_link: '',
         description: ''
     });
@@ -94,13 +97,20 @@ export default function CreateJob() {
         // Format salary range
         const salaryRange = `${formData.salary_currency} ${formData.salary_amount} / ${formData.salary_period}`;
 
+        // Process tags: convert comma-separated string to array
+        const tagsArray = formData.tags
+            ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag !== '')
+            : [];
+
         const submitData = {
             company_name: formData.company_name,
+            company_logo_url: formData.company_logo_url,
             company_location: formData.company_location,
             job_title: formData.job_title,
             job_type: formData.job_type,
             salary_range: salaryRange,
             description: formData.description,
+            tags: tagsArray,
             application_link: formData.application_link
         };
 
@@ -109,12 +119,14 @@ export default function CreateJob() {
                 setProcessing(false);
                 setFormData({
                     company_name: '',
+                    company_logo_url: '',
                     company_location: '',
                     job_title: '',
                     job_type: 'Full-Time',
                     salary_currency: 'NGN',
                     salary_amount: '',
                     salary_period: 'month',
+                    tags: '',
                     application_link: '',
                     description: ''
                 });
@@ -136,6 +148,33 @@ export default function CreateJob() {
                 <h1>Create New Job Post</h1>
 
                 <form onSubmit={handleSubmit} className="job-form">
+
+                    <div className="form-group">
+                        <label>Company Logo URL (optional)</label>
+                        <input
+                            type="url"
+                            name="company_logo_url"
+                            value={formData.company_logo_url}
+                            onChange={handleChange}
+                            disabled={processing}
+                            placeholder="https://example.com/logo.png"
+                        />
+                        <small className="form-hint">
+                            Enter a URL for your company logo (e.g., https://company.com/logo.png)
+                        </small>
+                        {formData.company_logo_url && (
+                            <div className="logo-preview">
+                                <p>Preview:</p>
+                                <img src={formData.company_logo_url} alt="Logo preview" className="logo-preview-img"
+                                    onError={(e) => {
+                                        e.target.style.display = 'none';
+                                        e.target.previousSibling.innerText = 'Invalid image URL';
+                                    }}
+                                />
+                            </div>
+                        )}
+                    </div>
+
                     <div className="form-group">
                         <label>Company Name</label>
                         <input
@@ -160,6 +199,21 @@ export default function CreateJob() {
                             disabled={processing}
                             placeholder="e.g., Lagos, Nigeria"
                         />
+                    </div>
+
+                    <div className="form-group">
+                        <label>Skills/Tags</label>
+                        <input
+                            type="text"
+                            name="tags"
+                            value={formData.tags}
+                            onChange={handleChange}
+                            disabled={processing}
+                            placeholder="React, JavaScript, Laravel, Tailwind CSS"
+                        />
+                        <small className="form-hint">
+                            Enter skills separated by commas
+                        </small>
                     </div>
 
                     <div className="form-group">

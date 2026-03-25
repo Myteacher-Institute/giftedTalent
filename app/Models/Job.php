@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,21 +14,23 @@ class Job extends Model
     protected $fillable = [
         'user_id',
         'company_name',
+        'company_logo_url',
         'company_location',
         'job_title',
         'job_type',
         'salary_range',
         'description',
+        'tags',
         'status',
         'applicants_count',
         'posted_at',
-        'application_link'
+        'application_link',
     ];
 
     protected $casts = [
-        'posted_at' => 'datetime',
+        'posted_at'        => 'datetime',
         'applicants_count' => 'integer',
-        'tags' => 'array',
+        'tags'             => 'array',
     ];
 
     public function user()

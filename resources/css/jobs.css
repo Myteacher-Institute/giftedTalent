@@ -171,6 +171,155 @@ nav {
     color: #FFFFFF;
 }
 
+/* Filters Section */
+.filters-section {
+    padding: 20px 0;
+    border-bottom: 1px solid #E5E7EB;
+    margin-bottom: 24px;
+}
+
+.filters-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.filters-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #0A2463;
+}
+
+.clear-filters-btn {
+    width: 100%;
+    color: #EF4444;
+    max-width: 100px;
+    background-color: #f0f2f5;
+    padding: 10px;
+    border-radius: 12px;
+    justify-content: center;
+}
+
+.filters-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.filter-dropdown {
+    position: relative;
+}
+
+.filter-btn {
+    padding: 8px 16px;
+    border: 1px solid #E5E7EB;
+    border-radius: 30px;
+    background: white;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+    border-color: #0A2463;
+    background: #F8FAFF;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    min-width: 180px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 12px;
+    z-index: 100;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.filter-dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown-content label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.dropdown-content label:hover {
+    color: #0A2463;
+}
+
+.filter-actions {
+    text-align: right;
+}
+
+.apply-filters-btn {
+    background: #0A2463;
+    color: white;
+    border: none;
+    padding: 8px 24px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s ease;
+}
+
+.apply-filters-btn:hover {
+    background: #051A44;
+}
+
+.job-results {
+    margin-bottom: 20px;
+    color: #6B7280;
+    font-size: 14px;
+    width: 100%;
+    max-width: 150px;
+    background-color: #f0f2f5;
+    padding: 10px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .filters-grid {
+        flex-direction: column;
+    }
+
+    .filter-dropdown {
+        width: 100%;
+    }
+
+    .filter-btn {
+        width: 100%;
+        text-align: left;
+        justify-content: space-between;
+    }
+
+    .dropdown-content {
+        position: static;
+        display: none;
+        margin-top: 8px;
+        box-shadow: none;
+        border: 1px solid #E5E7EB;
+    }
+
+    .filter-dropdown.open .dropdown-content {
+        display: block;
+    }
+}
+
 /* FILTER BUTTONS */
 .filters {
     display: flex;
@@ -456,31 +605,68 @@ nav {
 .company {
     display: flex;
     gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+
+.company-logo {
+    width: 52px;
+    height: 48px;
+    border-radius: 50%;
+    padding: 6px;
+    border: 1px solid #E5E7EB;
+    background: white;
+}
+
+.company-initial {
+    width: 52px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 600;
+    color: #0A2463;
+    background: linear-gradient(135deg, #EFF6FF, #FFFFFF);
+    border: 1px solid #E5E7EB;
 }
 
 .company .svg {
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background: #eee;
     display: flex;
     align-items: center;
 }
 
+.company-header-info {
+    width: 100%;
+    display: flex;
+    gap: 3.5rem;
+}
+
 .company-header {
+    width: 50%;
     display: flex;
     flex-direction: column;
+    margin: 0;
+    padding: 0;
 }
 
 .company div {
     display: flex;
-    flex-wrap: wrap;
 }
 
 @media (min-width: 1024px) {
-    .company div {
-        padding: 0 10px;
+    .company div img {
+        padding-left: 2px;
     }
+}
+
+.company div .location-icon {
+    margin-right: 5px;
 }
 
 .company h2 {
@@ -493,7 +679,7 @@ nav {
 
 @media (min-width: 1024px) {
     .company h2 {
-        padding: 0 10px;
+        padding: 0 2px;
     }
 }
 
@@ -508,12 +694,12 @@ nav {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 95%;
+    max-width: 92%;
 }
 
 @media (min-width: 1024px) {
     .job-card p {
-        margin: 0 10px;
+        margin: 0 5px;
     }
 }
 

@@ -172,22 +172,28 @@ class AdminController extends Controller
     {
         $request->validate([
             'company_name'     => 'required|string|max:255',
+            'company_logo_url' => 'nullable|url|max:500',
             'company_location' => 'required|string|max:255',
             'job_title'        => 'required|string|max:255',
             'job_type'         => 'required|string|max:255',
             'salary_range'     => 'required|string|max:255',
             'description'      => 'required|string',
+            'tags'             => 'nullable|array',
             'application_link' => 'required|url|max:500',
         ]);
 
+        $tags = $request->tags ?? [];
+        
         $job = Job::create([
             'user_id'          => Auth::id(),
             'company_name'     => $request->company_name,
+            'company_logo_url' => $request->company_logo_url,
             'company_location' => $request->company_location,
             'job_title'        => $request->job_title,
             'job_type'         => $request->job_type,
             'salary_range'     => $request->salary_range, // This will be like "₦ 250,000"
             'description'      => $request->description,
+            'tags' => $request->tags ?? [],
             'application_link' => $request->application_link,
             'status'           => 'active',
             'posted_at'        => now(),

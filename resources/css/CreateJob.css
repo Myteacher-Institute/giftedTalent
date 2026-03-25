@@ -43,6 +43,29 @@
     gap: 1.5rem;
 }
 
+.logo-preview {
+    margin-top: 10px;
+    padding: 10px;
+    background: #F8FAFC;
+    border-radius: 8px;
+}
+
+.logo-preview p {
+    font-size: 12px;
+    color: #6B7280;
+    margin-bottom: 8px;
+}
+
+.logo-preview-img {
+    max-width: 60px;
+    max-height: 60px;
+    object-fit: contain;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    padding: 4px;
+    background: white;
+}
+
 .form-group {
     display: flex;
     flex-direction: column;

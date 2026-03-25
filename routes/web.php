@@ -10,19 +10,19 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-     $jobs = Job::latest()->take(6)->get();
-     
+    $jobs = Job::latest()->take(6)->get();
+
     return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
+        'canLogin'       => Route::has('login'),
+        'canRegister'    => Route::has('register'),
         'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-        'jobs' => $jobs,
+        'phpVersion'     => PHP_VERSION,
+        'jobs'           => $jobs,
     ]);
 })->name('home');
 
 Route::get('/jobs/{id}', function ($id) {
-    $job = App\Models\Job::findOrFail($id);
+    $job = Job::findOrFail($id);
     return Inertia::render('JobDetails', ['job' => $job]);
 })->name('jobs.show');
 
@@ -44,7 +44,7 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'read'])->name('notifications.read');
     Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'readAll'])->name('notifications.readAll');
-    
+
     Route::get('/cv', [ProfileController::class, 'cv'])->name('cv');
     Route::post('/profile/resume', [ProfileController::class, 'storeResume'])->name('profile.resume.store');
     Route::delete('/profile/resume/{id}', [ProfileController::class, 'destroyResume'])->name('profile.resume.destroy');
@@ -57,7 +57,7 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     // Extended Profile Routes
     Route::get('/profile/extended', [ProfileController::class, 'editExtendedProfile'])->name('profile.editExtended');
     Route::patch('/profile/extended', [ProfileController::class, 'updateExtendedProfile'])->name('profile.updateExtended');
-    
+
     // Avatar Upload Route
     Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar'])->middleware('auth')->name('profile.avatar.upload');
     Route::delete('/profile/avatar', [ProfileController::class, 'removeAvatar'])->middleware('auth')->name('profile.avatar.remove');
@@ -81,6 +81,8 @@ Route::middleware(['auth', 'admin'])->prefix('Admin')->name('admin.')->group(fun
     Route::get('/users', [AdminController::class, 'users'])->name('users');
 
     Route::get('/jobs', [AdminController::class, 'jobs'])->name('jobs');
+
+    Route::post('jobs', [AdminController::class, 'storeJob'])->name('admin.jobs.store');
 
     Route::get('/analytics', [AdminController::class, 'analytics'])->name('analytics');
 

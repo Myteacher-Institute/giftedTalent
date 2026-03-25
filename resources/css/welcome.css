@@ -18,9 +18,9 @@ body {
     width: 100%;
 }
 
-.feature-jobs .job-location, .feature-jobs .job-date {
-    margin-left: 10px;
+.feature-jobs .job-date {
     color: #4B5563;
+    margin-bottom: 1rem;
 }
 
 /* FEATURED TALENTS SECTION */
@@ -102,8 +102,6 @@ body {
 
 /* Talent Cards Grid */
 .feature-talent-content {
-    /* display: grid;
-    grid-template-columns: repeat(1fr, 1fr, 1fr); */
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
