@@ -46,6 +46,7 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     // Notifications
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'read'])->name('notifications.read');
+    Route::get('/user/applied-jobs', [\App\Http\Controllers\DashboardController::class, 'appliedJobs'])->name('user.applied-jobs');
     Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'readAll'])->name('notifications.readAll');
     
     // CV Management - Using dedicated ResumeController
@@ -93,6 +94,10 @@ Route::middleware(['auth', 'admin'])->prefix('Admin')->name('admin.')->group(fun
         ->name('cv-review.download');
     Route::delete('cv-review/{resume}', [\App\Http\Controllers\Admin\CvReviewController::class, 'destroy'])
         ->name('cv-review.destroy');
+
+    // Application Management Routes
+    Route::get('/pending-applications', [AdminController::class, 'getPendingApplications'])->name('pending.applications');
+    Route::post('/update-application-status/{id}', [AdminController::class, 'updateApplicationStatus'])->name('update.application.status');
 });
 
 // Google Authentication Routes

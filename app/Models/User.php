@@ -71,37 +71,59 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
-    /**
-     * Get the user's work experiences.
-     */
     public function experiences(): HasMany
     {
         return $this->hasMany(Experience::class);
     }
 
-
-
-    /**
-     * Get the user's resumes.
-     */
     public function resumes(): HasMany
     {
         return $this->hasMany(Resume::class);
     }
 
-    /**
-     * Get the user's applications.
-     */
     public function applications(): HasMany
     {
         return $this->hasMany(Application::class);
     }
 
-    /**
-     * Get the user's posted jobs.
-     */
     public function jobs(): HasMany
     {
         return $this->hasMany(Job::class, 'job_postings');
+    }
+
+    public function conversations()
+    {
+        return $this->belongsToMany(Conversation::class, 'conversations', 'user_one_id', 'user_two_id')
+            ->orWhere('user_one_id', $this->id)
+            ->orWhere('user_two_id', $this->id);
+    }
+
+    public function messages(): HasMany
+    {
+        return $this->hasMany(Message::class, 'user_id');
+    }
+
+    public function unreadMessagesCount()
+    {
+        return $this->messages()
+            ->where('is_read', false)
+            ->count();
+    }
+
+    public function savedJobs(): HasMany
+    {
+        return $this->hasMany(SavedJob::class);
+    }
+
+    public function savedJobsList(): BelongsToMany
+    {
+        return $this->belongsToMany(Job::class, 'saved_jobs', 'user_id', 'job_id')
+            ->withTimestamps()
+            ->wherePivot('is_saved', true);
+    }
+
+    public function hasSavedJob($jobId): bool
+    {
+        return $this->savedJobs()->where('job_id', $jobId)->where('is_saved', true)->exists();
     }
 }

@@ -3,6 +3,8 @@ import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '../Layouts/AuthenticatedLayout';
 import '../../css/Dashboard.css';
 import Notification from '../Components/Notification';
+import axios from 'axios';
+import MessageModal from '../Components/MessageModal';
 
 window.alertify = window.alertify || alertify;
 
@@ -80,6 +82,16 @@ export default function Dashboard({
     const [selectedJobType, setSelectedJobType] = useState(searchParams.job_type || '');
     const [showAdvanced, setShowAdvanced] = useState(false);
     const [loading, setLoading] = useState(false);
+    
+    // New state variables for applied jobs and notifications
+    const [showAppliedJobs, setShowAppliedJobs] = useState(false);
+    const [appliedJobs, setAppliedJobs] = useState([]);
+    const [loadingApplied, setLoadingApplied] = useState(false);
+    const [newJobsCount, setNewJobsCount] = useState(0);
+    const [showMessageModal, setShowMessageModal] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [messages, setMessages] = useState([]);
+    const [loadingMessages, setLoadingMessages] = useState(false);
 
     // Get current user data
     const currentUser = user || auth?.user;
@@ -137,6 +149,78 @@ export default function Dashboard({
         router.post('/logout');
     };
 
+    // Function to fetch user's applied jobs
+    const fetchAppliedJobs = async () => {
+        setLoadingApplied(true);
+        try {
+            // TODO: Update this endpoint once you share your routes
+            const response = await axios.get('/api/user/applied-jobs');
+            setAppliedJobs(response.data);
+        } catch (error) {
+            console.error('Error fetching applied jobs:', error);
+            alertify.error('Failed to load applied jobs');
+        } finally {
+            setLoadingApplied(false);
+        }
+    };
+
+    // Handle showing applied jobs
+    const handleShowAppliedJobs = () => {
+        setShowAppliedJobs(true);
+        fetchAppliedJobs();
+    };
+
+    // Handle showing all jobs (feed)
+    const handleShowAllJobs = () => {
+        setShowAppliedJobs(false);
+    };
+
+    const fetchUnreadCount = async () => {
+        try {
+            const response = await axios.get('/api/messages/unread-count');
+            setUnreadCount(response.data.count);
+        } catch (error) {
+            console.error('Error fetching unread count:', error);
+        }
+    };
+
+    const fetchMessages = async () => {
+        setLoadingMessages(true);
+        try {
+            const response = await axios.get('/api/messages');
+            setMessages(response.data.data);
+        } catch (error) {
+            console.error('Error fetching messages:', error);
+        } finally {
+            setLoadingMessages(false);
+        }
+    };
+
+    const handleOpenMessages = async () => {
+        setShowMessageModal(true);
+        await fetchMessages();
+        if (unreadCount > 0) {
+            try {
+                await axios.put('/api/messages/read-all');
+                setUnreadCount(0);
+            } catch (error) {
+                console.error('Error marking all as read:', error);
+            }
+        }
+    };
+
+    const markMessageAsRead = async (messageId) => {
+        try {
+            await axios.put(`/api/messages/${messageId}/read`);
+            setMessages(messages.map(msg =>
+                msg.id === messageId ? { ...msg, is_read: true } : msg
+            ));
+            setUnreadCount(prev => Math.max(0, prev - 1));
+        } catch (error) {
+            console.error('Error marking message as read:', error);
+        }
+    };
+
     useEffect(() => {
         const hasShown = localStorage.getItem('profileCompleteShown');
         if (profileComplete === 100 && !hasShown) {
@@ -144,6 +228,12 @@ export default function Dashboard({
             localStorage.setItem('profileCompleteShown', 'true');
         }
     }, [profileComplete]);
+
+    useEffect(() => {
+        fetchUnreadCount();
+        const interval = setInterval(fetchUnreadCount, 30000);
+        return () => clearInterval(interval);
+    }, []);
 
     // Split jobs into recommended and others
     const recommendedJobs = jobs.filter(job => job.match_score && job.match_score >= 60);
@@ -175,7 +265,12 @@ export default function Dashboard({
 
                 <div className="nav-icons">
                     <i className="fa-regular fa-comment"></i>
-                    <Notification />
+                    <div style={{ position: 'relative' }}>
+                        <Notification />
+                        {newJobsCount > 0 && (
+                            <span className="notification-badge">{newJobsCount}</span>
+                        )}
+                    </div>
                     <img 
                         src={getProfileImageUrl()} 
                         alt={currentUser?.name || 'Profile'} 
@@ -227,10 +322,21 @@ export default function Dashboard({
                     </div>
 
                     <ul className="menu">
-                        <li className="active"><i className="fa-solid fa-table"></i>Dashboard</li>
+                        <li className={!showAppliedJobs ? 'active' : ''} onClick={handleShowAllJobs} style={{ cursor: 'pointer' }}>
+                            <i className="fa-solid fa-table"></i>Dashboard
+                        </li>
                         <li><Link href="/search-jobs"><i className="fa-solid fa-magnifying-glass"></i> Search Job</Link></li>
-                        <li><i className="fa-solid fa-file"></i> Application</li>
-                        <li><i className="fa-regular fa-envelope"></i> Message</li>
+                        <li className={showAppliedJobs ? 'active' : ''} onClick={handleShowAppliedJobs} style={{ cursor: 'pointer' }}>
+                            <i className="fa-solid fa-file"></i> My Applications
+                        </li>
+                        <li onClick={handleOpenMessages} style={{ cursor: 'pointer', position: 'relative' }}>
+                            <i className="fa-regular fa-envelope"></i> Message
+                            {unreadCount > 0 && (
+                                <span className="message-badge">
+                                    {unreadCount > 99 ? '99+' : unreadCount}
+                                </span>
+                            )}
+                        </li>
                         <li><i className="fa-regular fa-bookmark"></i> Save Jobs</li>
                         <li><i className="fa-solid fa-gear"></i> Settings</li>
                         <li className="logout-item">
@@ -243,171 +349,209 @@ export default function Dashboard({
                 </aside>
 
                 <main className="main">
-                    <h1>Welcome back, {currentUser?.name?.split(' ')[0] || 'User'}</h1>
-
-                    <div className="status-bar">
-                        <span className={hasCV ? 'success' : 'warning'}>
-                            {hasCV ? `CV Uploaded (${cvCount})` : 'Upload CV'}
-                        </span>
-                        <span>
-                            Skills: {currentUser?.skills?.slice(0, 2).map(s => s.name).join(', ') || 'No skills added'}
-                        </span>
-                        <span>
-                            Bio: {currentUser?.profile?.bio ? currentUser.profile.bio.substring(0, 50) + '...' : 'Add bio'}
-                        </span>
-                        <button onClick={() => router.visit('/cv')}>
-                            <Link href="/cv" className="status-button">
-                                {hasCV ? 'Manage CVs' : 'Upload Your CV'}
-                            </Link>
-                        </button>
-                    </div>
-
-                    {/* Profile completion status */}
-                    {profileComplete === 100 ? (
-                        <div className="bg-green-50 border-l-4 border-green-400 p-4 mb-6 rounded-r-lg">
-                            <div className="flex">
-                                <div className="flex-shrink-0">
-                                    <i className="fa-solid fa-check-circle text-green-400 text-lg"></i>
+                    {showAppliedJobs ? (
+                        // Applied Jobs View
+                        <>
+                            <h1>My Applications</h1>
+                            {loadingApplied ? (
+                                <div className="flex justify-center py-12">
+                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
                                 </div>
-                                <div className="ml-3">
-                                    <p className="text-sm text-green-700">
-                                        Your profile is 100% complete! 🎉
+                            ) : appliedJobs.length > 0 ? (
+                                <div className="jobs">
+                                    {appliedJobs.map((job) => (
+                                        <JobCard key={job.id} job={job} />
+                                    ))}
+                                </div>
+                            ) : (
+                                // Empty state for no applications
+                                <div className="text-center py-16 px-8">
+                                    <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-3xl flex items-center justify-center">
+                                        <i className="fa-solid fa-file text-3xl text-blue-500"></i>
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-gray-800 mb-2">No Applications Yet</h3>
+                                    <p className="text-lg text-gray-600 mb-6 max-w-md mx-auto">
+                                        You haven't applied to any jobs yet. Start browsing and apply to your first job!
                                     </p>
+                                    <button 
+                                        onClick={handleShowAllJobs}
+                                        className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg font-semibold"
+                                    >
+                                        Browse Jobs
+                                    </button>
                                 </div>
-                            </div>
-                        </div>
-                    ) : profileComplete < 100 ? (
-                        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-r-lg">
-                            <div className="flex">
-                                <div className="flex-shrink-0">
-                                    <i className="fa-solid fa-exclamation-triangle text-yellow-400"></i>
-                                </div>
-                                <div className="ml-3">
-                                    <p className="text-sm text-yellow-700">
-                                        Complete your profile to get better job recommendations! ({profileComplete}% complete)
-                                        <Link href="/profile/edit" className="font-medium underline ml-2 hover:text-yellow-800">
-                                            Update Profile →
-                                        </Link>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    ) : null}
-
-                    <div className="search-bar">
-                        <form onSubmit={handleSearch} className="flex gap-2 w-full">
-                            <input 
-                                type="text" 
-                                placeholder="Search for jobs..." 
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            />
-                            <select 
-                                value={selectedJobType} 
-                                onChange={(e) => setSelectedJobType(e.target.value)}
-                                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
-                            >
-                                <option value="">All Types</option>
-                                {jobTypes.map(type => (
-                                    <option key={type} value={type}>{type}</option>
-                                ))}
-                            </select>
-                            <button 
-                                type="button" 
-                                onClick={toggleAdvanced}
-                                className="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md"
-                            >
-                                Advanced
-                            </button>
-                            <button 
-                                type="submit" 
-                                disabled={loading}
-                                className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all duration-200 shadow-md disabled:opacity-50"
-                            >
-                                {loading ? 'Searching...' : 'Search'}
-                            </button>
-                            {(searchQuery || selectedJobType) && (
-                                <button 
-                                    type="button" 
-                                    onClick={clearSearch}
-                                    className="px-4 py-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-all"
-                                >
-                                    Clear
-                                </button>
                             )}
-                        </form>
-                    </div>
+                        </>
+                    ) : (
+                        // Original Dashboard Content
+                        <>
+                            <h1>Welcome back, {currentUser?.name?.split(' ')[0] || 'User'}</h1>
 
-                    {showAdvanced && (
-                        <div className="advanced-filter-modal bg-white p-6 rounded-xl shadow-2xl border border-gray-200 max-w-md mx-auto mb-6">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-xl font-bold text-gray-800">Advanced Filter</h3>
-                                <button onClick={toggleAdvanced} className="text-gray-500 hover:text-gray-700 text-2xl">×</button>
-                            </div>
-                            <div className="space-y-4">
-                                <select className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                    <option>Location</option>
-                                </select>
-                                <input type="range" min="0" max="200" className="w-full" />
-                                <span>$0 - $200k</span>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Recommended Jobs Section */}
-                    {recommendedJobs.length > 0 && (
-                        <div className="mb-8">
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-2xl font-bold text-gray-800">
-                                    🎯 Recommended for You
-                                </h2>
-                                <span className="text-sm text-gray-500">
-                                    Based on your profile and skills
+                            <div className="status-bar">
+                                <span className={hasCV ? 'success' : 'warning'}>
+                                    {hasCV ? `CV Uploaded (${cvCount})` : 'Upload CV'}
                                 </span>
+                                <span>
+                                    Skills: {currentUser?.skills?.slice(0, 2).map(s => s.name).join(', ') || 'No skills added'}
+                                </span>
+                                <span>
+                                    Bio: {currentUser?.profile?.bio ? currentUser.profile.bio.substring(0, 50) + '...' : 'Add bio'}
+                                </span>
+                                <button onClick={() => router.visit('/cv')}>
+                                    <Link href="/cv" className="status-button">
+                                        {hasCV ? 'Manage CVs' : 'Upload Your CV'}
+                                    </Link>
+                                </button>
                             </div>
-                            <div className="jobs">
-                                {recommendedJobs.map((job) => (
-                                    <JobCard key={job.id} job={job} />
-                                ))}
-                            </div>
-                        </div>
-                    )}
 
-                    {/* Other Jobs Section */}
-                    {otherJobs.length > 0 && (
-                        <div className="mb-8">
-                            <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                                {searchQuery ? `Search Results for "${searchQuery}"` : 'Other Available Jobs'}
-                            </h2>
-                            <div className="jobs">
-                                {otherJobs.map((job) => (
-                                    <JobCard key={job.id} job={job} />
-                                ))}
-                            </div>
-                        </div>
-                    )}
+                            {/* Profile completion status */}
+                            {profileComplete === 100 ? (
+                                <div className="bg-green-50 border-l-4 border-green-400 p-4 mb-6 rounded-r-lg">
+                                    <div className="flex">
+                                        <div className="flex-shrink-0">
+                                            <i className="fa-solid fa-check-circle text-green-400 text-lg"></i>
+                                        </div>
+                                        <div className="ml-3">
+                                            <p className="text-sm text-green-700">
+                                                Your profile is 100% complete! 🎉
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : profileComplete < 100 ? (
+                                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-r-lg">
+                                    <div className="flex">
+                                        <div className="flex-shrink-0">
+                                            <i className="fa-solid fa-exclamation-triangle text-yellow-400"></i>
+                                        </div>
+                                        <div className="ml-3">
+                                            <p className="text-sm text-yellow-700">
+                                                Complete your profile to get better job recommendations! ({profileComplete}% complete)
+                                                <Link href="/profile/edit" className="font-medium underline ml-2 hover:text-yellow-800">
+                                                    Update Profile →
+                                                </Link>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : null}
 
-                    {/* No results message */}
-                    {recommendedJobs.length === 0 && otherJobs.length === 0 && !loading && (
-                        <div className="text-center py-16 px-8">
-                            <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-3xl flex items-center justify-center">
-                                <i className="fa-solid fa-magnifying-glass text-3xl text-yellow-500"></i>
+                            <div className="search-bar">
+                                <form onSubmit={handleSearch} className="flex gap-2 w-full">
+                                    <input 
+                                        type="text" 
+                                        placeholder="Search for jobs..." 
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    />
+                                    <select 
+                                        value={selectedJobType} 
+                                        onChange={(e) => setSelectedJobType(e.target.value)}
+                                        className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
+                                    >
+                                        <option value="">All Types</option>
+                                        {jobTypes.map(type => (
+                                            <option key={type} value={type}>{type}</option>
+                                        ))}
+                                    </select>
+                                    <button 
+                                        type="button" 
+                                        onClick={toggleAdvanced}
+                                        className="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md"
+                                    >
+                                        Advanced
+                                    </button>
+                                    <button 
+                                        type="submit" 
+                                        disabled={loading}
+                                        className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all duration-200 shadow-md disabled:opacity-50"
+                                    >
+                                        {loading ? 'Searching...' : 'Search'}
+                                    </button>
+                                    {(searchQuery || selectedJobType) && (
+                                        <button 
+                                            type="button" 
+                                            onClick={clearSearch}
+                                            className="px-4 py-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-all"
+                                        >
+                                            Clear
+                                        </button>
+                                    )}
+                                </form>
                             </div>
-                            <h3 className="text-2xl font-bold text-gray-800 mb-2">Sorry, no matching jobs</h3>
-                            <p className="text-lg text-gray-600 mb-6 max-w-md mx-auto">
-                                No jobs match your criteria. Complete your profile for better recommendations!
-                            </p>
-                            <Link href="/profile/edit" className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg font-semibold">
-                                Complete Your Profile
-                            </Link>
-                        </div>
-                    )}
 
-                    {loading && (
-                        <div className="flex justify-center py-12">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-                        </div>
+                            {showAdvanced && (
+                                <div className="advanced-filter-modal bg-white p-6 rounded-xl shadow-2xl border border-gray-200 max-w-md mx-auto mb-6">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h3 className="text-xl font-bold text-gray-800">Advanced Filter</h3>
+                                        <button onClick={toggleAdvanced} className="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <select className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                            <option>Location</option>
+                                        </select>
+                                        <input type="range" min="0" max="200" className="w-full" />
+                                        <span>$0 - $200k</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Recommended Jobs Section */}
+                            {recommendedJobs.length > 0 && (
+                                <div className="mb-8">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h2 className="text-2xl font-bold text-gray-800">
+                                            🎯 Recommended for You
+                                        </h2>
+                                        <span className="text-sm text-gray-500">
+                                            Based on your profile and skills
+                                        </span>
+                                    </div>
+                                    <div className="jobs">
+                                        {recommendedJobs.map((job) => (
+                                            <JobCard key={job.id} job={job} />
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Other Jobs Section */}
+                            {otherJobs.length > 0 && (
+                                <div className="mb-8">
+                                    <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                                        {searchQuery ? `Search Results for "${searchQuery}"` : 'Other Available Jobs'}
+                                    </h2>
+                                    <div className="jobs">
+                                        {otherJobs.map((job) => (
+                                            <JobCard key={job.id} job={job} />
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* No results message */}
+                            {recommendedJobs.length === 0 && otherJobs.length === 0 && !loading && (
+                                <div className="text-center py-16 px-8">
+                                    <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-3xl flex items-center justify-center">
+                                        <i className="fa-solid fa-magnifying-glass text-3xl text-yellow-500"></i>
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-gray-800 mb-2">Sorry, no matching jobs</h3>
+                                    <p className="text-lg text-gray-600 mb-6 max-w-md mx-auto">
+                                        No jobs match your criteria. Complete your profile for better recommendations!
+                                    </p>
+                                    <Link href="/profile/edit" className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg font-semibold">
+                                        Complete Your Profile
+                                    </Link>
+                                </div>
+                            )}
+
+                            {loading && (
+                                <div className="flex justify-center py-12">
+                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                                </div>
+                            )}
+                        </>
                     )}
                 </main>
 
@@ -467,6 +611,14 @@ export default function Dashboard({
                     </div>
                 </aside>
             </div>
+
+            <MessageModal
+                isOpen={showMessageModal}
+                onClose={() => setShowMessageModal(false)}
+                messages={messages}
+                loading={loadingMessages}
+                onMarkAsRead={markMessageAsRead}
+            />
         </AuthenticatedLayout>
     );
 }

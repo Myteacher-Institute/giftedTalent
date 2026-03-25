@@ -21,9 +21,10 @@ class DashboardController extends Controller
             'experiences', 
             'applications', 
             'resumes', 
-            'notifications.unreadNotifications'
+            'notifications'
         ]);
-            $profile = Profile::where('user_id', $user->id)->first();
+        
+        $profile = Profile::where('user_id', $user->id)->first();
 
         // Debug: Log profile status
         Log::info('Dashboard loaded', [
@@ -89,11 +90,12 @@ class DashboardController extends Controller
                 ->get()
                 ->map(fn($n) => [
                     'id' => $n->id,
-                    'title' => $n->data['title'],
-                    'message' => $n->data['message'],
+                    'title' => $n->data['title'] ?? 'Notification',
+                    'message' => $n->data['message'] ?? '',
                     'time' => $n->created_at->diffForHumans(),
                     'resume_id' => $n->data['resume_id'] ?? null,
                     'status' => $n->data['status'] ?? null,
+                    'is_unread' => true,
                 ]),
         ];
 
@@ -121,6 +123,7 @@ class DashboardController extends Controller
                 'image' => $job->logo_url ?? 'https://i.pravatar.cc/40?img=' . $job->id,
                 'type' => $job->job_type,
                 'location' => $job->company_location,
+                'match_score' => $this->calculateMatchScore($user, $job),
             ]),
             'searchParams' => [
                 'q' => $query,
@@ -131,6 +134,38 @@ class DashboardController extends Controller
             'notifications' => $notificationsData,
             'flash' => session('flash') ?: [],
         ]);
+    }
+
+    public function appliedJobs(Request $request)
+    {
+        $user = $request->user();
+        
+        // Get all jobs the user has applied to with application details
+        $appliedJobs = $user->applications()
+            ->with('job')
+            ->orderBy('applied_at', 'desc')
+            ->get()
+            ->map(function($application) {
+                $job = $application->job;
+                if (!$job) {
+                    return null;
+                }
+                return [
+                    'id' => $job->id,
+                    'company' => $job->company_name ?? $job->company ?? 'Company',
+                    'title' => $job->job_title ?? $job->title,
+                    'tags' => $job->job_type . ($job->company_location ? ' • ' . $job->company_location : ''),
+                    'time' => $job->created_at->diffForHumans(),
+                    'image' => $job->logo_url ?? 'https://i.pravatar.cc/40?img=' . $job->id,
+                    'type' => $job->job_type,
+                    'location' => $job->company_location,
+                    'application_status' => $application->status,
+                    'applied_at' => $application->applied_at,
+                ];
+            })
+            ->filter(); // Remove null values
+    
+        return response()->json($appliedJobs->values());
     }
 
     private function calculateProfileCompletion(Profile $profile): array
@@ -156,5 +191,21 @@ class DashboardController extends Controller
             'percent' => round(($complete / $total) * 100),
             'status' => $status
         ];
+    }
+
+    private function calculateMatchScore($user, $job)
+    {
+        
+        $userSkills = $user->skills->pluck('name')->toArray();
+        $jobSkills = $job->required_skills ?? [];
+        
+        if (empty($jobSkills)) {
+            return 0;
+        }
+        
+        $matchingSkills = array_intersect($userSkills, $jobSkills);
+        $score = (count($matchingSkills) / count($jobSkills)) * 100;
+        
+        return round($score);
     }
 }

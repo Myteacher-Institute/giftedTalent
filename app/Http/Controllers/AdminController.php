@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\Application;
+use App\Models\Message;
 
 class AdminController extends Controller
 {
@@ -190,7 +192,7 @@ class AdminController extends Controller
             'job_type' => $request->job_type,
             'salary_range' => $request->salary_range,
             'description' => $request->description,
-'status' => 'active',
+            'status' => 'active',
             'posted_at' => now(),
             'applicants_count' => 0,
         ]);
@@ -230,5 +232,62 @@ class AdminController extends Controller
         $job->delete();
 
         return redirect()->route('admin.jobs')->with('success', 'Job deleted successfully!');
+    }
+    
+    //Application management for admin
+    public function getPendingApplications()
+    {
+        $applications = Application::with(['user', 'job'])
+            ->where('status', 'applied')
+            ->orderBy('applied_at', 'asc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $applications,
+            'count' => $applications->count()
+        ]);
+    }
+
+    public function updateApplicationStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:applied,review,interview,rejected,offered',
+            'message' => 'required|string'
+        ]);
+
+        $application = Application::with('user')->findOrFail($id);
+        
+        $messageType = 'general';
+        if (in_array($request->status, ['interview', 'offered'])) {
+            $messageType = 'application_accepted';
+        } elseif ($request->status === 'rejected') {
+            $messageType = 'application_rejected';
+        }
+
+        $application->update([
+            'status' => $request->status,
+            'reviewed_by' => Auth::id(),
+            'reviewed_at' => now(),
+            'message_sent' => true
+        ]);
+
+        $message = Message::create([
+            'user_id' => $application->user_id,
+            'admin_id' => Auth::id(),
+            'application_id' => $application->id,
+            'message' => $request->message,
+            'type' => $messageType,
+            'is_read' => false
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Application status updated and notification sent',
+            'data' => [
+                'application' => $application,
+                'notification' => $message
+            ]
+        ]);
     }
 }
