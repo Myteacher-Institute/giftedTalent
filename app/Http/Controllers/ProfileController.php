@@ -184,7 +184,8 @@ $profile->update(['avatar' => 'avatars/' . $filename]);
     /**
      * Remove a skill from the user's profile.
      */
-    public function removeSkill(Request $request, int $skillId): RedirectResponse
+    public function removeSkill(Request $request, int $skillI
+    ): RedirectResponse
     {
         $request->user()->skills()->detach($skillId);
 
