@@ -5,15 +5,34 @@ namespace App\Http\Controllers;
 use App\Models\Application;
 use App\Models\Job;
 use App\Models\Profile;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\Skill;
+use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'applications', 'resumes', 'notifications.unreadNotifications']);
+        // Force fresh load from database
+        $user = $request->user()->fresh()->loadMissing([
+            'profile', 
+            'skills', 
+            'experiences', 
+            'applications', 
+            'resumes', 
+            'notifications.unreadNotifications'
+        ]);
+            $profile = Profile::where('user_id', $user->id)->first();
+
+        // Debug: Log profile status
+        Log::info('Dashboard loaded', [
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'profile_exists' => $user->profile ? 'yes' : 'no',
+            'profile_position' => $user->profile->position ?? 'null',
+            'profile_bio' => $user->profile->bio ?? 'null',
+        ]);
 
         // Search parameters
         $query = $request->get('q', '');
@@ -42,24 +61,8 @@ class DashboardController extends Controller
             $jobsQuery->where('company_location', 'like', '%' . $location . '%');
         }
 
-        // Recommended jobs (now filtered admin jobs, fallback to skill-matched if no results)
-        $userSkills = $user->skills->pluck('name');
-        $adminJobs = $jobsQuery->limit(10)->get();
-
-        if ($adminJobs->isEmpty() && $userSkills->isNotEmpty()) {
-            $fallbackJobs = Job::where('status', 'open')
-                ->where(function($q) use ($userSkills) {
-                    foreach ($userSkills as $skill) {
-                        $q->orWhereJsonContains('skills_required ?? []', $skill)
-                          ->orWhereJsonContains('preferred_skills ?? []', $skill);
-                    }
-                })->limit(5)->get();
-        } else {
-            $fallbackJobs = collect();
-        }
-
-        $jobs = $adminJobs->merge($fallbackJobs);
-
+        // Get jobs
+        $jobs = $jobsQuery->limit(10)->get();
 
         // Profile completion status
         $profileStatus = ['percent' => 0, 'status' => []];
@@ -70,12 +73,7 @@ class DashboardController extends Controller
             $profileComplete = $completion['percent'];
         }
 
-
-
-
-
         // Notifications data for bell/navbar
-        // Extract job types before return
         $jobTypes = Job::whereHas('user', fn($q) => $q->where('is_admin', true))
                           ->distinct()
                           ->pluck('job_type')
@@ -99,9 +97,9 @@ class DashboardController extends Controller
                 ]),
         ];
 
-        $skills = Skill::where('user_id', Auth::id())->get();
-
         return Inertia::render('Dashboard', [
+            "profile" => $profile,
+            'user' => $user,
             'auth' => [
                 'user' => $user,
             ],
@@ -109,9 +107,9 @@ class DashboardController extends Controller
             'profileStatus' => $profileStatus,
             'stats' => [
                 'applied' => $user->applications()->count(),
-                'pending_cv' => $user->resumes()->pending()->count(),
-                'approved_cv' => $user->resumes()->approved()->count(),
-                'rejected_cv' => $user->resumes()->rejected()->count(),
+                'review' => $user->applications()->where('status', 'review')->count(),
+                'interview' => $user->applications()->where('status', 'interview')->count(),
+                'rejected' => $user->applications()->where('status', 'rejected')->count(),
             ],
             'resumes' => $user->resumes,
             'jobs' => $jobs->map(fn($job) => [
@@ -131,10 +129,9 @@ class DashboardController extends Controller
             ],
             'jobTypes' => $jobTypes,
             'notifications' => $notificationsData,
+            'flash' => session('flash') ?: [],
         ]);
     }
-
-
 
     private function calculateProfileCompletion(Profile $profile): array
     {
@@ -145,10 +142,11 @@ class DashboardController extends Controller
             'bio' => !empty($profile->bio) && strlen(trim($profile->bio)) > 20,
             'skills' => $user->skills()->count() >= 3,
             'experience' => $user->experiences()->count() > 0,
-'education' => false, // Add Education model/relation if needed
+            'education' => !empty($profile->education),
             'portfolio' => !empty($profile->portfolio_url),
             'position' => !empty($profile->position),
             'cv_uploaded' => $user->resumes()->count() > 0,
+            'phone' => !empty($profile->phone),
         ];
 
         $total = count($status);

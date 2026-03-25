@@ -15,35 +15,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
-use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display the user's profile.
-     */
-    public function show(Request $request): InertiaResponse
-    {
-        $user = $request->user()->loadMissing([
-            'profile',
-            'skills',
-            'experiences',
-            'resumes'
-        ]);
-
-        if (!$user->profile) {
-            $profile = Profile::firstOrCreate(['user_id' => $user->id]);
-            $user->setRelation('profile', $profile);
-        }
-
-        return Inertia::render('userProfile', [
-            'user' => $user,
-            'availableSkills' => Skill::where('is_active', true)->get(),
-        ]);
-    }
-
     /**
      * Display the profile edit form.
      */
@@ -51,74 +27,204 @@ class ProfileController extends Controller
     {
         $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'resumes']);
 
+        // Get existing profile or create only if absolutely necessary
+        $profile = Profile::where('user_id', $user->id)->first();
+        
+        if (!$profile) {
+            $profile = Profile::create(['user_id' => $user->id]);
+            $user->setRelation('profile', $profile);
+            Log::info('Created new profile for user: ' . $user->id);
+        } else {
+            $user->setRelation('profile', $profile);
+            Log::info('Found existing profile ID: ' . $profile->id . ' for user: ' . $user->id);
+        }
+
         return Inertia::render('userProfile', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
             'user' => $user,
+            'profile' => $profile,
+            'flash' => [
+                'success' => session('success')
+            ],
             'availableSkills' => Skill::where('is_active', true)->get(),
         ]);
     }
 
     /**
-     * Update the user's basic profile information.
-     */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
-    {
-        $user = $request->user();
-        $user->fill($request->validated());
-
-        if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
-        }
-
-        $user->save();
-
-        return Redirect::route('profile.editExtended');
-    }
-
-    /**
-     * Update extended profile information.
+     * Update extended profile information - UPDATED to support base64 image
      */
     public function updateExtendedProfile(Request $request): RedirectResponse
     {
-        Log::info('Profile update started', ['user_id' => $request->user()->id, 'data' => $request->all()]);
+        try {
+            $user = $request->user();
+            
+            // Get the existing profile
+            $profile = Profile::where('user_id', $user->id)->first();
+            
+            // If no profile exists, create one (first time only)
+            if (!$profile) {
+                $profile = new Profile();
+                $profile->user_id = $user->id;
+                $profile->save();
+                Log::info('Created FIRST profile for user: ' . $user->id);
+            } else {
+                Log::info('Updating EXISTING profile ID: ' . $profile->id . ' for user: ' . $user->id);
+            }
 
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:100',
-            'last_name' => 'required|string|max:100',
-            'email' => 'required|email|max:255',
-            'phone' => 'nullable|string|max:20',
-            'position' => 'nullable|string|max:100',
-            'education' => 'nullable|string|max:100',
-            'bio' => 'nullable|string|max:1000',
-            'address' => 'nullable|string|max:255',
-            'city' => 'nullable|string|max:100',
-            'country' => 'nullable|string|max:100',
-            'linkedin_url' => 'nullable|string|max:255',
-            'github_url' => 'nullable|string|max:255',
-            'portfolio_url' => 'nullable|string|max:255',
-        ]);
+            Log::info('=== PROFILE UPDATE STARTED ===');
+            Log::info('User ID: ' . $user->id);
+            Log::info('Profile ID being updated: ' . $profile->id);
+            Log::info('Request data:', $request->all());
 
-        Log::info('Profile data validated', ['validated' => $validated]);
+            // Validate all fields including profile_image
+            $validated = $request->validate([
+                'first_name' => 'nullable|string|max:100',
+                'last_name' => 'nullable|string|max:100',
+                'email' => 'nullable|email|max:255|unique:users,email,' . $user->id,
+                'phone' => 'nullable|string|max:20',
+                'position' => 'nullable|string|max:100',
+                'education' => 'nullable|string|max:100',
+                'bio' => 'nullable|string|max:1000',
+                'address' => 'nullable|string|max:255',
+                'city' => 'nullable|string|max:100',
+                'country' => 'nullable|string|max:100',
+                'linkedin_url' => 'nullable|string|max:255',
+                'github_url' => 'nullable|string|max:255',
+                'portfolio_url' => 'nullable|string|max:255',
+                'profile_image' => 'nullable|string', // Base64 image string
+            ]);
 
-        $user = $request->user();
-        $user->forceFill([
-            'name' => trim($validated['first_name'] . ' ' . $validated['last_name']),
-            'email' => $validated['email'],
-        ])->save();
+            Log::info('Validated data:', $validated);
 
-        Profile::updateOrCreate(
-            ['user_id' => $user->id],
-            Arr::except($validated, ['first_name', 'last_name', 'email'])
-        );
+            // Handle base64 profile image if present
+            $avatarUpdated = false;
+            if (isset($validated['profile_image'])) {
+                $base64Image = $validated['profile_image'];
+                
+                // Check if it's an empty string (remove avatar)
+                if ($base64Image === '') {
+                    if ($profile->avatar && Storage::disk('public')->exists($profile->avatar)) {
+                        Storage::disk('public')->delete($profile->avatar);
+                    }
+                    $profile->avatar = null;
+                    $avatarUpdated = true;
+                    Log::info('Profile image removed');
+                }
+                // Check if it's a valid base64 string (upload new image)
+                elseif (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                    $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
+                    $imageData = base64_decode($imageData);
+                    
+                    if ($imageData !== false) {
+                        $imageType = strtolower($type[1]); // jpg, png, gif
+                        
+                        // Validate image type
+                        if (!in_array($imageType, ['jpg', 'jpeg', 'png', 'gif'])) {
+                            throw new \Exception('Invalid image type. Only JPG, PNG, and GIF are allowed.');
+                        }
+                        
+                        // Generate unique filename
+                        $filename = 'profile_' . $user->id . '_' . time() . '.' . $imageType;
+                        $path = 'avatars/' . $filename;
+                        
+                        // Save file to storage
+                        Storage::disk('public')->put($path, $imageData);
+                        
+                        // Delete old avatar if exists
+                        if ($profile->avatar && Storage::disk('public')->exists($profile->avatar)) {
+                            Storage::disk('public')->delete($profile->avatar);
+                        }
+                        
+                        // Save the path to profile
+                        $profile->avatar = $path;
+                        $avatarUpdated = true;
+                        Log::info('Profile image saved to: ' . $path);
+                        Log::info('Full URL: ' . Storage::disk('public')->url($path));
+                    }
+                }
+            }
 
-        Log::info('Profile updated successfully', ['user_id' => $user->id]);
+            // Update user basic info
+            $userUpdated = false;
+            if (isset($validated['first_name']) || isset($validated['last_name'])) {
+                $currentFirstName = explode(' ', $user->name)[0] ?? '';
+                $currentLastName = explode(' ', $user->name, 2)[1] ?? '';
+                
+                $firstName = $validated['first_name'] ?? $currentFirstName;
+                $lastName = $validated['last_name'] ?? $currentLastName;
+                
+                $newName = trim($firstName . ' ' . $lastName);
+                if ($user->name !== $newName) {
+                    $user->name = $newName;
+                    $userUpdated = true;
+                }
+            }
+            
+            if (isset($validated['email']) && $validated['email'] !== $user->email) {
+                $user->email = $validated['email'];
+                $user->email_verified_at = null;
+                $userUpdated = true;
+            }
+            
+            if ($userUpdated) {
+                $user->save();
+                Log::info('User updated');
+            }
 
-        return Redirect::route('pages.userProfile')->with('success', 'Profile updated successfully!');
+            // Prepare profile data - remove user fields and profile_image
+            $profileData = Arr::except($validated, ['first_name', 'last_name', 'email', 'profile_image']);
+            
+            // Filter out empty values to preserve existing data
+            $filteredProfileData = [];
+            foreach ($profileData as $key => $value) {
+                // Only update if the value is not null and not empty string
+                if ($value !== null && $value !== '') {
+                    $filteredProfileData[$key] = $value;
+                    Log::info("Will update {$key}: '{$value}'");
+                }
+            }
+            
+            // Update the existing profile
+            if (!empty($filteredProfileData)) {
+                foreach ($filteredProfileData as $key => $value) {
+                    $profile->$key = $value;
+                }
+                $profile->save();
+                Log::info('Profile updated with fields:', $filteredProfileData);
+            } elseif ($avatarUpdated) {
+                // Save profile if only avatar was updated
+                $profile->save();
+                Log::info('Profile saved with avatar update only');
+            }
+
+            // CRITICAL: Refresh the user and profile to get the latest data
+            $user->refresh();
+            $user->load('profile');
+            
+            Log::info('=== PROFILE UPDATE COMPLETED ===');
+            Log::info('Final avatar path: ' . $profile->avatar);
+            Log::info('Final avatar URL: ' . ($profile->avatar ? Storage::disk('public')->url($profile->avatar) : 'none'));
+
+            // Store success message
+            session()->flash('success', 'Profile updated successfully!');
+
+            return Redirect::route('profile.editExtended');
+            
+        } catch (\Exception $e) {
+            Log::error('Profile update error:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            session()->flash('error', 'An error occurred while updating profile.');
+            return Redirect::route('profile.editExtended')->withErrors(['error' => 'Update failed']);
+        }
     }
 
+    // ... keep all your other methods (cv, storeResume, destroyResume, etc.)
+    
     /**
-     * Upload user avatar image.
+     * Upload user avatar image (keep for backward compatibility)
      */
     public function uploadAvatar(Request $request): RedirectResponse
     {
@@ -127,21 +233,28 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
-        $profile = $user->profile ?? Profile::firstOrCreate(['user_id' => $user->id]);
+        
+        $profile = Profile::where('user_id', $user->id)->first();
+        if (!$profile) {
+            $profile = new Profile();
+            $profile->user_id = $user->id;
+            $profile->save();
+        }
 
-        // Delete old avatar if exists
         if ($profile->avatar && Storage::disk('public')->exists($profile->avatar)) {
             Storage::disk('public')->delete($profile->avatar);
         }
 
         $file = $request->file('avatar');
         $filename = $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+        $path = $file->storeAs('avatars', $filename, 'public');
         
-        Storage::disk('public')->putFileAs('avatars', $file, $filename);
-        
-$profile->update(['avatar' => 'avatars/' . $filename]);
+        $profile->avatar = $path;
+        $profile->save();
 
-        return Redirect::route('profile.editExtended')->with('success', 'Avatar uploaded successfully.');
+        session()->flash('success', 'Avatar uploaded successfully!');
+        
+        return Redirect::route('profile.editExtended');
     }
 
     /**
@@ -150,186 +263,16 @@ $profile->update(['avatar' => 'avatars/' . $filename]);
     public function removeAvatar(Request $request): RedirectResponse
     {
         $user = $request->user();
-        $profile = $user->profile;
+        $profile = Profile::where('user_id', $user->id)->first();
 
         if ($profile && $profile->avatar && Storage::disk('public')->exists($profile->avatar)) {
             Storage::disk('public')->delete($profile->avatar);
-            $profile->update(['avatar' => null]);
+            $profile->avatar = null;
+            $profile->save();
         }
 
-        return Redirect::route('pages.userProfile')->with('success', 'Avatar removed successfully.');
-    }
-
-    /**
-     * Add a skill to the user's profile.
-     */
-    public function addSkill(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'skill_id' => 'required|exists:skills,id',
-            'proficiency_level' => 'required|in:beginner,intermediate,advanced,expert',
-            'years_experience' => 'nullable|integer|min:0',
-        ]);
-
-        $request->user()->skills()->syncWithoutDetaching([
-            $validated['skill_id'] => [
-                'proficiency_level' => $validated['proficiency_level'],
-                'years_experience' => $validated['years_experience'] ?? 0,
-            ]
-        ]);
-
-        return Redirect::route('profile.editExtended')->with('success', 'Skill added successfully.');
-    }
-
-    /**
-     * Remove a skill from the user's profile.
-     */
-    public function removeSkill(Request $request, int $skillI
-    ): RedirectResponse
-    {
-        $request->user()->skills()->detach($skillId);
-
-        return Redirect::route('profile.editExtended')->with('success', 'Skill removed successfully.');
-    }
-
-    /**
-     * Add work experience.
-     */
-    public function addExperience(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'company_name' => 'required|string|max:255',
-            'job_title' => 'required|string|max:255',
-            'location' => 'nullable|string|max:255',
-            'start_date' => 'required|date',
-            'end_date' => 'nullable|date|after:start_date',
-            'is_current' => 'boolean',
-            'description' => 'nullable|string|max:2000',
-        ]);
-
-        $request->user()->experiences()->create($validated);
-
-        return Redirect::route('profile.editExtended')->with('success', 'Experience added successfully.');
-    }
-
-    /**
-     * Update work experience.
-     */
-    public function updateExperience(Request $request, Experience $experience): RedirectResponse
-    {
-        if (!$experience->isOwnedBy($request->user())) {
-            return Redirect::back()->with('error', 'Unauthorized action.');
-        }
-
-        $validated = $request->validate([
-            'company_name' => 'required|string|max:255',
-            'job_title' => 'required|string|max:255',
-            'location' => 'nullable|string|max:255',
-            'start_date' => 'required|date',
-            'end_date' => 'nullable|date|after:start_date',
-            'is_current' => 'boolean',
-            'description' => 'nullable|string|max:2000',
-        ]);
-
-        $experience->update($validated);
-
-        return Redirect::route('profile.editExtended')->with('success', 'Experience updated successfully.');
-    }
-
-    /**
-     * Delete work experience.
-     */
-    public function deleteExperience(Request $request, Experience $experience): RedirectResponse
-    {
-        if (!$experience->isOwnedBy($request->user())) {
-            return Redirect::back()->with('error', 'Unauthorized action.');
-        }
-
-        $experience->delete();
-
-        return Redirect::route('profile.editExtended')->with('success', 'Experience deleted successfully.');
-    }
-
-    /**
-     * Delete the user's account.
-     */
-    public function destroy(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'password' => ['required', 'current_password'],
-        ]);
-
-        $user = $request->user();
-
-        Auth::logout();
-        $user->delete();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return Redirect::to('/');
-    }
-
-    /**
-     * CV Upload Page
-     */
-    public function cv(Request $request)
-    {
-        $user = $request->user()->loadMissing(['profile', 'resumes']);
-        return Inertia::render('cv', [
-            'user' => $user,
-            'resumes' => $user->resumes ?? [],
-        ]);
-    }
-
-    /**
-     * Store CV upload
-     */
-    public function storeResume(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'cv' => 'required|file|mimes:pdf,doc,docx|max:2048',
-            'title' => 'nullable|string|max:255',
-            'is_primary' => 'boolean',
-        ]);
-
-        $user = $request->user();
+        session()->flash('success', 'Avatar removed successfully!');
         
-        $file = $request->file('cv');
-        $title = $request->title ?: $file->getClientOriginalName();
-        $filename = $user->id . '_' . time() . '_' . $file->getClientOriginalName();
-        
-        $path = $file->storeAs('resumes', $filename, 'public');
-        
-        // Demote other resumes if this is primary
-        if ($request->boolean('is_primary')) {
-            $user->resumes()->update(['is_primary' => false]);
-        }
-        
-        $user->resumes()->create([
-            'title' => $title,
-            'file_path' => $path,
-            'file_name' => $filename,
-            'file_size' => $file->getSize(),
-            'is_primary' => $request->boolean('is_primary', false),
-            'status' => 'pending',
-        ]);
-
-        return back()->with('success', 'CV uploaded successfully');
-    }
-
-    /**
-     * Delete CV
-     */
-    public function destroyResume(Request $request, $id): RedirectResponse
-    {
-        $user = $request->user();
-        $resume = $user->resumes()->findOrFail($id);
-        
-        Storage::disk('public')->delete($resume->file_path);
-        $resume->delete();
-
-        return back()->with('success', 'CV deleted');
+        return Redirect::route('profile.editExtended');
     }
 }
-

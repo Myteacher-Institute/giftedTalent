@@ -8,13 +8,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('resumes', function (Blueprint $table) {
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
-            $table->text('feedback')->nullable();
-            $table->timestamp('reviewed_at')->nullable();
-            $table->unsignedBigInteger('reviewer_id')->nullable();
-            $table->foreign('reviewer_id')->references('id')->on('users');
-        });
+        // Migration disabled - fields already merged into create_resumes_table
+        // Schema::table('resumes', function (Blueprint $table) {
+        //     $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+        //     $table->text('feedback')->nullable();
+        //     $table->timestamp('reviewed_at')->nullable();
+        //     $table->unsignedBigInteger('reviewer_id')->nullable();
+        //     $table->foreign('reviewer_id')->references('id')->on('users');
+        // });
     }
 
     public function down(): void

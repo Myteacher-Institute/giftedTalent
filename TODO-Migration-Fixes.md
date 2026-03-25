@@ -1,0 +1,1 @@
+# Migration Fixes Progress Tracker\n\n**Status**: Approved & Implementing\n\n- [x] Create TODO ✅\n- [ ] 1. Delete bad migrations\n- [ ] 2. Edit create_resumes.php (add fields)\n- [ ] 3. php artisan migrate:fresh\n- [ ] 4. Test dashboard/profile\n- [ ] 5. Complete\n\nCurrent: Step 1

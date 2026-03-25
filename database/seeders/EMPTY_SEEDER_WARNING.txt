@@ -1,0 +1,1 @@
+REMOVED ALL SEEDERS AS PER USER REQUEST. No auto-seeding. Admins post jobs, users add skills/experience via UI. Do NOT run 'db:seed'.

@@ -1,4 +1,4 @@
-import '@/css/EasyApplyJob.css';
+import '../../css/EasyApplyJob.css';
 import { useState } from 'react';
 import { Head } from '@inertiajs/react';
 import AuthenticatedLayout from '@/js/Layouts/AuthenticatedLayout';

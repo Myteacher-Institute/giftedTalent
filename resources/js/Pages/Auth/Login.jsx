@@ -121,6 +121,14 @@ export default function Login({ status, canResetPassword }) {
                                 Continue with Google
                             </a>
                         </div>
+                        <div className="auth-divider">
+                            <span>New here?</span>
+                        </div>
+                        <div className="form-actions">
+                            <Link href={route('register')} className="btn-secondary full-width">
+                                Create Account - Register Now
+                            </Link>
+                        </div>
             </form>
         </div>
     );

@@ -1,7 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { router } from '@inertiajs/react';
-import '/resources/css/CreateJob.css';
+import '../../css/CreateJob.css';
 
 export default function CreateJob() {
     const [formData, setFormData] = useState({
