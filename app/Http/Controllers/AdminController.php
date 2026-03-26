@@ -189,14 +189,12 @@ class AdminController extends Controller
             'company_name'     => $request->company_name,
             'company_logo_url' => $request->company_logo_url,
             'company_location' => $request->company_location,
-            'job_title'        => $request->job_title,
-            'job_type'         => $request->job_type,
-            'salary_range'     => $request->salary_range, // This will be like "₦ 250,000"
-            'description'      => $request->description,
-            'tags' => $request->tags ?? [],
-            'application_link' => $request->application_link,
-            'status'           => 'active',
-            'posted_at'        => now(),
+            'job_title' => $request->job_title,
+            'job_type' => $request->job_type,
+            'salary_range' => $request->salary_range,
+            'description' => $request->description,
+'status' => 'active',
+            'posted_at' => now(),
             'applicants_count' => 0,
         ]);
 

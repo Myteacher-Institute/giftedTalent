@@ -14,7 +14,13 @@ class JobSeeder extends Seeder
      */
     public function run(): void
     {
-        $users = User::limit(5)->get();
+        // Get admin users for admin jobs, fallback to regular users
+        $adminUsers = User::where('is_admin', true)->get();
+        $regularUsers = User::where('is_admin', false)->limit(5)->get();
+        $allUsers = $adminUsers->merge($regularUsers);
+        if ($allUsers->isEmpty()) {
+            $allUsers = User::limit(10)->get();
+        }
 
         $jobs = [
             [
@@ -65,8 +71,85 @@ class JobSeeder extends Seeder
         ];
 
         foreach ($jobs as $jobData) {
-            Job::create(array_merge($jobData, ['user_id' => $users->random()->id]));
+            $userId = $allUsers->random()->id;
+            // Map fields to model fillable
+            Job::create([
+                'user_id' => $userId,
+                'company_name' => $jobData['company'],
+                'company_location' => $jobData['location'],
+                'job_title' => $jobData['title'],
+                'job_type' => 'Full-time', // Default
+                'salary_range' => $jobData['salary_range'],
+                'description' => $jobData['description'],
+                'status' => $jobData['status'],
+                'available_at' => now(),
+            ]);
+
         }
+
+        // Additional admin jobs with varied types
+        $adminJobs = [
+            [
+                'company_name' => 'TechCorp Inc',
+                'company_location' => 'Remote',
+                'job_title' => 'Senior Software Engineer',
+                'job_type' => 'Full-time',
+                'salary_range' => '$120k - $160k',
+                'description' => 'Lead development team, React & Laravel.',
+                'status' => 'open',
+            ],
+            [
+                'company_name' => 'DesignHub',
+                'company_location' => 'New York',
+                'job_title' => 'UI/UX Designer',
+                'job_type' => 'Part-time',
+                'salary_range' => '$60k - $90k',
+                'description' => 'Design modern interfaces.',
+                'status' => 'open',
+            ],
+            [
+                'company_name' => 'CloudScale',
+                'company_location' => 'San Francisco',
+                'job_title' => 'DevOps Engineer',
+                'job_type' => 'Contract',
+                'salary_range' => '$100k - $140k',
+                'description' => 'CI/CD pipelines, AWS.',
+                'status' => 'open',
+            ],
+            [
+                'company_name' => 'FinTech Solutions',
+                'company_location' => 'Remote',
+                'job_title' => 'Backend Developer',
+                'job_type' => 'Remote',
+                'salary_range' => '$90k - $130k',
+                'description' => 'PHP/Laravel API development.',
+                'status' => 'open',
+            ],
+            [
+                'company_name' => 'StartupX',
+                'company_location' => 'London',
+                'job_title' => 'Full Stack Developer',
+                'job_type' => 'Internship',
+                'salary_range' => 'Paid Internship',
+                'description' => 'Work on real projects.',
+                'status' => 'open',
+            ],
+        ];
+
+        foreach ($adminJobs as $jobData) {
+            if ($adminUsers->isNotEmpty()) {
+            Job::create(array_merge($jobData, [
+                'user_id' => $adminUsers->random()->id,
+                'available_at' => now(),
+            ]));
+            } else {
+                Job::create(array_merge($jobData, [
+                    'user_id' => $allUsers->random()->id,
+                    'available_at' => now(),
+                ]));
+            }
+        }
+
     }
 }
 
