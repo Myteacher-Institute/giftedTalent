@@ -13,7 +13,53 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-$user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'applications', 'resumes']);
+        $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'applications', 'resumes', 'notifications.unreadNotifications']);
+
+        // Search parameters
+        $query = $request->get('q', '');
+        $jobType = $request->get('job_type', '');
+        $location = $request->get('location', '');
+
+        // Base query for admin jobs only
+        $jobsQuery = Job::whereHas('user', function($q) {
+            $q->where('is_admin', true);
+        })->where('status', 'open');
+
+        // Apply filters
+        if ($query) {
+            $jobsQuery->where(function($q) use ($query) {
+                $q->where('job_title', 'like', '%' . $query . '%')
+                  ->orWhere('company_name', 'like', '%' . $query . '%')
+                  ->orWhere('description', 'like', '%' . $query . '%');
+            });
+        }
+
+        if ($jobType) {
+            $jobsQuery->where('job_type', $jobType);
+        }
+
+        if ($location) {
+            $jobsQuery->where('company_location', 'like', '%' . $location . '%');
+        }
+
+        // Recommended jobs (now filtered admin jobs, fallback to skill-matched if no results)
+        $userSkills = $user->skills->pluck('name');
+        $adminJobs = $jobsQuery->limit(10)->get();
+
+        if ($adminJobs->isEmpty() && $userSkills->isNotEmpty()) {
+            $fallbackJobs = Job::where('status', 'open')
+                ->where(function($q) use ($userSkills) {
+                    foreach ($userSkills as $skill) {
+                        $q->orWhereJsonContains('skills_required ?? []', $skill)
+                          ->orWhereJsonContains('preferred_skills ?? []', $skill);
+                    }
+                })->limit(5)->get();
+        } else {
+            $fallbackJobs = collect();
+        }
+
+        $jobs = $adminJobs->merge($fallbackJobs);
+
 
         // Profile completion status
         $profileStatus = ['percent' => 0, 'status' => []];
@@ -24,27 +70,18 @@ $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'appl
             $profileComplete = $completion['percent'];
         }
 
-        // Application stats
-        $stats = [
-            'applied' => $user->applications()->count(),
-            'review' => 0, // Adjust scopes as needed
-            'interview' => 0,
-            'rejected' => 0,
-        ];
 
-        // Recommended jobs (match skills)
-        $userSkills = $user->skills->pluck('name');
-        $jobs = Job::where('status', 'open')
-            ->when($userSkills->isNotEmpty(), function($q) use ($userSkills) {
-                $q->where(function($subQ) use ($userSkills) {
-                    $subQ->whereJsonContains('skills_required', $userSkills->first())
-                         ->orWhereJsonContains('preferred_skills', $userSkills->first());
-                });
-            })
-            ->limit(3)
-            ->get();
+
+
 
         // Notifications data for bell/navbar
+        // Extract job types before return
+        $jobTypes = Job::whereHas('user', fn($q) => $q->where('is_admin', true))
+                          ->distinct()
+                          ->pluck('job_type')
+                          ->filter()
+                          ->values();
+
         $notificationsData = [
             'unread_count' => $user->unreadNotifications->count(),
             'recent_unread' => $user->notifications()
@@ -62,9 +99,11 @@ $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'appl
                 ]),
         ];
 
+        $skills = Skill::where('user_id', Auth::id())->get();
+
         return Inertia::render('Dashboard', [
             'auth' => [
-                'user' => $user
+                'user' => $user,
             ],
             'profileComplete' => $profileComplete,
             'profileStatus' => $profileStatus,
@@ -78,14 +117,23 @@ $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'appl
             'jobs' => $jobs->map(fn($job) => [
                 'id' => $job->id,
                 'company' => $job->company_name ?? $job->company ?? 'Company',
-                'title' => $job->title,
-                'tags' => implode(', ', $job->tags ?? []),
+                'title' => $job->job_title ?? $job->title,
+                'tags' => $job->job_type . ($job->company_location ? ' • ' . $job->company_location : ''),
                 'time' => $job->created_at->diffForHumans(),
                 'image' => $job->logo_url ?? 'https://i.pravatar.cc/40?img=' . $job->id,
+                'type' => $job->job_type,
+                'location' => $job->company_location,
             ]),
+            'searchParams' => [
+                'q' => $query,
+                'job_type' => $jobType,
+                'location' => $location,
+            ],
+            'jobTypes' => $jobTypes,
             'notifications' => $notificationsData,
         ]);
     }
+
 
 
     private function calculateProfileCompletion(Profile $profile): array

@@ -7,6 +7,7 @@ use App\Models\Experience;
 use App\Models\Profile;
 use App\Models\Resume;
 use App\Models\Skill;
+use Inertia\Response as InertiaResponse;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,14 +15,16 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
-use Illuminate\Support\Arr as array_except;
+use Illuminate\Http\Response;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 
 class ProfileController extends Controller
 {
     /**
      * Display the user's profile.
      */
-    public function show(Request $request): Response
+    public function show(Request $request): InertiaResponse
     {
         $user = $request->user()->loadMissing([
             'profile',
@@ -41,22 +44,10 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function edit(Request $request): Response
-    {
-        $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'resumes']);
-
-        return Inertia::render('Profile/Edit', [
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
-            'status' => session('status'),
-            'user' => $user,
-            'availableSkills' => Skill::where('is_active', true)->get(),
-        ]);
-    }
-
     /**
-     * Display extended profile edit form.
+     * Display the profile edit form.
      */
-    public function editExtendedProfile(Request $request): Response
+    public function editExtendedProfile(Request $request): InertiaResponse
     {
         $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'resumes']);
 
@@ -82,7 +73,7 @@ class ProfileController extends Controller
 
         $user->save();
 
-        return Redirect::route('profile.edit');
+        return Redirect::route('profile.editExtended');
     }
 
     /**
@@ -90,23 +81,25 @@ class ProfileController extends Controller
      */
     public function updateExtendedProfile(Request $request): RedirectResponse
     {
+        Log::info('Profile update started', ['user_id' => $request->user()->id, 'data' => $request->all()]);
+
         $validated = $request->validate([
             'first_name' => 'required|string|max:100',
             'last_name' => 'required|string|max:100',
-            'email' => [
-                'required',
-                'email',
-                'max:255',
-            ],
+            'email' => 'required|email|max:255',
             'phone' => 'nullable|string|max:20',
+            'position' => 'nullable|string|max:100',
+            'education' => 'nullable|string|max:100',
             'bio' => 'nullable|string|max:1000',
             'address' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:100',
             'country' => 'nullable|string|max:100',
-            'linkedin_url' => 'nullable|url|max:255',
-            'github_url' => 'nullable|url|max:255',
-            'portfolio_url' => 'nullable|url|max:255',
+            'linkedin_url' => 'nullable|string|max:255',
+            'github_url' => 'nullable|string|max:255',
+            'portfolio_url' => 'nullable|string|max:255',
         ]);
+
+        Log::info('Profile data validated', ['validated' => $validated]);
 
         $user = $request->user();
         $user->forceFill([
@@ -116,10 +109,12 @@ class ProfileController extends Controller
 
         Profile::updateOrCreate(
             ['user_id' => $user->id],
-            array_except($validated, ['first_name', 'last_name', 'email'])
+            Arr::except($validated, ['first_name', 'last_name', 'email'])
         );
 
-        return Redirect::route('profile.show')->with('success', 'Profile updated successfully!');
+        Log::info('Profile updated successfully', ['user_id' => $user->id]);
+
+        return Redirect::route('pages.userProfile')->with('success', 'Profile updated successfully!');
     }
 
     /**
@@ -144,9 +139,9 @@ class ProfileController extends Controller
         
         Storage::disk('public')->putFileAs('avatars', $file, $filename);
         
-        $profile->update(['avatar' => $filename]);
+$profile->update(['avatar' => 'avatars/' . $filename]);
 
-        return Redirect::route('profile.edit')->with('success', 'Avatar uploaded successfully.');
+        return Redirect::route('profile.editExtended')->with('success', 'Avatar uploaded successfully.');
     }
 
     /**
@@ -162,7 +157,7 @@ class ProfileController extends Controller
             $profile->update(['avatar' => null]);
         }
 
-        return Redirect::route('profile.show')->with('success', 'Avatar removed successfully.');
+        return Redirect::route('pages.userProfile')->with('success', 'Avatar removed successfully.');
     }
 
     /**
@@ -183,7 +178,7 @@ class ProfileController extends Controller
             ]
         ]);
 
-        return Redirect::route('profile.edit')->with('success', 'Skill added successfully.');
+        return Redirect::route('profile.editExtended')->with('success', 'Skill added successfully.');
     }
 
     /**
@@ -193,7 +188,7 @@ class ProfileController extends Controller
     {
         $request->user()->skills()->detach($skillId);
 
-        return Redirect::route('profile.edit')->with('success', 'Skill removed successfully.');
+        return Redirect::route('profile.editExtended')->with('success', 'Skill removed successfully.');
     }
 
     /**
@@ -213,7 +208,7 @@ class ProfileController extends Controller
 
         $request->user()->experiences()->create($validated);
 
-        return Redirect::route('profile.edit')->with('success', 'Experience added successfully.');
+        return Redirect::route('profile.editExtended')->with('success', 'Experience added successfully.');
     }
 
     /**
@@ -237,7 +232,7 @@ class ProfileController extends Controller
 
         $experience->update($validated);
 
-        return Redirect::route('profile.edit')->with('success', 'Experience updated successfully.');
+        return Redirect::route('profile.editExtended')->with('success', 'Experience updated successfully.');
     }
 
     /**
@@ -251,7 +246,7 @@ class ProfileController extends Controller
 
         $experience->delete();
 
-        return Redirect::route('profile.edit')->with('success', 'Experience deleted successfully.');
+        return Redirect::route('profile.editExtended')->with('success', 'Experience deleted successfully.');
     }
 
     /**
@@ -336,3 +331,4 @@ class ProfileController extends Controller
         return back()->with('success', 'CV deleted');
     }
 }
+
