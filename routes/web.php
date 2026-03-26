@@ -49,13 +49,13 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     Route::post('/profile/resume', [ProfileController::class, 'storeResume'])->name('profile.resume.store');
     Route::delete('/profile/resume/{id}', [ProfileController::class, 'destroyResume'])->name('profile.resume.destroy');
     // Basic Profile Routes
-    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
-    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    // Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    // Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    // Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    // Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Extended Profile Routes
-    Route::get('/profile/extended', [ProfileController::class, 'editExtendedProfile'])->name('profile.editExtended');
+    Route::get('/profile/edit', [ProfileController::class, 'editExtendedProfile'])->name('profile.editExtended');
     Route::patch('/profile/extended', [ProfileController::class, 'updateExtendedProfile'])->name('profile.updateExtended');
 
     // Avatar Upload Route

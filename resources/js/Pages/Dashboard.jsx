@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
+import AuthenticatedLayout from '../Layouts/AuthenticatedLayout';
 import '../../css/Dashboard.css';
-import Notification from '@/Components/Notification';
+import Notification from '../Components/Notification';
 
 window.alertify = window.alertify || alertify;
 
@@ -30,7 +30,7 @@ function JobCard({ job }) {
                 <div className="menu-trigger" onClick={() => toggleMenu(job.id)}>
                     <i className="fa-solid fa-ellipsis"></i>
                 </div>
-{showMenu === job.id && (
+                {showMenu === job.id && (
                     <div className="dropdown-menu">
                         <button onClick={() => setShowMenu(null)}>
                             <i className="fa-regular fa-eye-slash"></i> Hide Job
@@ -48,11 +48,67 @@ function JobCard({ job }) {
     );
 }
 
-export default function Dashboard({ auth, profileComplete = 75, profileStatus = {}, stats = { applied: 8, review: 3, interview: 1, rejected: 2 }, jobs = [] }) {
+export default function Dashboard({ auth, profileComplete = 75, profileStatus = {}, stats = { applied: 8, review: 3, interview: 1, rejected: 2 }, jobs = [], jobTypes = [], searchParams = {}, notifications }) {
     const [activeMenu, setActiveMenu] = useState(null);
+    const [searchQuery, setSearchQuery] = useState(searchParams.q || '');
+    const [selectedJobType, setSelectedJobType] = useState(searchParams.job_type || '');
+    const [showAdvanced, setShowAdvanced] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [clientFilteredJobs, setClientFilteredJobs] = useState(jobs);
+
+    // Debounce search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            let filtered = jobs;
+            if (searchQuery) {
+                filtered = filtered.filter(job => 
+                    job.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    job.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    job.tags?.toLowerCase().includes(searchQuery.toLowerCase())
+                );
+            }
+            if (selectedJobType) {
+                filtered = filtered.filter(job => job.type === selectedJobType);
+            }
+            setClientFilteredJobs(filtered);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchQuery, selectedJobType, jobs]);
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+        setLoading(true);
+        router.get(
+            '/dashboard',
+            { q: searchQuery, job_type: selectedJobType },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => setLoading(false),
+                onError: () => setLoading(false),
+            }
+        );
+    };
+
+    const clearSearch = () => {
+        setSearchQuery('');
+        setSelectedJobType('');
+        router.get('/dashboard', {}, { preserveState: true, preserveScroll: true });
+    };
+
+    const toggleAdvanced = () => setShowAdvanced(!showAdvanced);
+
+    const handleJobTypeClick = () => {
+        console.log('Job Type clicked');
+    };
+
+    const noResults = clientFilteredJobs.length === 0 && jobs.length === 0;
+
+    const handleLogout = () => {
+        router.post('/logout');
+    };
 
     useEffect(() => {
-        // Profile complete celebration (one-time)
         const hasShown = localStorage.getItem('profileCompleteShown');
         if (profileComplete === 100 && !hasShown) {
             alertify.success('Congratulations! Your profile is 100% complete! 🎉', 3);
@@ -70,10 +126,10 @@ export default function Dashboard({ auth, profileComplete = 75, profileStatus = 
                 </div>
 
                 <nav>
-                    <a href="#">Home</a>
-                    <a href="#">Jobs</a>
-                    <a href="#">Explore</a>
-                    <a href="#">Hire</a>
+                    <Link href="/">Home</Link>
+                    <Link href="/search-jobs">Jobs</Link>
+                    <Link href="#">Explore</Link>
+                    <Link href="#">Hire</Link>
                 </nav>
 
                 <div className="search">
@@ -93,8 +149,9 @@ export default function Dashboard({ auth, profileComplete = 75, profileStatus = 
                         <img src={auth.user.profile?.avatar_url || `https://i.pravatar.cc/40?img=${auth.user.id}`} alt="" />
                         <h3>{auth.user.name}</h3>
                         <p>{auth.user.profile?.position || 'Add position'}</p>
-                        <Link href={route('profile.editExtended')} className="profile-button">Edit Profile</Link>
-
+                        <button>
+                            <Link href="/profile" className="profile-button">Edit Profile</Link>
+                        </button>
                     </div>
 
                     <ul className="menu">
@@ -104,6 +161,12 @@ export default function Dashboard({ auth, profileComplete = 75, profileStatus = 
                         <li><i className="fa-regular fa-envelope"></i> Message</li>
                         <li><i className="fa-regular fa-bookmark"></i> Save Jobs</li>
                         <li><i className="fa-solid fa-gear"></i> Settings</li>
+                        <li className="logout-item">
+                            <a href="/" onClick={(e) => { e.preventDefault(); handleLogout(); }}>
+                                <i className="fa-solid fa-right-from-bracket logout-icon"></i>
+                                Logout
+                            </a>
+                        </li>
 
                         
                     </ul>
@@ -113,24 +176,101 @@ export default function Dashboard({ auth, profileComplete = 75, profileStatus = 
                     <h1>Welcome back, {auth.user.name.split(' ')[0]}</h1>
 
                     <div className="status-bar">
-                        <span className="success">{auth.user.profile?.cv_uploaded ? 'CV Uploaded' : 'Upload CV'}</span>
-                        <span>Skills: {auth.user.skills?.slice(0,2).map(s => s.name).join(', ') || 'No skills added'}</span>
-                        <span>Bio: {auth.user.profile?.bio ? auth.user.profile.bio.substring(0,50) + '...' : 'Add bio'}</span>
+                        <span className="success">{auth.user.resumes?.length > 0 ? 'CV Uploaded' : 'Upload CV'}</span>
+                        <span>Skills: {auth.user.skills?.slice(0, 2).map(s => s.name).join(', ') || 'No skills added'}</span>
+                        <span>Bio: {auth.user.profile?.bio ? auth.user.profile.bio.substring(0, 50) + '...' : 'Add bio'}</span>
                         <button><Link href="/cv" className="status-button">Upload Your CV</Link></button>
                     </div>
 
                     <div className="search-bar">
-                        <input type="text" placeholder="Search for jobs..." />
-                        <button>Job Type</button>
-                        <button>Advanced Filter</button>
+                        <form onSubmit={handleSearch} className="flex gap-2 w-full">
+                            <input 
+                                type="text" 
+                                placeholder="Search for jobs..." 
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            />
+                            <select 
+                                value={selectedJobType} 
+                                onChange={(e) => setSelectedJobType(e.target.value)}
+                                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
+                            >
+                                <option value="">All Types</option>
+                                {jobTypes.map(type => (
+                                    <option key={type} value={type}>{type}</option>
+                                ))}
+                            </select>
+                            <button 
+                                type="button" 
+                                onClick={toggleAdvanced}
+                                className="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md"
+                            >
+                                Advanced
+                            </button>
+                            <button 
+                                type="submit" 
+                                disabled={loading}
+                                className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all duration-200 shadow-md disabled:opacity-50"
+                            >
+                                {loading ? 'Searching...' : 'Search'}
+                            </button>
+                            {searchQuery || selectedJobType ? (
+                                <button 
+                                    type="button" 
+                                    onClick={clearSearch}
+                                    className="px-4 py-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-all"
+                                >
+                                    Clear
+                                </button>
+                            ) : null}
+                        </form>
                     </div>
 
-                    <h2>Recommended Jobs</h2>
+                    {showAdvanced && (
+                        <div className="advanced-filter-modal bg-white p-6 rounded-xl shadow-2xl border border-gray-200 max-w-md mx-auto mb-6">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-xl font-bold text-gray-800">Advanced Filter</h3>
+                                <button onClick={toggleAdvanced} className="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+                            </div>
+                            <div className="space-y-4">
+                                <select className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    <option>Location</option>
+                                </select>
+                                <input type="range" min="0" max="200" className="w-full" />
+                                <span>$0 - $200k</span>
+                            </div>
+                        </div>
+                    )}
+
+                    <h2>{searchQuery ? `Search Results for "${searchQuery}"` : 'Recommended Jobs'}</h2>
 
                     <div className="jobs">
-                        {jobs.map((job) => (
-                            <JobCard key={job.id} job={job} />
-                        ))}
+                        {loading ? (
+                            <div className="flex justify-center py-12">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                            </div>
+                        ) : noResults ? (
+                            <div className="text-center py-16 px-8">
+                                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-3xl flex items-center justify-center">
+                                    <i className="fa-solid fa-magnifying-glass text-3xl text-yellow-500"></i>
+                                </div>
+                                <h3 className="text-2xl font-bold text-gray-800 mb-2">Sorry, no matching jobs</h3>
+                                <p className="text-lg text-gray-600 mb-6 max-w-md mx-auto">
+                                    No admin-posted jobs match your search. We'll notify you when available. Thanks for your patience!
+                                </p>
+                                <button 
+                                    onClick={clearSearch}
+                                    className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg font-semibold"
+                                >
+                                    Browse All Jobs
+                                </button>
+                            </div>
+                        ) : (
+                            clientFilteredJobs.map((job) => (
+                                <JobCard key={job.id} job={job} />
+                            ))
+                        )}
                     </div>
                 </main>
 
@@ -138,25 +278,24 @@ export default function Dashboard({ auth, profileComplete = 75, profileStatus = 
                     <div className="progress-card">
                         <h3>Complete Your Profile</h3>
 
-                        <div className="progress-circle" style={{'--progress': `${profileComplete / 100}`}}>
+                        <div className="progress-circle" style={{ '--progress': `${profileComplete / 100}` }}>
                             <div className="flex flex-col items-center">
                                 <h2 className="text-2xl font-bold text-indigo-600 mb-1">{profileComplete}%</h2>
                                 <span className="text-xs text-gray-500 font-medium uppercase tracking-wide">Complete</span>
                             </div>
                         </div>
                         <ul>
-                            <li className={profileStatus.status?.portfolio ? 'done' : ''} onClick={() => router.visit(route('profile.editExtended'))}>
+                            <li className={profileStatus.status?.portfolio ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
                                 {profileStatus.status?.portfolio ? '✓ Portfolio Added' : '➤ Add Portfolio Link'}
                             </li>
-
-                            <li className={profileStatus.status?.experience ? 'done' : ''} onClick={() => router.visit(route('profile.editExtended'))}>
+                            <li className={profileStatus.status?.experience ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
                                 {profileStatus.status?.experience ? '✓ Experience Added' : '➤ Update Experience'}
                             </li>
 
                             <li className={profileStatus.status?.email_verified ? 'done' : ''}>
                                 {profileStatus.status?.email_verified ? '✓ Email Verified' : '➤ Verify Email'}
                             </li>
-                            <li className={profileStatus.status?.skills ? 'done' : ''} onClick={() => router.visit(route('profile.editExtended'))}>
+                            <li className={profileStatus.status?.skills ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
                                 {profileStatus.status?.skills ? '✓ Skills Added' : '➤ Add Skills'}
                             </li>
 

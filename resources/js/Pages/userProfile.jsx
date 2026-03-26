@@ -49,20 +49,19 @@ export default function EditProfile({ user }) {
 
     const submit = (e) => {
         e.preventDefault();
+        console.log('Submitting profile data:', data);
         clearErrors();
         patch(route('profile.updateExtended'), data, {
-            preserveState: true,
-            preserveScroll: true,
             onSuccess: () => {
                 alertify.success('Profile updated successfully!');
-                reset();
-                router.visit(route('dashboard'));
+                router.visit(route('pages.userProfile'));
             },
             onError: (errors) => {
                 console.error('Validation errors:', errors);
-                alertify.error('Please fix the errors below.');
+                alertify.error('Please check the form for errors.');
             }
         });
+
     };
 
     const uploadAvatar = async (e) => {
@@ -281,7 +280,8 @@ export default function EditProfile({ user }) {
                                         className="mt-1 block w-full"
                                     />
 
-                                    <InputError message={errors.location} />
+                                    <InputError message={errors.city} />
+
                                 </div>
 
                                 <div className="form-group">
@@ -340,7 +340,14 @@ export default function EditProfile({ user }) {
                                 <PrimaryButton className="btn-primary" disabled={processing}>
                                     {processing ? 'Saving...' : 'Save Changes'}
                                 </PrimaryButton>
+                                {user && (
+                                    <a href="/dashboard" className="btn-secondary">
+                                        View Dashboard →
+                                    </a>
+                                )}
+
                             </div>
+
                         </form>
                     </div>
                 </div>

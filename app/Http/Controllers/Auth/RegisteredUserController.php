@@ -43,7 +43,7 @@ class RegisteredUserController extends Controller
         ]);
 
         // Auto-create profile
-        $user->profile()->create();
+
 
         event(new Registered($user));
 
