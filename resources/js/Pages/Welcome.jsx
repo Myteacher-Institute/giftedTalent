@@ -83,7 +83,7 @@ function Hero() {
             <div className="circle2"></div>
             <div className="hero-left">
                 <h1>Discover opportunities. <span>Showcase Your Talent.</span></h1>
-                <p>Connecting skilled talents with verified employers worldwide.</p>
+                <p>Connect with top employers and talented professionals. Your dream job or ideal candidate is just a click away.</p>
                 <div className="hero-buttons">
                     <button className="btn-primary">Find Jobs</button>
                     <button className="btn-secondary">Hire Talent</button>
@@ -238,35 +238,76 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
 
                         <div className="jobs-grid">
                             {jobs.length > 0 ? (
-                                jobs.map((job) => (
-                                    <div key={job.id} className="job-card">
-                                        <div className="job-card-header">
-                                            <div className={`job-icon ${job.gradient || 'gradient-blue'}`}>
-                                                <img src={`/assets/svg/${job.icon || 'code.svg'}`} alt="" className="job-icon-img" />
+                                jobs.map((job) => {
+                                    // Determine job type styling
+                                    const getJobTypeStyle = () => {
+                                        const jobType = job.job_type || job.type || 'Full-time';
+                                        const type = jobType.toLowerCase();
+
+                                        if (type === 'contract' || type === 'part-time') {
+                                            return { className: 'job-type job-type-blue', id: '' };
+                                        }
+                                        if (type === 'full-time' || type === 'remote') {
+                                            return { className: 'job-type job-type-green', id: '' };
+                                        }
+                                        return { className: 'job-type', id: '' };
+                                    };
+
+                                    const jobTypeStyle = getJobTypeStyle();
+                                    // Get tags array - default empty array if none
+                                    const tags = job.tags || [];
+
+                                    return (
+                                        <div key={job.id} className="job-card">
+                                            <div className="job-card-header">
+                                                <div className={`job-icon ${job.gradient || 'gradient-blue'}`}>
+                                                    <img src={`/assets/svg/${job.icon || 'code.svg'}`} alt="" className="job-icon-img" />
+                                                </div>
+                                                <span className={jobTypeStyle.className} id={jobTypeStyle.id}>
+                                                    {job.job_type || job.type || 'Full-time'}
+                                                </span>
                                             </div>
-                                            <span className="job-type" id={job.type === 'Contract' ? 'job-type-contract' : 'job-type-fulltime'}>
-                                                {job.job_type || job.type || 'Full-time'}
-                                            </span>
-                                        </div>
-                                        <h3 className="job-title">{job.job_title || job.title || 'Job Title'}</h3>
-                                        <p className="job-company">{job.company_name || job.company || 'Company Name'}</p>
-                                        <div className="job-details">
-                                            <div className="job-location">
-                                                <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                                <span>{job.company_location || job.location || 'Location'}</span>
+                                            <h3 className="job-title">{job.job_title || job.title || 'Job Title'}</h3>
+                                            <p className="job-company">{job.company_name || job.company || 'Company Name'}</p>
+
+
+                                            <div className="job-details">
+                                                <div className="job-location">
+                                                    <img src="/assets/svg/location.svg" alt="" className="location-icon" />
+                                                    <span>{job.company_location || job.location || 'Location'}</span>
+                                                </div>
+                                                <span className="job-salary">{job.salary_range || job.salary || 'Salary'}</span>
                                             </div>
-                                            <span className="job-salary">{job.salary_range || job.salary || 'Salary'}</span>
+                                            {/* Tags Section */}
+                                            {tags.length > 0 && (
+                                                <div className="job-tags">
+                                                    {tags.slice(0, 3).map((tag, index) => (
+                                                        <span key={index} className="job-tag">{tag}</span>
+                                                    ))}
+                                                    {tags.length > 3 && (
+                                                        <span className="job-tag-more">+{tags.length - 3}</span>
+                                                    )}
+                                                </div>
+                                            )}
+                                            <div>
+                                                <span className="job-date">{new Date(job.created_at).toLocaleDateString('en-US', {
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}</span>
+                                            </div>
+
+                                            <button
+                                                className="apply-btn"
+                                                onClick={() => window.location.href = `/jobs/${job.id}`}
+                                            >
+                                                Apply Now
+                                            </button>
                                         </div>
-                                        {/* <div className="job-tags">
-                                            {(job.tags || ['Apply Now']).slice(0, 3).map((tag, i) => (
-                                                <span key={i} className="job-tag">{tag}</span>
-                                            ))}
-                                        </div> */}
-                                        <button className="apply-btn">Apply Now</button>
-                                    </div>
-                                ))
+                                    );
+                                })
                             ) : (
-                                // Show message if no jobs
                                 <div className="no-jobs-message">
                                     <p>No jobs posted yet. Check back soon!</p>
                                 </div>
@@ -327,6 +368,26 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
 
                     <Link href="" className='browse-all-btn'>Browse All Talents</Link>
                 </div>
+
+                {/* FOOTER */}
+                <footer>
+                    <div className="footer-left">
+                        <a href="#" className="brand" onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
+                            GiftedTalents<span>.online</span>
+                        </a>
+                        <div>
+                            <p>©</p>
+                            <span>2026</span>
+                        </div>
+                    </div>
+
+                    <div className="footer-right">
+                        <a href="/about">About</a>
+                        <a href="/contact">Contact</a>
+                        <a href="/privacy">Privacy Policy</a>
+                        <a href="/guidelines">Community Guideline</a>
+                    </div>
+                </footer>
 
             </div>
         </>

@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,6 +15,7 @@ class Job extends Model
     protected $fillable = [
         'user_id',
         'company_name',
+        'company_logo_url',
         'company_location',
         'job_title',
         'job_type',

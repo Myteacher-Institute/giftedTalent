@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Job;
@@ -63,7 +62,7 @@ class PageController extends Controller
     public function searchJobs(): Response
     {
         return Inertia::render('search-job', [
-            'auth' => ['user' => Auth::user()]
+            'auth' => ['user' => Auth::user()],
         ]);
     }
 
@@ -71,9 +70,62 @@ class PageController extends Controller
     {
         $jobs = Job::latest()->get();
         return Inertia::render('Jobs', [
-            'jobs' => $jobs
+            'jobs' => $jobs,
+        ]);
+    }
+
+    public function index($request)
+    {
+        $query = Job::query();
+
+        // Search - works for ANY text
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('job_title', 'like', "%{$search}%")
+                    ->orWhere('company_name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('company_location', 'like', "%{$search}%")
+                    ->orWhere('job_type', 'like', "%{$search}%");
+            });
+        }
+
+        // Job Type filter - multiple selections
+        if ($request->has('type') && is_array($request->type) && count($request->type) > 0) {
+            $query->whereIn('job_type', $request->type);
+        }
+
+        // Location filter - multiple selections
+        if ($request->has('location') && is_array($request->location) && count($request->location) > 0) {
+            $query->whereIn('company_location', $request->location);
+        }
+
+        // Company filter - multiple selections
+        if ($request->has('company') && is_array($request->company) && count($request->company) > 0) {
+            $query->whereIn('company_name', $request->company);
+        }
+
+        // Remote filter
+        if ($request->has('remote') && $request->remote == 'true') {
+            $query->where('job_type', 'Remote');
+        }
+
+        // Experience filter
+        if ($request->has('experience') && is_array($request->experience) && count($request->experience) > 0) {
+            $query->where(function ($q) use ($request) {
+                foreach ($request->experience as $level) {
+                    $q->orWhere('job_title', 'like', "%{$level}%")
+                        ->orWhere('description', 'like', "%{$level}%");
+                }
+            });
+        }
+
+        $jobs = $query->latest()->get();
+
+        return Inertia::render('Jobs', [
+            'jobs' => $jobs,
+            'auth' => ['user' => Auth::user()],
         ]);
     }
 
 }
-
