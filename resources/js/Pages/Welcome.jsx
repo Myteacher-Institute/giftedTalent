@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import '../../css/nav.css';
 import '../../css/hero.css';
@@ -52,7 +52,7 @@ function Nav({ auth }) {
                 <div className="auth-links">
                     {
                         auth.user ? (
-                            <Link href='dashboard' className="nav-auth-link">Dashboard</Link>
+                            <Link href='/dashboard' className="nav-auth-link">Dashboard</Link>
                         ) : (
                             <>
                                 <Link href={route('login')} className="nav-auth-link">Sign In</Link>
@@ -98,6 +98,7 @@ function Hero() {
 
 const featuresData = [
     {
+        id: 1,
         image: sample1,
         name: 'Sarah Johnson',
         role: 'Senior Frontend Developer',
@@ -111,6 +112,7 @@ const featuresData = [
         border: { borderColor: '#0ea5e9', borderWidth: '1px', borderStyle: 'solid' }
     },
     {
+        id: 2,
         image: sample2,
         name: 'Michael Chen',
         role: 'Full Stack Engineer',
@@ -124,6 +126,7 @@ const featuresData = [
         border: { borderColor: '#10b981', borderWidth: '1px', borderStyle: 'solid' }
     },
     {
+        id: 3,
         image: sample3,
         name: 'Emily Rodriguez',
         role: 'UX/UI Designer',
@@ -137,6 +140,7 @@ const featuresData = [
         border: { borderColor: '#ec4899', borderWidth: '1px', borderStyle: 'solid' }
     },
     {
+        id: 4,
         image: sample4,
         name: 'David Kim',
         role: 'DevOps Specialist',
@@ -150,6 +154,7 @@ const featuresData = [
         border: { borderColor: '#f59e0b', borderWidth: '1px', borderStyle: 'solid' }
     },
     {
+        id: 5,
         image: sample1,
         name: 'Lisa Wang',
         role: 'Product Manager',
@@ -163,6 +168,7 @@ const featuresData = [
         border: { borderColor: '#6b7280', borderWidth: '1px', borderStyle: 'solid' }
     },
     {
+        id: 6,
         image: sample2,
         name: 'Alex Patel',
         role: 'Data Scientist',
@@ -191,13 +197,18 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
     // State for loading and error
     const [isSearching, setIsSearching] = useState(false);
     const [searchError, setSearchError] = useState('');
+    const [submitting, setSubmitting] = useState(false);
     
     // Toast notification state
     const [toast, setToast] = useState({
         show: false,
         message: '',
-        type: 'info' // 'info', 'success', 'error', 'loading'
+        type: 'info'
     });
+    
+    // Auth Modal state
+    const [showAuthModal, setShowAuthModal] = useState(false);
+    const [intendedJob, setIntendedJob] = useState(null);
     
     // Auto-hide toast after 3 seconds
     useEffect(() => {
@@ -218,6 +229,28 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
         });
     };
 
+    // Function to check if user is authenticated
+    const isAuthenticated = () => {
+        return auth && auth.user !== null;
+    };
+
+    // Function to handle protected actions with modal
+    const requireAuthWithModal = (action, event, jobData = null) => {
+        if (!isAuthenticated()) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            // Store the intended job/action
+            setIntendedJob(jobData);
+            setShowAuthModal(true);
+            
+            return false;
+        }
+        return true;
+    };
+
     // Handle input changes
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -229,7 +262,6 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
 
     // Handle search
     const handleSearch = () => {
-        // Check if any search input has value
         const hasSearchCriteria = searchInputs.keyword || searchInputs.skill || searchInputs.location;
         
         if (!hasSearchCriteria) {
@@ -241,45 +273,30 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
         setSearchError('');
         showToast('Searching for jobs...', 'loading');
         
-        // Simulate minimum loading time for better UX
         setTimeout(() => {
             try {
-                // Filter jobs based on search inputs
                 const filtered = jobs.filter(job => {
-                    // Get search values (trim and lowercase for better matching)
                     const keyword = searchInputs.keyword.toLowerCase().trim();
                     const skill = searchInputs.skill.toLowerCase().trim();
                     const location = searchInputs.location.toLowerCase().trim();
                     
-                    // Get job data (handle null/undefined values)
                     const jobTitle = (job.job_title || job.title || '').toLowerCase();
                     const jobSkills = (job.skills_required || job.skills || '').toLowerCase();
                     const jobLocation = (job.company_location || job.location || '').toLowerCase();
                     
-                    // Check each field - if field is empty, don't filter by it
                     let matchesKeyword = true;
                     let matchesSkill = true;
                     let matchesLocation = true;
                     
-                    if (keyword) {
-                        matchesKeyword = jobTitle.includes(keyword);
-                    }
+                    if (keyword) matchesKeyword = jobTitle.includes(keyword);
+                    if (skill) matchesSkill = jobSkills.includes(skill);
+                    if (location) matchesLocation = jobLocation.includes(location);
                     
-                    if (skill) {
-                        matchesSkill = jobSkills.includes(skill);
-                    }
-                    
-                    if (location) {
-                        matchesLocation = jobLocation.includes(location);
-                    }
-                    
-                    // Return true if all active filters match
                     return matchesKeyword && matchesSkill && matchesLocation;
                 });
                 
                 setSearchResults(filtered);
                 
-                // Show appropriate feedback
                 if (filtered.length > 0) {
                     showToast(`Found ${filtered.length} job${filtered.length !== 1 ? 's' : ''} matching your criteria`, 'success');
                 } else {
@@ -292,7 +309,54 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
             } finally {
                 setIsSearching(false);
             }
-        }, 500); // 500ms delay for better UX
+        }, 500);
+    };
+
+    // Handle apply button click - Navigate to easy apply page
+    const handleApplyClick = (job, event) => {
+        if (requireAuthWithModal('apply_job', event, job)) {
+            // Navigate to the easy apply page for this job
+            router.visit(`/easy-apply-job?job_id=${job.id}`);
+        }
+    };
+
+    // Handle view profile click - Navigate to talent profile
+    const handleViewProfile = (talent, event) => {
+        if (requireAuthWithModal('view_profile', event, talent)) {
+            // Navigate to talent profile page
+            // You may need to create this route if it doesn't exist
+            router.visit(`/talent/${talent.id}`);
+        }
+    };
+
+    // Handle saved jobs
+    const handleSaveJob = async (job, event) => {
+        if (requireAuthWithModal('save_job', event, job)) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            try {
+                const response = await fetch(`/saved-jobs/${job.id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showToast(data.message || 'Job saved successfully!', 'success');
+                } else {
+                    showToast(data.message || 'Failed to save job', 'error');
+                }
+            } catch (error) {
+                showToast('Network error. Please try again.', 'error');
+                console.error('Save job error:', error);
+            }
+        }
     };
 
     return (
@@ -300,19 +364,14 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
             <Head title="GiftedTalents" />
 
             <div className="home-screen">
-                {/* Henry */}
                 <Nav auth={auth} />
-
                 <Hero />
-
-
 
                 {/* search bar */}
                 <div className="search-container">
                     <div className="search-box">
                         <div className="search-inputs">
                             <div className="input-with-icon">
-                                {/* magnifying glass / keyword */}
                                 <svg xmlns="http://www.w3.org/2000/svg" className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <circle cx="11" cy="11" r="8"></circle>
                                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -326,7 +385,6 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                                 />
                             </div>
                             <div className="input-with-icon">
-                                {/* briefcase / skill */}
                                 <svg xmlns="http://www.w3.org/2000/svg" className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
                                     <path d="M16 3H8v4h8V3z"></path>
@@ -340,7 +398,6 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                                 />
                             </div>
                             <div className="input-with-icon">
-                                {/* map pin / location */}
                                 <svg xmlns="http://www.w3.org/2000/svg" className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M21 10c0 6-9 13-9 13S3 16 3 10a9 9 0 1118 0z"></path>
                                     <circle cx="12" cy="10" r="3"></circle>
@@ -354,7 +411,6 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                                 />
                             </div>
                         </div>
-
                         <button className="search-button" onClick={handleSearch}>
                             {isSearching ? 'Searching...' : 'Search Jobs'}
                         </button>
@@ -412,7 +468,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                                         <div className={`job-icon ${job.gradient || 'gradient-blue'}`}>
                                             <img src={`/assets/svg/${job.icon || 'code.svg'}`} alt="" className="job-icon-img" />
                                         </div>
-                                        <span className="job-type" id={job.type === 'Contract' ? 'job-type-contract' : 'job-type-fulltime'}>
+                                        <span className="job-type">
                                             {job.job_type || job.type || 'Full-time'}
                                         </span>
                                     </div>
@@ -425,23 +481,33 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                                         </div>
                                         <span className="job-salary">{job.salary_range || job.salary || 'Salary'}</span>
                                     </div>
-                                    <button className="apply-btn">Apply Now</button>
+                                    <div className="job-buttons">
+                                        <button 
+                                            className="apply-btn" 
+                                            onClick={(e) => handleApplyClick(job, e)}
+                                        >
+                                            Apply Now
+                                        </button>
+                                        <button 
+                                            className="save-btn" 
+                                            onClick={(e) => handleSaveJob(job, e)}
+                                        >
+                                            Save Job
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
                     </div>
                 )}
 
-                {/* christopher - Featured Jobs Section */}
+                {/* Featured Jobs Section */}
                 <div className="feature-jobs">
-
                     <div className="jobs-wrapper">
-                        {/* Header */}
                         <div className="jobs-header">
                             <h2 className="jobs-title">Featured Jobs</h2>
                             <p className="jobs-subtitle">Top opportunities from verified employers</p>
                         </div>
-
                         <div className="jobs-grid">
                             {jobs.length > 0 ? (
                                 jobs.map((job) => (
@@ -450,7 +516,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                                             <div className={`job-icon ${job.gradient || 'gradient-blue'}`}>
                                                 <img src={`/assets/svg/${job.icon || 'code.svg'}`} alt="" className="job-icon-img" />
                                             </div>
-                                            <span className="job-type" id={job.type === 'Contract' ? 'job-type-contract' : 'job-type-fulltime'}>
+                                            <span className="job-type">
                                                 {job.job_type || job.type || 'Full-time'}
                                             </span>
                                         </div>
@@ -463,48 +529,50 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                                             </div>
                                             <span className="job-salary">{job.salary_range || job.salary || 'Salary'}</span>
                                         </div>
-                                        {/* <div className="job-tags">
-                                            {(job.tags || ['Apply Now']).slice(0, 3).map((tag, i) => (
-                                                <span key={i} className="job-tag">{tag}</span>
-                                            ))}
-                                        </div> */}
-                                        <button className="apply-btn">Apply Now</button>
+                                        <div className="job-buttons">
+                                            <button 
+                                                className="apply-btn" 
+                                                onClick={(e) => handleApplyClick(job, e)}
+                                            >
+                                                Apply Now
+                                            </button>
+                                            <button 
+                                                className="save-btn" 
+                                                onClick={(e) => handleSaveJob(job, e)}
+                                            >
+                                                Save Job
+                                            </button>
+                                        </div>
                                     </div>
                                 ))
                             ) : (
-                                // Show message if no jobs
                                 <div className="no-jobs-message">
                                     <p>No jobs posted yet. Check back soon!</p>
                                 </div>
                             )}
                         </div>
-
-                        {/* View All button */}
                         <div className="view-all-container">
                             <Link href="/jobs" className="view-all-btn">View All Jobs</Link>
                         </div>
                     </div>
                 </div>
 
+                {/* Featured Talents Section */}
                 <div className="featured-talents">
-
                     <div className="feature-talent-header">
                         <h3>Featured Talents</h3>
                         <p>Connect with skilled professionals ready to work</p>
                     </div>
-
                     <div className="feature-talent-content">
-                        {featuresData.map((feature, index) => (
-                            <div className="feature-talent-card" key={index} style={{ ...feature.bg, ...feature.border }}>
+                        {featuresData.map((feature) => (
+                            <div className="feature-talent-card" key={feature.id} style={{ ...feature.bg, ...feature.border }}>
                                 <div className="feature-talent-card-header">
-                                    <img src={feature.image} alt="" />
+                                    <img src={feature.image} alt={feature.name} />
                                 </div>
-
                                 <div className="feature-talent-card-body">
                                     <h3>{feature.name}</h3>
                                     <p>{feature.role}</p>
                                 </div>
-
                                 <div className="feature-talent-card-stars">
                                     {[...Array(5)].map((_, starIndex) => {
                                         if (starIndex < feature.stars) {
@@ -514,25 +582,75 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                                         }
                                         return null;
                                     })}
-                                    <span>{`(${feature.rating})`}</span>
+                                    <span>({feature.rating})</span>
                                 </div>
-
                                 <div className="feature-talent-card-roles">
                                     {feature.tech.map((tech, techIndex) => (
                                         <span key={techIndex}>{tech}</span>
                                     ))}
                                 </div>
-
                                 <div className="feature-talent-card-footer">
-                                    <Link href="">View Profile</Link>
+                                    <Link 
+                                        href="#" 
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            handleViewProfile(feature, e);
+                                        }}
+                                    >
+                                        View Profile
+                                    </Link>
                                 </div>
                             </div>
                         ))}
-
                     </div>
-
-                    <Link href="" className='browse-all-btn'>Browse All Talents</Link>
+                    <Link href="#" className='browse-all-btn'>Browse All Talents</Link>
                 </div>
+
+                {/* Auth Modal */}
+                {showAuthModal && (
+                    <div className="auth-modal-overlay" onClick={() => setShowAuthModal(false)}>
+                        <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
+                            <button className="auth-modal-close" onClick={() => setShowAuthModal(false)}>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                            
+                            <div className="auth-modal-content">
+                                <div className="auth-modal-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                                        <circle cx="12" cy="12" r="4"/>
+                                    </svg>
+                                </div>
+                                
+                                <h2>Join GiftedTalent to Continue</h2>
+                                <p>You need to be a member to apply for jobs and view talent profiles. It only takes a minute!</p>
+                                
+                                {intendedJob && (
+                                    <div className="auth-modal-job">
+                                        <p>You were about to apply for:</p>
+                                        <strong>{intendedJob.job_title || intendedJob.title || intendedJob.role}</strong>
+                                    </div>
+                                )}
+                                
+                                <div className="auth-modal-buttons">
+                                    <Link href={route('login')} className="auth-modal-btn auth-modal-btn-primary">
+                                        Sign In
+                                    </Link>
+                                    <Link href={route('register')} className="auth-modal-btn auth-modal-btn-secondary">
+                                        Create Account
+                                    </Link>
+                                </div>
+                                
+                                <p className="auth-modal-footer">
+                                    By continuing, you agree to our Terms of Service and Privacy Policy
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
             </div>
         </>
