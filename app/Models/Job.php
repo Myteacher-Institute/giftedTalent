@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,21 +9,39 @@ class Job extends Model
 {
     use HasFactory;
 
-    protected $table = 'job_postings';
+    protected $table = 'job_posts';
 
     protected $fillable = [
-        'title',
-        'company',
+        'user_id',
+        'company_name',
+        'company_logo_url',
+        'company_location',
+        'job_title',
+        'job_type',
+        'salary_range',
         'description',
         'tags',
-        'salary_range',
-        'location',
         'status',
+        'applicants_count',
+        'posted_at',
+        'application_link',
     ];
 
     protected $casts = [
-        'tags' => 'array',
+        'posted_at'        => 'datetime',
+        'applicants_count' => 'integer',
+        'tags'             => 'array',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function applications()
+    {
+        return $this->hasMany(JobApplication::class, 'job_id');
+    }
 
     public function users(): BelongsToMany
     {
@@ -43,35 +60,5 @@ class Job extends Model
                 $q->orWhereJsonContains('tags', $skill);
             }
         });
-    }
-}
-    protected $table = 'job_posts'; // Use the new table name
-    
-    protected $fillable = [
-        'user_id',
-        'company_name',
-        'company_location',
-        'job_title',
-        'job_type',
-        'salary_range',
-        'description',
-        'status',
-        'applicants_count',
-        'posted_at'
-    ];
-
-    protected $casts = [
-        'posted_at' => 'datetime',
-        'applicants_count' => 'integer'
-    ];
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    public function applications()
-    {
-        return $this->hasMany(JobApplication::class, 'job_id');
     }
 }

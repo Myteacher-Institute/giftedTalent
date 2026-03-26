@@ -104,6 +104,8 @@ export default function Dashboard({ auth, profileComplete = 75, profileStatus = 
                         <li><i className="fa-regular fa-envelope"></i> Message</li>
                         <li><i className="fa-regular fa-bookmark"></i> Save Jobs</li>
                         <li><i className="fa-solid fa-gear"></i> Settings</li>
+
+                        
                     </ul>
                 </aside>
 
