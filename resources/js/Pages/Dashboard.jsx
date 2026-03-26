@@ -167,6 +167,8 @@ export default function Dashboard({ auth, profileComplete = 75, profileStatus = 
                                 Logout
                             </a>
                         </li>
+
+                        
                     </ul>
                 </aside>
 
