@@ -236,6 +236,38 @@ color: #3B82F6;
     font-weight: 600;
 }
 
+.logout-icon {
+    color: #0A66C2;
+    width: 18px;
+    font-size: 16px;
+}
+
+.logout-item {
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #000000;
+}
+
+.logout-item:hover {
+    background: #f9fafb;
+    color: #4f46e5;
+    transform: translateX(4px);
+}
+
+.logout-item i {
+    color: #0A66C2;
+    width: 18px;
+    font-size: 16px;
+}
+
 
 /* MAIN CONTENT */
 .main {

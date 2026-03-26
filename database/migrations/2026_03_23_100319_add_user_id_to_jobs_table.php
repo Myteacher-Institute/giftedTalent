@@ -6,19 +6,26 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::table('jobs', function (Blueprint $table) {
-            if (!Schema::hasColumn('jobs', 'company_name')) {
-                $table->string('company_name');
+            if (!Schema::hasColumn('jobs', 'user_id')) {
+                $table->foreignId('user_id')->constrained()->onDelete('cascade');
             }
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::table('jobs', function (Blueprint $table) {
-            $table->dropColumn('company_name');
+            $table->dropForeign(['user_id']);
+            $table->dropColumn('user_id');
         });
     }
 };

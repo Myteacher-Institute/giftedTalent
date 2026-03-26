@@ -3,13 +3,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Job extends Model
 {
     use HasFactory;
 
-    protected $table = 'job_posts';
+    protected $table = 'jobs';
 
     protected $fillable = [
         'user_id',
@@ -20,45 +21,26 @@ class Job extends Model
         'job_type',
         'salary_range',
         'description',
-        'tags',
         'status',
         'applicants_count',
-        'posted_at',
-        'application_link',
+        'posted_at'
     ];
 
-    protected $casts = [
-        'posted_at'        => 'datetime',
-        'applicants_count' => 'integer',
-        'tags'             => 'array',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'posted_at' => 'datetime',
+            'applicants_count' => 'integer',
+        ];
+    }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function applications()
+    public function applications(): HasMany
     {
-        return $this->hasMany(JobApplication::class, 'job_id');
-    }
-
-    public function users(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class, 'applications');
-    }
-
-    public function scopeOpen($query)
-    {
-        return $query->where('status', 'open');
-    }
-
-    public function scopeRecommended($query, $userSkills)
-    {
-        return $query->where(function ($q) use ($userSkills) {
-            foreach ($userSkills as $skill) {
-                $q->orWhereJsonContains('tags', $skill);
-            }
-        });
+        return $this->hasMany(JobApplication::class);
     }
 }
