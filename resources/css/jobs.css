@@ -287,6 +287,8 @@ nav {
 
 /* HERO */
 .hero {
+    display: flex;  
+    justify-content: center;
     text-align: center;
     padding: 20px 15px;
 }
@@ -684,6 +686,27 @@ nav {
     }
 }
 
+@media (min-width: 393px) {
+    .job-tag {
+        padding: 0;
+    }
+
+    .job-tag-more {
+        padding: 2px 8px;
+        font-size: 10px;
+    }
+}
+
+@media (min-width: 480px) {
+    .job-tag {
+        padding: 0;
+    }
+
+    .job-tag-more {
+        padding: 2px 8px;
+        font-size: 10px;
+    }
+}
 @media (min-width: 480px) {
     .job-tag {
         padding: 0;

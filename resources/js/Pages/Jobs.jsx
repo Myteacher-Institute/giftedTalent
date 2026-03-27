@@ -336,7 +336,7 @@ export default function Jobs({ jobs = [], auth }) {
                 {/* HERO SECTION */}
                 <section className="hero">
                     <h1>Find the best creative Jobs,<br /> Curated by GiftedTalents</h1>
-                    <button className="find-job-btn">Find a job</button>
+                    {/* <button className="find-job-btn">Find a job</button> */}
                 </section>
 
                 {/* JOB SECTION */}

@@ -178,6 +178,45 @@ const featuresData = [
 ];
 
 export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] }) {
+    const [openFaq, setOpenFaq] = useState(null);
+
+    const toggleFaq = (index) => {
+        setOpenFaq(openFaq === index ? null : index);
+    };
+
+    const faqs = [
+        {
+            question: "How do I create an account?",
+            answer: "Click the 'Get Started' button on the top right corner. Choose whether you're a talent or employer, fill in your details, and you're ready to go. It takes less than 2 minutes!"
+        },
+        {
+            question: "Is GiftedTalents free to use?",
+            answer: "Creating a profile and browsing jobs or talents is completely free. Employers can post jobs for free, and there are premium features available for enhanced visibility and advanced matching."
+        },
+        {
+            question: "How does the matching process work?",
+            answer: "Our intelligent algorithm matches your skills, experience, and preferences with relevant job opportunities or talent profiles. You'll receive personalized recommendations based on your profile."
+        },
+        {
+            question: "Can I edit my profile after creating it?",
+            answer: "Absolutely! You can update your profile anytime from your dashboard. Add new skills, update your experience, or change your preferences whenever you want."
+        },
+        {
+            question: "How do I apply for jobs?",
+            answer: "Browse job listings and click 'Apply Now' on any position that interests you. You'll be guided through a simple application process where you can submit your profile and any additional information."
+        },
+        {
+            question: "Is my data secure?",
+            answer: "Yes! We take data security seriously. Your personal information is encrypted and protected. We never share your data without your consent. Read our Privacy Policy for more details."
+        }
+    ];
+    // Stats data for mission section
+    const stats = [
+        { number: "10K+", label: "Active Users" },
+        { number: "500+", label: "Companies" },
+        { number: "5K+", label: "Jobs Posted" },
+        { number: "98%", label: "Success Rate" }
+    ];
 
     return (
         <>
@@ -188,8 +227,6 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                 <Nav auth={auth} />
 
                 <Hero />
-
-
 
                 {/* search bar */}
                 <div className="search-container">
@@ -225,6 +262,58 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                     </div>
                 </div>
 
+                <section className="about-story">
+                    <div className="about-hero-content">
+                        <h1>About GiftedTalents</h1>
+                        <p>We're on a mission to transform the way talent meets opportunity.</p>
+                    </div>
+                    <div className="story-container">
+                        <div className="story-image">
+                            <img src="/assets/svg/hero-image.jpg" alt="Our Story" />
+                        </div>
+                        <div className="story-text">
+                            <h2>Our Story</h2>
+                            <p>GiftedTalents was born from a simple idea: connecting talented professionals with companies that need them shouldn't be complicated. Founded in 2026, we set out to create a platform that puts people first.</p>
+                            <p>Today, we've helped thousands of professionals find meaningful work and hundreds of companies build exceptional teams. Our journey is just beginning, and we're excited to continue growing with our community.</p>
+                            <div className="story-footer">
+                                <Link href="/how-it-works" className="story-btn">Learn How It Works</Link>
+                                <a
+                                    href="https://wa.me/2348012345678?text=Hello%20GiftedTalents"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="whatsapp-icon-link"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.277-.582c.949.544 2.017.83 3.09.831 3.18 0 5.767-2.586 5.768-5.766.001-3.18-2.585-5.767-5.766-5.767zm-.001 10.285c-.893 0-1.77-.24-2.537-.692l-.18-.108-1.359.348.356-1.325-.117-.186c-.462-.742-.707-1.6-.707-2.477 0-2.553 2.077-4.63 4.63-4.63 2.553 0 4.63 2.077 4.63 4.63 0 2.553-2.077 4.63-4.63 4.63zm2.62-3.453c-.144-.072-.852-.42-.984-.468-.132-.048-.228-.072-.324.072-.096.144-.372.468-.456.564-.084.096-.168.108-.312.036-.144-.072-.608-.224-1.158-.714-.432-.384-.72-.858-.804-1.002-.084-.144-.012-.222.06-.294.064-.072.144-.168.216-.252.072-.084.096-.144.144-.24.048-.096.024-.18-.012-.252-.036-.072-.324-.78-.444-1.068-.12-.288-.24-.24-.324-.252-.084-.012-.18-.012-.276-.012-.096 0-.252.036-.384.18-.132.144-.504.492-.504 1.2 0 .708.516 1.392.588 1.488.072.096 1.008 1.548 2.448 2.172.348.144.612.228.828.288.348.108.672.084.924.048.276-.036.852-.348.972-.684.12-.336.12-.624.084-.684-.036-.06-.132-.096-.276-.168z" />
+                                    </svg>
+                                    <span>Chat on WhatsApp</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                {/* Mission Section - ADD THIS */}
+                <section className="about-mission">
+                    <div className="mission-container">
+                        <div className="mission-text">
+                            <h2>Our Mission</h2>
+                            <p>To empower professionals and employers by creating a seamless, transparent, and efficient platform where talent meets opportunity. We believe that everyone deserves to find work they love and companies deserve to find the talent they need.</p>
+                            <div className="mission-stats">
+                                {stats.map((stat, index) => (
+                                    <div key={index} className="stat-item">
+                                        <span className="stat-number">{stat.number}</span>
+                                        <span className="stat-label">{stat.label}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="mission-image">
+                            <img src="/assets/svg/01f7c576-04bb-4d9e-b318-158c701bfeda 1.jpg" alt="Our Mission" />
+                        </div>
+                    </div>
+                </section>
 
                 {/* christopher - Featured Jobs Section */}
                 <div className="feature-jobs">
@@ -260,8 +349,25 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                                     return (
                                         <div key={job.id} className="job-card">
                                             <div className="job-card-header">
-                                                <div className={`job-icon ${job.gradient || 'gradient-blue'}`}>
-                                                    <img src={`/assets/svg/${job.icon || 'code.svg'}`} alt="" className="job-icon-img" />
+                                                <div className='job-icon'>
+                                                    {job.company_logo_url ? (
+                                                        <img
+                                                            src={job.company_logo_url}
+                                                            alt={`${job.company_name} logo`}
+                                                            className="company-logo"
+                                                            onError={(e) => {
+                                                                e.target.style.display = 'none';
+                                                                const parent = e.target.parentElement;
+                                                                if (parent) {
+                                                                    parent.innerHTML = `<div class="company-initial">${job.company_name?.charAt(0)?.toUpperCase() || 'C'}</div>`;
+                                                                }
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <div className="company-initial">
+                                                            {job.company_name?.charAt(0)?.toUpperCase() || 'C'}
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <span className={jobTypeStyle.className} id={jobTypeStyle.id}>
                                                     {job.job_type || job.type || 'Full-time'}
@@ -368,6 +474,31 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
 
                     <Link href="" className='browse-all-btn'>Browse All Talents</Link>
                 </div>
+
+                {/* FAQ Section */}
+                <section className="about-faq">
+                    <div className="faq-container">
+                        <div className="faq-header">
+                            <h2>Frequently Asked Questions</h2>
+                            <p>Got questions? We've got answers. Here are some of the most common questions we receive.</p>
+                        </div>
+                        <div className="faq-grid">
+                            {faqs.map((faq, index) => (
+                                <div className={`faq-item ${openFaq === index ? 'open' : ''}`} key={index}>
+                                    <div className="faq-question" onClick={() => toggleFaq(index)}>
+                                        <h3>{faq.question}</h3>
+                                        <svg className="faq-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <polyline points="6 9 12 15 18 9"></polyline>
+                                        </svg>
+                                    </div>
+                                    <div className="faq-answer">
+                                        <p>{faq.answer}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
 
                 {/* FOOTER */}
                 <footer>

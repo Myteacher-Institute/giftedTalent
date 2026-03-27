@@ -35,12 +35,14 @@
 }
 
 .job-icon {
-    width: 64px;
-    height: 64px;
+    width: 94px;
+    height: 94px;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
+    background-color: #f6f9fd;
+    padding: 6px;
 }
 
 .job-icon-img {
