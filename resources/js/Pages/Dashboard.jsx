@@ -5,6 +5,7 @@ import '../../css/Dashboard.css';
 import Notification from '../Components/Notification';
 import axios from 'axios';
 import MessageModal from '../Components/MessageModal';
+import AppNavbar from '../Components/AppNavbar';
 
 window.alertify = window.alertify || alertify;
 
@@ -42,7 +43,7 @@ function JobCard({ job, onSave, onUnsave, isSaved = false }) {
                     <div className="match-score mt-2">
                         <div className="flex items-center">
                             <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
-                                <div 
+                                <div
                                     className="bg-green-500 h-2 rounded-full"
                                     style={{ width: `${job.match_score}%` }}
                                 ></div>
@@ -68,7 +69,7 @@ function JobCard({ job, onSave, onUnsave, isSaved = false }) {
                             <i className="fa-regular fa-paper-plane"></i> Apply Now
                         </button>
                         <button onClick={handleSaveClick}>
-                            <i className={`fa-regular fa-bookmark`} style={{ color: saved ? '#4F46E5' : '' }}></i> 
+                            <i className={`fa-regular fa-bookmark`} style={{ color: saved ? '#4F46E5' : '' }}></i>
                             {saved ? 'Saved' : 'Save Job'}
                         </button>
                     </div>
@@ -78,24 +79,24 @@ function JobCard({ job, onSave, onUnsave, isSaved = false }) {
     );
 }
 
-export default function Dashboard({ 
+export default function Dashboard({
     user,
-    auth, 
-    profileComplete = 0, 
-    profileStatus = {}, 
-    stats = { applied: 0, review: 0, interview: 0, rejected: 0 }, 
-    jobs = [], 
-    jobTypes = [], 
-    searchParams = {}, 
+    auth,
+    profileComplete = 0,
+    profileStatus = {},
+    stats = { applied: 0, review: 0, interview: 0, rejected: 0 },
+    jobs = [],
+    jobTypes = [],
+    searchParams = {},
     notifications,
     profile,
-    flash 
+    flash
 }) {
     const [searchQuery, setSearchQuery] = useState(searchParams.q || '');
     const [selectedJobType, setSelectedJobType] = useState(searchParams.job_type || '');
     const [showAdvanced, setShowAdvanced] = useState(false);
     const [loading, setLoading] = useState(false);
-    
+
     const [showAppliedJobs, setShowAppliedJobs] = useState(false);
     const [appliedJobs, setAppliedJobs] = useState([]);
     const [loadingApplied, setLoadingApplied] = useState(false);
@@ -120,15 +121,15 @@ export default function Dashboard({
     useEffect(() => {
         const profileUpdated = sessionStorage.getItem('profileUpdated');
         const profileUpdateTime = sessionStorage.getItem('profileUpdateTime');
-        
+
         if (profileUpdated === 'true') {
             const now = Date.now();
             const updateTime = parseInt(profileUpdateTime);
-            
+
             if (updateTime && (now - updateTime) < 10000) {
                 alertify.success('Profile updated successfully! Your changes have been saved.');
             }
-            
+
             sessionStorage.removeItem('profileUpdated');
             sessionStorage.removeItem('profileUpdateTime');
         }
@@ -138,19 +139,19 @@ export default function Dashboard({
         if (currentUser?.profile?.avatar_url) {
             return currentUser.profile.avatar_url;
         }
-        
+
         if (currentUser?.profile?.avatar) {
             const avatarPath = currentUser.profile.avatar;
-            
+
             if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
                 return avatarPath;
             }
-            
+
             const cleanPath = avatarPath.replace(/^\/+/, '');
             const fullUrl = `/storage/${cleanPath}`;
             return fullUrl;
         }
-        
+
         const userName = currentUser?.name || 'User';
         const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
         return fallbackUrl;
@@ -339,60 +340,17 @@ export default function Dashboard({
         <AuthenticatedLayout user={currentUser}>
             <Head title="Dashboard" />
 
-            <header className="navbar">
-                <div className="logo">
-                    <span className="blue">GiftedTalents</span>.Online
-                </div>
-
-                <nav>
-                    <Link href="/">Home</Link>
-                    <Link href="/search-jobs">Jobs</Link>
-                    <Link href="#">Explore</Link>
-                    <Link href="#">Hire</Link>
-                </nav>
-
-                <div className="search">
-                    <input type="text" placeholder="search for jobs..." />
-                </div>
-
-                <div className="nav-icons">
-                    <i className="fa-regular fa-comment"></i>
-                    <div style={{ position: 'relative' }}>
-                        <Notification />
-                        {newJobsCount > 0 && (
-                            <span className="notification-badge">{newJobsCount}</span>
-                        )}
-                    </div>
-                    <img 
-                        src={getProfileImageUrl()} 
-                        alt={currentUser?.name || 'Profile'} 
-                        className="navbar-profile-image"
-                        style={{ 
-                            width: '40px', 
-                            height: '40px', 
-                            borderRadius: '50%', 
-                            objectFit: 'cover', 
-                            cursor: 'pointer',
-                            border: '2px solid #e5e7eb'
-                        }}
-                        onClick={() => router.visit('/profile/edit')}
-                        onError={(e) => {
-                            const userName = currentUser?.name || 'User';
-                            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=40&bold=true`;
-                        }}
-                    />
-                </div>
-            </header>
+            <AppNavbar user={currentUser} newJobsCount={newJobsCount} />
 
             <div className="container">
                 <aside className="sidebar">
                     <div className="profile">
                         <div className="profile-image-wrapper">
-                            <img 
-                                src={getProfileImageUrl()} 
-                                alt={currentUser?.name || 'Profile'} 
+                            <img
+                                src={getProfileImageUrl()}
+                                alt={currentUser?.name || 'Profile'}
                                 className="profile-image"
-                                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                                // style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
                                 onError={(e) => {
                                     const userName = currentUser?.name || 'User';
                                     e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
@@ -434,7 +392,20 @@ export default function Dashboard({
                                 </span>
                             )}
                         </li>
-                        <li><i className="fa-solid fa-gear"></i> Settings</li>
+
+                      {/* Test Button */}
+<li>
+    <button 
+        onClick={() => {
+            console.log('Button clicked, navigating to settings...');
+            router.visit('/settings');
+        }}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left', padding: '8px 16px' }}
+    >
+        <i className="fa-solid fa-gear"></i> TEST SETTINGS
+    </button>
+</li>
+
                         <li className="logout-item">
                             <a href="/" onClick={(e) => { e.preventDefault(); handleLogout(); }}>
                                 <i className="fa-solid fa-right-from-bracket logout-icon"></i>
@@ -569,15 +540,15 @@ export default function Dashboard({
 
                             <div className="search-bar">
                                 <form onSubmit={handleSearch} className="flex gap-2 w-full">
-                                    <input 
-                                        type="text" 
-                                        placeholder="Search for jobs..." 
+                                    <input
+                                        type="text"
+                                        placeholder="Search for jobs..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     />
-                                    <select 
-                                        value={selectedJobType} 
+                                    <select
+                                        value={selectedJobType}
                                         onChange={(e) => setSelectedJobType(e.target.value)}
                                         className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
                                     >
@@ -586,23 +557,23 @@ export default function Dashboard({
                                             <option key={type} value={type}>{type}</option>
                                         ))}
                                     </select>
-                                    <button 
-                                        type="button" 
+                                    <button
+                                        type="button"
                                         onClick={toggleAdvanced}
                                         className="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md"
                                     >
                                         Advanced
                                     </button>
-                                    <button 
-                                        type="submit" 
+                                    <button
+                                        type="submit"
                                         disabled={loading}
                                         className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all duration-200 shadow-md disabled:opacity-50"
                                     >
                                         {loading ? 'Searching...' : 'Search'}
                                     </button>
                                     {(searchQuery || selectedJobType) && (
-                                        <button 
-                                            type="button" 
+                                        <button
+                                            type="button"
                                             onClick={clearSearch}
                                             className="px-4 py-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-all"
                                         >
@@ -700,7 +671,8 @@ export default function Dashboard({
                             <li className={profileStatus.status?.experience ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
                                 {profileStatus.status?.experience ? '✓ Experience Added' : '➤ Update Experience'}
                             </li>
-                            <li className={profileStatus.status?.email_verified ? 'done' : ''}>
+                            <li className={profileStatus.status?.email_verified ? 'done' : ''}
+                                onClick={() => router.visit('/profile/edit')}>
                                 {profileStatus.status?.email_verified ? '✓ Email Verified' : '➤ Verify Email'}
                             </li>
                             <li className={profileStatus.status?.skills ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>

@@ -18,7 +18,7 @@ import heroImage from '../../assets/img/giftedtalentimage.png';
 
 
 // Nav Component
-function Nav({ auth }) {
+export function Nav({ auth }) {
     const [isActive, setIsActive] = useState(false);
     const [scrolled, setScrolled] = useState(false);
 
@@ -73,6 +73,7 @@ function Nav({ auth }) {
             </div>
         </nav>
     );
+
 }
 
 // Hero Component
@@ -96,94 +97,7 @@ function Hero() {
     );
 }
 
-const featuresData = [
-    {
-        id: 1,
-        image: sample1,
-        name: 'Sarah Johnson',
-        role: 'Senior Frontend Developer',
-        stars: 5,
-        halfStar: false,
-        icon: starIcon,
-        halfStarIcon: halfStarIcon,
-        rating: '5.0',
-        tech: ['React', 'TypeScript', 'Tailwind'],
-        bg: { backgroundColor: '#eff6ff' },
-        border: { borderColor: '#0ea5e9', borderWidth: '1px', borderStyle: 'solid' }
-    },
-    {
-        id: 2,
-        image: sample2,
-        name: 'Michael Chen',
-        role: 'Full Stack Engineer',
-        stars: 4,
-        halfStar: true,
-        icon: starIcon,
-        halfStarIcon: halfStarIcon,
-        rating: '4.5',
-        tech: ['Node.js', 'Python', 'PostgreSQL'],
-        bg: { backgroundColor: '#f0fdf4' },
-        border: { borderColor: '#10b981', borderWidth: '1px', borderStyle: 'solid' }
-    },
-    {
-        id: 3,
-        image: sample3,
-        name: 'Emily Rodriguez',
-        role: 'UX/UI Designer',
-        stars: 4,
-        halfStar: false,
-        icon: starIcon,
-        halfStarIcon: halfStarIcon,
-        rating: '4.0',
-        tech: ['Figma', 'Adobe XD', 'Prototyping'],
-        bg: { backgroundColor: '#fdf4ff' },
-        border: { borderColor: '#ec4899', borderWidth: '1px', borderStyle: 'solid' }
-    },
-    {
-        id: 4,
-        image: sample4,
-        name: 'David Kim',
-        role: 'DevOps Specialist',
-        stars: 5,
-        halfStar: false,
-        icon: starIcon,
-        halfStarIcon: halfStarIcon,
-        rating: '5.0',
-        tech: ['AWS', 'Docker', 'Kubernetes'],
-        bg: { backgroundColor: '#fef3c7' },
-        border: { borderColor: '#f59e0b', borderWidth: '1px', borderStyle: 'solid' }
-    },
-    {
-        id: 5,
-        image: sample1,
-        name: 'Lisa Wang',
-        role: 'Product Manager',
-        stars: 4,
-        halfStar: true,
-        icon: starIcon,
-        halfStarIcon: halfStarIcon,
-        rating: '4.5',
-        tech: ['Agile', 'Jira', 'Analytics'],
-        bg: { backgroundColor: '#f3f4f6' },
-        border: { borderColor: '#6b7280', borderWidth: '1px', borderStyle: 'solid' }
-    },
-    {
-        id: 6,
-        image: sample2,
-        name: 'Alex Patel',
-        role: 'Data Scientist',
-        stars: 5,
-        halfStar: false,
-        icon: starIcon,
-        halfStarIcon: halfStarIcon,
-        rating: '5.0',
-        tech: ['Python', 'ML', 'TensorFlow'],
-        bg: { backgroundColor: '#dbeafe' },
-        border: { borderColor: '#3b82f6', borderWidth: '1px', borderStyle: 'solid' }
-    }
-];
-
-export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] }) {
+export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], featuredTalents = [] }) {
     // State for search inputs
     const [searchInputs, setSearchInputs] = useState({
         keyword: '',
@@ -315,7 +229,6 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
     // Handle apply button click - Navigate to easy apply page
     const handleApplyClick = (job, event) => {
         if (requireAuthWithModal('apply_job', event, job)) {
-            // Navigate to the easy apply page for this job
             router.visit(`/easy-apply-job?job_id=${job.id}`);
         }
     };
@@ -323,8 +236,6 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
     // Handle view profile click - Navigate to talent profile
     const handleViewProfile = (talent, event) => {
         if (requireAuthWithModal('view_profile', event, talent)) {
-            // Navigate to talent profile page
-            // You may need to create this route if it doesn't exist
             router.visit(`/talent/${talent.id}`);
         }
     };
@@ -357,6 +268,16 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                 console.error('Save job error:', error);
             }
         }
+    };
+
+    // Get initials for avatar fallback
+    const getInitials = (name) => {
+        return name
+            .split(' ')
+            .map(word => word[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
     };
 
     return (
@@ -557,53 +478,67 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                     </div>
                 </div>
 
-                {/* Featured Talents Section */}
+                {/* Featured Talents Section - Dynamic from Database */}
                 <div className="featured-talents">
                     <div className="feature-talent-header">
                         <h3>Featured Talents</h3>
                         <p>Connect with skilled professionals ready to work</p>
                     </div>
                     <div className="feature-talent-content">
-                        {featuresData.map((feature) => (
-                            <div className="feature-talent-card" key={feature.id} style={{ ...feature.bg, ...feature.border }}>
-                                <div className="feature-talent-card-header">
-                                    <img src={feature.image} alt={feature.name} />
+                        {featuredTalents.length > 0 ? (
+                            featuredTalents.map((talent) => (
+                                <div key={talent.id} className="feature-talent-card">
+                                    <div className="feature-talent-card-header">
+                                        {talent.avatar ? (
+                                            <img src={talent.avatar} alt={talent.name} />
+                                        ) : (
+                                            <div className="feature-talent-avatar-initials">
+                                                {getInitials(talent.name)}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="feature-talent-card-body">
+                                        <h3>{talent.name}</h3>
+                                        <p>{talent.title || 'Professional'}</p>
+                                    </div>
+
+                                    <div className="feature-talent-card-stars">
+                                        <span>⭐ {talent.rating || '4.5'}</span>
+                                    </div>
+
+                                    <div className="feature-talent-card-roles">
+                                        {talent.skills && talent.skills.length > 0 ? (
+                                            talent.skills.slice(0, 3).map((skill, skillIndex) => (
+                                                <span key={skillIndex}>{skill}</span>
+                                            ))
+                                        ) : (
+                                            <span>Available for work</span>
+                                        )}
+                                    </div>
+
+                                    <div className="feature-talent-card-footer">
+                                        <Link 
+                                            href={`/talent/${talent.id}`}
+                                            onClick={(e) => {
+                                                if (!isAuthenticated()) {
+                                                    e.preventDefault();
+                                                    requireAuthWithModal('view_profile', e, talent);
+                                                }
+                                            }}
+                                        >
+                                            View Profile
+                                        </Link>
+                                    </div>
                                 </div>
-                                <div className="feature-talent-card-body">
-                                    <h3>{feature.name}</h3>
-                                    <p>{feature.role}</p>
-                                </div>
-                                <div className="feature-talent-card-stars">
-                                    {[...Array(5)].map((_, starIndex) => {
-                                        if (starIndex < feature.stars) {
-                                            return <img key={starIndex} src={feature.icon} alt="star" />;
-                                        } else if (starIndex === feature.stars && feature.halfStar) {
-                                            return <img key={starIndex} src={feature.halfStarIcon} alt="half star" />;
-                                        }
-                                        return null;
-                                    })}
-                                    <span>({feature.rating})</span>
-                                </div>
-                                <div className="feature-talent-card-roles">
-                                    {feature.tech.map((tech, techIndex) => (
-                                        <span key={techIndex}>{tech}</span>
-                                    ))}
-                                </div>
-                                <div className="feature-talent-card-footer">
-                                    <Link 
-                                        href="#" 
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            handleViewProfile(feature, e);
-                                        }}
-                                    >
-                                        View Profile
-                                    </Link>
-                                </div>
+                            ))
+                        ) : (
+                            <div className="no-featured-talents">
+                                <p>No featured talents available yet. Check back soon!</p>
                             </div>
-                        ))}
+                        )}
                     </div>
-                    <Link href="#" className='browse-all-btn'>Browse All Talents</Link>
+                    <Link href="/find-talents" className='browse-all-btn'>Browse All Talents</Link>
                 </div>
 
                 {/* Auth Modal */}

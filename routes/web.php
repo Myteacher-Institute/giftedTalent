@@ -6,6 +6,7 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ResumeController;
 use App\Models\Job;
+use App\Models\User;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -13,6 +14,10 @@ use Inertia\Inertia;
 // Public Routes
 Route::get('/', function () {
     $jobs = Job::latest()->take(6)->get();
+    $featuredTalents = User::where('profile_completed', true)
+                            ->inRandomOrder()
+                            ->take(3)
+                            ->get();
      
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
@@ -20,6 +25,7 @@ Route::get('/', function () {
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
         'jobs' => $jobs,
+        'featuredTalents' => $featuredTalents,
     ]);
 })->name('home');
 
@@ -28,6 +34,7 @@ Route::get('/jobs', [PageController::class, 'findJobs'])->name('pages.findJobs')
 Route::get('/find-talents', [PageController::class, 'findTalents'])->name('pages.findTalents');
 Route::get('/how-it-works', [PageController::class, 'howItWorks'])->name('pages.howItWorks');
 Route::get('/about', [PageController::class, 'about'])->name('pages.about');
+Route::get('/talent/{id}', [PageController::class, 'showTalent'])->name('talent.show');
 Route::get('/easy-apply-job', [PageController::class, 'easyApplyJob'])->middleware(['auth', 'verified'])->name('pages.easyApplyJob');
 
 // Search Jobs Page - Updated route
@@ -41,6 +48,20 @@ Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'ind
     ->middleware(['auth', 'verified', 'not_admin'])
     ->name('dashboard');
 
+// Settings Page - Fixed with lowercase URL
+Route::get('/settings', function () {
+    $user = auth()->user();
+    $profile = $user->profile ?? null;
+    
+    return Inertia::render('Settings', [
+        'user' => $user,
+        'profile' => $profile,
+        'auth' => [
+            'user' => $user,
+        ],
+    ]);
+})->middleware(['auth'])->name('settings');
+
 // Authenticated User Routes
 Route::middleware(['auth', 'not_admin'])->group(function () {
     // Notifications
@@ -48,6 +69,9 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'read'])->name('notifications.read');
     Route::get('/user/applied-jobs', [\App\Http\Controllers\DashboardController::class, 'appliedJobs'])->name('user.applied-jobs');
     Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'readAll'])->name('notifications.readAll');
+    // Notification Preferences Routes
+Route::get('/user/notification-preferences', [ProfileController::class, 'getNotificationPreferences'])->name('user.notification-preferences.get');
+Route::put('/user/notification-preferences', [ProfileController::class, 'updateNotificationPreferences'])->name('user.notification-preferences.update');
     
     // CV Management - Using dedicated ResumeController
     Route::get('/cv', [ResumeController::class, 'index'])->name('cv');
@@ -62,11 +86,20 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     Route::get('/profile/edit', [ProfileController::class, 'editExtendedProfile'])->name('profile.editExtended');
     Route::patch('/profile/extended', [ProfileController::class, 'updateExtendedProfile'])->name('profile.updateExtended');
     
-    // Avatar Upload Routes
+    // Profile Management Routes for Settings
+    Route::put('/user/profile', [ProfileController::class, 'updateProfile'])->name('user.profile.update');
+    Route::get('/user/skills', [ProfileController::class, 'getSkills'])->name('user.skills.get');
+    Route::post('/user/skills', [ProfileController::class, 'addSkill'])->name('user.skills.add');
+    Route::delete('/user/skills/{skill}', [ProfileController::class, 'removeSkill'])->name('user.skills.remove');
+    Route::post('/user/upload-avatar', [ProfileController::class, 'uploadAvatar'])->name('user.avatar.upload');
+    Route::delete('/user/remove-avatar', [ProfileController::class, 'removeAvatar'])->name('user.avatar.remove');
+    
+    
+    // Avatar Upload Routes (keeping for compatibility)
     Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar'])->name('profile.avatar.upload');
     Route::delete('/profile/avatar', [ProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
 
-    // Skills Routes
+    // Skills Routes (keeping for compatibility)
     Route::post('/profile/skills', [ProfileController::class, 'addSkill'])->name('profile.skills.add');
     Route::delete('/profile/skills/{skillId}', [ProfileController::class, 'removeSkill'])->name('profile.skills.remove');
 
@@ -75,12 +108,16 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     Route::put('/profile/experiences/{experience}', [ProfileController::class, 'updateExperience'])->name('profile.experiences.update');
     Route::delete('/profile/experiences/{experience}', [ProfileController::class, 'deleteExperience'])->name('profile.experiences.delete');
 
-      // Saved Jobs Routes
-     Route::get('/saved-jobs', [\App\Http\Controllers\Api\SavedJobController::class, 'index'])->name('saved-jobs.index');
-     Route::post('/saved-jobs/{jobId}', [\App\Http\Controllers\Api\SavedJobController::class, 'store'])->name('saved-jobs.store');
-     Route::delete('/saved-jobs/{jobId}', [\App\Http\Controllers\Api\SavedJobController::class, 'destroy'])->name('saved-jobs.destroy');
-     Route::get('/saved-jobs/check/{jobId}', [\App\Http\Controllers\Api\SavedJobController::class, 'check'])->name('saved-jobs.check');
-     Route::get('/saved-jobs/count', [\App\Http\Controllers\Api\SavedJobController::class, 'count'])->name('saved-jobs.count');
+    // Saved Jobs Routes
+    Route::get('/saved-jobs', [\App\Http\Controllers\Api\SavedJobController::class, 'index'])->name('saved-jobs.index');
+    Route::post('/saved-jobs/{jobId}', [\App\Http\Controllers\Api\SavedJobController::class, 'store'])->name('saved-jobs.store');
+    Route::delete('/saved-jobs/{jobId}', [\App\Http\Controllers\Api\SavedJobController::class, 'destroy'])->name('saved-jobs.destroy');
+    Route::get('/saved-jobs/check/{jobId}', [\App\Http\Controllers\Api\SavedJobController::class, 'check'])->name('saved-jobs.check');
+    Route::get('/saved-jobs/count', [\App\Http\Controllers\Api\SavedJobController::class, 'count'])->name('saved-jobs.count');
+
+    // Job Preferences Routes
+    Route::get('/user/job-preferences', [ProfileController::class, 'getJobPreferences'])->name('user.job-preferences.get');
+    Route::put('/user/job-preferences', [ProfileController::class, 'updateJobPreferences'])->name('user.job-preferences.update');
 });
 
 // Admin Routes - Protected by IsAdmin middleware

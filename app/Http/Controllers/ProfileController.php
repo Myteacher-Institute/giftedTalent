@@ -244,63 +244,540 @@ class ProfileController extends Controller
     }
 
     /**
-     * Upload user avatar image (keep for backward compatibility)
+     * Update user profile (for settings page) - Updated for Inertia form handling
      */
-    public function uploadAvatar(Request $request): RedirectResponse
+    public function updateProfile(Request $request)
     {
-        $request->validate([
-            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
-
-        $user = $request->user();
-        
-        $profile = Profile::where('user_id', $user->id)->first();
-        if (!$profile) {
-            $profile = new Profile();
-            $profile->user_id = $user->id;
+        try {
+            $user = Auth::user();
+            $profile = $user->profile ?? new Profile(['user_id' => $user->id]);
+            
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email,' . $user->id,
+                'position' => 'nullable|string|max:255',
+                'bio' => 'nullable|string|max:500',
+                'phone' => 'nullable|string|max:20',
+                'location' => 'nullable|string|max:255',
+                'portfolio_url' => 'nullable|url|max:255',
+                'github_url' => 'nullable|url|max:255',
+                'linkedin_url' => 'nullable|url|max:255',
+                'twitter_url' => 'nullable|url|max:255',
+                'skills' => 'nullable|array',
+            ]);
+            
+            // Update user basic info
+            $user->update([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+            ]);
+            
+            // Update or create profile
+            $profile->fill([
+                'position' => $validated['position'],
+                'bio' => $validated['bio'],
+                'phone' => $validated['phone'],
+                'location' => $validated['location'],
+                'portfolio_url' => $validated['portfolio_url'],
+                'github_url' => $validated['github_url'],
+                'linkedin_url' => $validated['linkedin_url'],
+                'twitter_url' => $validated['twitter_url'],
+            ]);
             $profile->save();
+            
+            // Handle skills if provided
+            if ($request->has('skills')) {
+                $this->syncSkills($user, $request->skills);
+            }
+            
+            // Update profile completion
+            $this->updateProfileCompletion($user);
+            
+            // Refresh user with profile and skills
+            $user->refresh();
+            $user->load('profile', 'skills');
+            
+            // Set avatar URL if exists
+            if ($profile->avatar) {
+                $user->profile->avatar_url = Storage::disk('public')->url($profile->avatar);
+            }
+            
+            // For Inertia form submission, redirect back with success
+            return Redirect::back()->with('success', 'Profile updated successfully!');
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return Redirect::back()->withErrors($e->errors());
+        } catch (\Exception $e) {
+            Log::error('Profile update error (settings):', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return Redirect::back()->withErrors(['error' => 'Failed to update profile: ' . $e->getMessage()]);
         }
-
-        if ($profile->avatar && Storage::disk('public')->exists($profile->avatar)) {
-            Storage::disk('public')->delete($profile->avatar);
+    }
+    
+    /**
+     * Get user skills
+     */
+    public function getSkills(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $skills = $user->skills()->get();
+            
+            return response()->json([
+                'skills' => $skills
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching skills:', [
+                'message' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch skills'
+            ], 500);
         }
+    }
+    
+    /**
+     * Add a skill
+     */
+    public function addSkill(Request $request)
+    {
+        try {
+            $request->validate([
+                'name' => 'required|string|max:100',
+                'proficiency' => 'required|in:beginner,intermediate,advanced,expert',
+            ]);
+            
+            $user = Auth::user();
+            
+            // Check if skill already exists
+            $existingSkill = Skill::where('user_id', $user->id)
+                ->where('name', $request->name)
+                ->first();
+                
+            if ($existingSkill) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Skill already exists'
+                ], 422);
+            }
+            
+            $skill = Skill::create([
+                'user_id' => $user->id,
+                'name' => $request->name,
+                'proficiency' => $request->proficiency,
+                'is_active' => true
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'skill' => $skill
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error adding skill:', [
+                'message' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to add skill'
+            ], 500);
+        }
+    }
+    
+    /**
+     * Remove a skill
+     */
+    public function removeSkill($skillId)
+    {
+        try {
+            $user = Auth::user();
+            $skill = Skill::where('user_id', $user->id)->where('id', $skillId)->first();
+            
+            if (!$skill) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Skill not found'
+                ], 404);
+            }
+            
+            $skill->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Skill removed successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error removing skill:', [
+                'message' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to remove skill'
+            ], 500);
+        }
+    }
+    
+    /**
+     * Sync skills for user
+     */
+    private function syncSkills($user, $skills)
+    {
+        $skillIds = [];
+        
+        foreach ($skills as $skillData) {
+            if (isset($skillData['id']) && !str_starts_with($skillData['id'], 'temp_')) {
+                // Update existing skill
+                $skill = Skill::find($skillData['id']);
+                if ($skill && $skill->user_id === $user->id) {
+                    $skill->update([
+                        'name' => $skillData['name'],
+                        'proficiency' => $skillData['proficiency'],
+                    ]);
+                    $skillIds[] = $skill->id;
+                }
+            } else {
+                // Create new skill
+                $skill = Skill::create([
+                    'user_id' => $user->id,
+                    'name' => $skillData['name'],
+                    'proficiency' => $skillData['proficiency'],
+                    'is_active' => true
+                ]);
+                $skillIds[] = $skill->id;
+            }
+        }
+        
+        // Remove skills that weren't in the list
+        Skill::where('user_id', $user->id)
+            ->whereNotIn('id', $skillIds)
+            ->delete();
+    }
+    
+    /**
+     * Upload user avatar image (AJAX version for settings page)
+     */
+    public function uploadAvatar(Request $request)
+    {
+        try {
+            $request->validate([
+                'avatar' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
+            ]);
 
-        $file = $request->file('avatar');
-        $filename = $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
-        $path = $file->storeAs('avatars', $filename, 'public');
-        
-        $profile->avatar = $path;
-        $profile->save();
+            $user = Auth::user();
+            
+            $profile = Profile::where('user_id', $user->id)->first();
+            if (!$profile) {
+                $profile = new Profile();
+                $profile->user_id = $user->id;
+                $profile->save();
+            }
 
-        // Refresh user with profile
-        $user->refresh();
-        $user->load('profile');
-        
-        session()->flash('success', 'Avatar uploaded successfully!');
-        
-        return Redirect::route('dashboard');
+            // Delete old avatar if exists
+            if ($profile->avatar && Storage::disk('public')->exists($profile->avatar)) {
+                Storage::disk('public')->delete($profile->avatar);
+            }
+
+            // Store new avatar
+            $file = $request->file('avatar');
+            $filename = 'profile_' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('avatars', $filename, 'public');
+            
+            $profile->avatar = $path;
+            $profile->save();
+
+            // Refresh user with profile
+            $user->refresh();
+            $user->load('profile');
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile picture updated successfully',
+                'path' => Storage::disk('public')->url($path)
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error uploading avatar:', [
+                'message' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload profile picture: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
-     * Remove user avatar.
+     * Remove user avatar (AJAX version for settings page)
      */
-    public function removeAvatar(Request $request): RedirectResponse
+    public function removeAvatar(Request $request)
     {
-        $user = $request->user();
-        $profile = Profile::where('user_id', $user->id)->first();
+        try {
+            $user = Auth::user();
+            $profile = Profile::where('user_id', $user->id)->first();
 
-        if ($profile && $profile->avatar && Storage::disk('public')->exists($profile->avatar)) {
-            Storage::disk('public')->delete($profile->avatar);
-            $profile->avatar = null;
-            $profile->save();
+            if ($profile && $profile->avatar && Storage::disk('public')->exists($profile->avatar)) {
+                Storage::disk('public')->delete($profile->avatar);
+                $profile->avatar = null;
+                $profile->save();
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile picture removed successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error removing avatar:', [
+                'message' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to remove profile picture'
+            ], 500);
         }
+    }
+    
+    /**
+     * Update profile completion percentage
+     */
+    private function updateProfileCompletion($user)
+    {
+        $profile = $user->profile;
+        if (!$profile) {
+            $user->profile_completed = 0;
+            $user->save();
+            return;
+        }
+        
+        $completionScore = 0;
+        $totalFields = 7;
+        
+        if ($profile->position) $completionScore++;
+        if ($profile->bio) $completionScore++;
+        if ($profile->phone) $completionScore++;
+        if ($profile->location) $completionScore++;
+        if ($profile->portfolio_url) $completionScore++;
+        if ($user->skills()->count() > 0) $completionScore++;
+        if ($user->resumes()->count() > 0) $completionScore++;
+        
+        $percentage = round(($completionScore / $totalFields) * 100);
+        $user->profile_completed = $percentage;
+        $user->save();
+    }
 
-        // Refresh user with profile
-        $user->refresh();
-        $user->load('profile');
-        
-        session()->flash('success', 'Avatar removed successfully!');
-        
-        return Redirect::route('dashboard');
+    /**
+     * Get user job preferences
+     */
+    public function getJobPreferences(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            
+            // Get preferences from database or return defaults
+            $preferences = $user->job_preferences ?? [
+                'job_types' => [],
+                'employment_types' => [],
+                'locations' => [],
+                'remote_only' => false,
+                'max_commute_distance' => 50,
+                'salary_min' => '',
+                'salary_max' => '',
+                'salary_currency' => 'USD',
+                'job_alerts_enabled' => true,
+                'alert_frequency' => 'daily',
+                'alert_email' => $user->email,
+                'experience_level' => '',
+                'industries' => [],
+                'minimum_match_score' => 60,
+                'show_remote_jobs' => true,
+                'show_urgent_jobs' => true,
+            ];
+            
+            return response()->json([
+                'success' => true,
+                'preferences' => $preferences
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error fetching job preferences:', [
+                'message' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch job preferences'
+            ], 500);
+        }
+    }
+
+    /**
+     * Update user job preferences
+     */
+    public function updateJobPreferences(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            
+            $validated = $request->validate([
+                'job_types' => 'nullable|array',
+                'employment_types' => 'nullable|array',
+                'locations' => 'nullable|array',
+                'remote_only' => 'boolean',
+                'max_commute_distance' => 'nullable|integer|min:0|max:500',
+                'salary_min' => 'nullable|string',
+                'salary_max' => 'nullable|string',
+                'salary_currency' => 'nullable|string|size:3',
+                'job_alerts_enabled' => 'boolean',
+                'alert_frequency' => 'nullable|in:instant,daily,weekly',
+                'alert_email' => 'nullable|email',
+                'experience_level' => 'nullable|string',
+                'industries' => 'nullable|array',
+                'minimum_match_score' => 'nullable|integer|min:0|max:100',
+                'show_remote_jobs' => 'boolean',
+                'show_urgent_jobs' => 'boolean',
+            ]);
+            
+            // Save preferences to user
+            $user->job_preferences = $validated;
+            $user->save();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Job preferences saved successfully!',
+                'preferences' => $validated
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error saving job preferences:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to save preferences: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get user notification preferences
+     */
+    public function getNotificationPreferences(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            
+            // Default notification preferences
+            $defaultPreferences = [
+                // Email Notifications
+                'email_job_alerts' => true,
+                'email_application_updates' => true,
+                'email_message_notifications' => true,
+                'email_marketing' => false,
+                'email_newsletter' => false,
+                
+                // In-App Notifications
+                'in_app_job_alerts' => true,
+                'in_app_application_updates' => true,
+                'in_app_messages' => true,
+                
+                // Push Notifications
+                'push_enabled' => false,
+                'push_job_alerts' => true,
+                'push_messages' => true,
+                
+                // Frequency
+                'digest_frequency' => 'daily',
+                'quiet_hours_enabled' => false,
+                'quiet_hours_start' => '22:00',
+                'quiet_hours_end' => '08:00',
+                
+                // Desktop Notifications
+                'desktop_enabled' => true,
+                
+                // Sound
+                'sound_enabled' => true,
+            ];
+            
+            // Get saved preferences or return defaults
+            $preferences = $user->notification_preferences ?? $defaultPreferences;
+            
+            return response()->json([
+                'success' => true,
+                'preferences' => $preferences
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error fetching notification preferences:', [
+                'message' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch notification preferences'
+            ], 500);
+        }
+    }
+
+    /**
+     * Update user notification preferences
+     */
+    public function updateNotificationPreferences(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            
+            $validated = $request->validate([
+                'email_job_alerts' => 'boolean',
+                'email_application_updates' => 'boolean',
+                'email_message_notifications' => 'boolean',
+                'email_marketing' => 'boolean',
+                'email_newsletter' => 'boolean',
+                'in_app_job_alerts' => 'boolean',
+                'in_app_application_updates' => 'boolean',
+                'in_app_messages' => 'boolean',
+                'push_enabled' => 'boolean',
+                'push_job_alerts' => 'boolean',
+                'push_messages' => 'boolean',
+                'digest_frequency' => 'nullable|in:instant,daily,weekly',
+                'quiet_hours_enabled' => 'boolean',
+                'quiet_hours_start' => 'nullable|string',
+                'quiet_hours_end' => 'nullable|string',
+                'desktop_enabled' => 'boolean',
+                'sound_enabled' => 'boolean',
+            ]);
+            
+            // Save preferences to user
+            $user->notification_preferences = $validated;
+            $user->save();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Notification preferences saved successfully!',
+                'preferences' => $validated
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error saving notification preferences:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to save notification preferences: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

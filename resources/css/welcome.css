@@ -431,3 +431,32 @@ body {
     background: #e5e7eb;
     border-color: #d1d5db;
 }
+
+
+/* Featured Talents - Dynamic Version */
+.feature-talent-avatar-initials {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 600;
+    color: white;
+    margin: 0 auto;
+}
+
+.no-featured-talents {
+    text-align: center;
+    padding: 40px;
+    background: #f9fafb;
+    border-radius: 12px;
+    grid-column: 1 / -1;
+}
+
+.no-featured-talents p {
+    color: #6b7280;
+    font-size: 14px;
+}
