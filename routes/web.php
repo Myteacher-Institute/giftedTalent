@@ -70,8 +70,8 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     Route::get('/user/applied-jobs', [\App\Http\Controllers\DashboardController::class, 'appliedJobs'])->name('user.applied-jobs');
     Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'readAll'])->name('notifications.readAll');
     // Notification Preferences Routes
-Route::get('/user/notification-preferences', [ProfileController::class, 'getNotificationPreferences'])->name('user.notification-preferences.get');
-Route::put('/user/notification-preferences', [ProfileController::class, 'updateNotificationPreferences'])->name('user.notification-preferences.update');
+    Route::get('/user/notification-preferences', [ProfileController::class, 'getNotificationPreferences'])->name('user.notification-preferences.get');
+    Route::put('/user/notification-preferences', [ProfileController::class, 'updateNotificationPreferences'])->name('user.notification-preferences.update');
     
     // CV Management - Using dedicated ResumeController
     Route::get('/cv', [ResumeController::class, 'index'])->name('cv');

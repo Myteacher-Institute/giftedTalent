@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import AppNavbar from '../Components/AppNavbar';
-import AppLayout from '../Layouts/AppLayout';
 import '../../css/Dashboard.css';
 
 export default function AppLayout({ children, user, newJobsCount = 0, profile, profileComplete, profileStatus, stats }) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const toggleMobileMenu = () => {
+        console.log('Toggle menu clicked in AppLayout, current state:', isMobileMenuOpen);
         setIsMobileMenuOpen(!isMobileMenuOpen);
     };
 
-    // Get profile status with professional levels
     const getProfileLevel = () => {
         if (profileComplete === 100) return { label: 'Expert', color: '#10b981', icon: 'fa-crown', message: 'Your profile is fully optimized!' };
         if (profileComplete >= 75) return { label: 'Advanced', color: '#3b82f6', icon: 'fa-rocket', message: 'Great progress! Almost there!' };
@@ -51,16 +50,13 @@ export default function AppLayout({ children, user, newJobsCount = 0, profile, p
 
                     {/* Navigation Menu */}
                     <ul className="menu">
-                        {/* Navbar Links - These appear in sidebar on mobile */}
                         <li><Link href="/" onClick={() => setIsMobileMenuOpen(false)}><i className="fa-solid fa-house"></i> Home</Link></li>
                         <li><Link href="/search-jobs" onClick={() => setIsMobileMenuOpen(false)}><i className="fa-solid fa-magnifying-glass"></i> Jobs</Link></li>
                         <li><Link href="#" onClick={() => setIsMobileMenuOpen(false)}><i className="fa-solid fa-compass"></i> Explore</Link></li>
                         <li><Link href="#" onClick={() => setIsMobileMenuOpen(false)}><i className="fa-solid fa-user-plus"></i> Hire</Link></li>
                         
-                        {/* Divider */}
                         <li style={{ borderTop: '1px solid #e5e7eb', margin: '8px 0', padding: 0 }}></li>
                         
-                        {/* Dashboard Menu Links */}
                         <li><Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)}><i className="fa-solid fa-table"></i> Dashboard</Link></li>
                         <li><Link href="/search-jobs" onClick={() => setIsMobileMenuOpen(false)}><i className="fa-solid fa-magnifying-glass"></i> Search Job</Link></li>
                         <li><Link href="/applications" onClick={() => setIsMobileMenuOpen(false)}><i className="fa-solid fa-file"></i> My Applications</Link></li>
@@ -74,7 +70,6 @@ export default function AppLayout({ children, user, newJobsCount = 0, profile, p
                         </li>
                     </ul>
 
-                    {/* Profile Strength Card - Only show if profile data exists */}
                     {profileComplete > 0 && (
                         <div className="progress-card">
                             <div className="flex items-center justify-between mb-4">
@@ -90,9 +85,7 @@ export default function AppLayout({ children, user, newJobsCount = 0, profile, p
                                     <span>Complete</span>
                                 </div>
                             </div>
-                            <p className="text-center text-sm text-gray-600 mt-3 mb-4">
-                                {profileLevel.message}
-                            </p>
+                            <p className="text-center text-sm text-gray-600 mt-3 mb-4">{profileLevel.message}</p>
                             {profileComplete < 100 && (
                                 <button onClick={() => router.visit('/profile/edit')} className="mt-6 w-full py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg">
                                     Complete Your Profile
@@ -102,12 +95,10 @@ export default function AppLayout({ children, user, newJobsCount = 0, profile, p
                     )}
                 </aside>
 
-                {/* Main Content */}
                 <main className="main">
                     {children}
                 </main>
 
-                {/* Right Panel - Only show on dashboard when stats exist */}
                 {hasStats && (
                     <aside className="right-panel">
                         <div className="tracker">
@@ -123,7 +114,6 @@ export default function AppLayout({ children, user, newJobsCount = 0, profile, p
                 )}
             </div>
 
-            {/* Mobile Menu Overlay */}
             <div className={`mobile-overlay ${isMobileMenuOpen ? 'active' : ''}`} onClick={toggleMobileMenu}></div>
         </>
     );

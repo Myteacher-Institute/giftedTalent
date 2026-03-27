@@ -1,9 +1,9 @@
 // resources/js/Components/AppNavbar.jsx
 import { Link, router } from '@inertiajs/react';
 import Notification from './Notification';
+import { useState } from 'react';
 
-const AppNavbar = ({ user, newJobsCount }) => {
-    // Copy the getProfileImageUrl function from dashboard
+const AppNavbar = ({ user, newJobsCount, onMenuToggle }) => {
     const getProfileImageUrl = () => {
         if (user?.profile?.avatar_url) {
             return user.profile.avatar_url;
@@ -11,11 +11,9 @@ const AppNavbar = ({ user, newJobsCount }) => {
         
         if (user?.profile?.avatar) {
             const avatarPath = user.profile.avatar;
-            
             if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
                 return avatarPath;
             }
-            
             const cleanPath = avatarPath.replace(/^\/+/, '');
             const fullUrl = `/storage/${cleanPath}`;
             return fullUrl;
@@ -32,12 +30,18 @@ const AppNavbar = ({ user, newJobsCount }) => {
                 <span className="blue">GiftedTalents</span>.Online
             </div>
 
+            {/* Desktop Navigation */}
             <nav>
                 <Link href="/">Home</Link>
                 <Link href="/search-jobs">Jobs</Link>
                 <Link href="#">Explore</Link>
                 <Link href="#">Hire</Link>
             </nav>
+
+            {/* Single Hamburger Menu - Opens Sidebar on Mobile */}
+            <button className="mobile-menu-toggle" onClick={onMenuToggle}>
+                <i className="fas fa-bars"></i>
+            </button>
 
             <div className="search">
                 <input type="text" placeholder="search for jobs..." />
@@ -55,14 +59,6 @@ const AppNavbar = ({ user, newJobsCount }) => {
                     src={getProfileImageUrl()} 
                     alt={user?.name || 'Profile'} 
                     className="navbar-profile-image"
-                    style={{ 
-                        width: '40px', 
-                        height: '40px', 
-                        borderRadius: '50%', 
-                        objectFit: 'cover', 
-                        cursor: 'pointer',
-                        border: '2px solid #e5e7eb'
-                    }}
                     onClick={() => router.visit('/profile/edit')}
                     onError={(e) => {
                         const userName = user?.name || 'User';

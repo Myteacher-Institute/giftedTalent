@@ -240,7 +240,7 @@ export default function AuthenticatedLayout({ header, children }) {
                 </header>
             )}
 
-            <main>{children}</main>
+            <main className={`py-12 ${usePage().url.includes('/userProfile') || usePage().url.includes('/pages/userProfile') ? 'max-w-none px-4 lg:px-16 xl:px-24 2xl:px-32' : 'py-12'}`}>{children}</main>
         </div>
     );
 }

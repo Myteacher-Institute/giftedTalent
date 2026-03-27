@@ -244,21 +244,31 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update user profile (for settings page) - Updated for Inertia form handling
+     * Update user profile (for settings page) - UPDATED to save to profiles table
      */
     public function updateProfile(Request $request)
     {
         try {
             $user = Auth::user();
-            $profile = $user->profile ?? new Profile(['user_id' => $user->id]);
+            
+            // Get or create profile
+            $profile = Profile::where('user_id', $user->id)->first();
+            if (!$profile) {
+                $profile = new Profile();
+                $profile->user_id = $user->id;
+            }
             
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:users,email,' . $user->id,
+                'title' => 'nullable|string|max:255',
                 'position' => 'nullable|string|max:255',
+                'company' => 'nullable|string|max:255',
                 'bio' => 'nullable|string|max:500',
                 'phone' => 'nullable|string|max:20',
                 'location' => 'nullable|string|max:255',
+                'employment_type' => 'nullable|string|max:255',
+                'start_date' => 'nullable|date',
                 'portfolio_url' => 'nullable|url|max:255',
                 'github_url' => 'nullable|url|max:255',
                 'linkedin_url' => 'nullable|url|max:255',
@@ -266,41 +276,46 @@ class ProfileController extends Controller
                 'skills' => 'nullable|array',
             ]);
             
-            // Update user basic info
+            // Update user basic info (users table)
             $user->update([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
             ]);
             
-            // Update or create profile
+            // Update profile info (profiles table)
             $profile->fill([
-                'position' => $validated['position'],
-                'bio' => $validated['bio'],
-                'phone' => $validated['phone'],
-                'location' => $validated['location'],
-                'portfolio_url' => $validated['portfolio_url'],
-                'github_url' => $validated['github_url'],
-                'linkedin_url' => $validated['linkedin_url'],
-                'twitter_url' => $validated['twitter_url'],
+                'title' => $validated['title'] ?? $validated['position'] ?? null,
+                'company' => $validated['company'] ?? null,
+                'bio' => $validated['bio'] ?? null,
+                'phone' => $validated['phone'] ?? null,
+                'address' => $validated['location'] ?? null,
+                'employment_type' => $validated['employment_type'] ?? null,
+                'start_date' => $validated['start_date'] ?? null,
+                'portfolio_url' => $validated['portfolio_url'] ?? null,
+                'github_url' => $validated['github_url'] ?? null,
+                'linkedin_url' => $validated['linkedin_url'] ?? null,
+                'twitter_url' => $validated['twitter_url'] ?? null,
             ]);
+            
             $profile->save();
             
-            // Handle skills if provided
-            if ($request->has('skills')) {
+            // Handle skills if provided (store as JSON in profile)
+            if ($request->has('skills') && is_array($request->skills)) {
+                $profile->skills = json_encode($request->skills);
+                $profile->save();
+            }
+            
+            // Also handle skills through the many-to-many relationship if needed
+            if ($request->has('skills') && $this->shouldUseSkillRelationships($request->skills)) {
                 $this->syncSkills($user, $request->skills);
             }
             
             // Update profile completion
             $this->updateProfileCompletion($user);
             
-            // Refresh user with profile and skills
+            // Refresh user with profile
             $user->refresh();
-            $user->load('profile', 'skills');
-            
-            // Set avatar URL if exists
-            if ($profile->avatar) {
-                $user->profile->avatar_url = Storage::disk('public')->url($profile->avatar);
-            }
+            $user->load('profile');
             
             // For Inertia form submission, redirect back with success
             return Redirect::back()->with('success', 'Profile updated successfully!');
@@ -318,13 +333,34 @@ class ProfileController extends Controller
     }
     
     /**
+     * Check if skills should be saved to the relationship table
+     */
+    private function shouldUseSkillRelationships($skills)
+    {
+        // If skills have proficiency levels, use the relationship
+        foreach ($skills as $skill) {
+            if (isset($skill['proficiency'])) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
      * Get user skills
      */
     public function getSkills(Request $request)
     {
         try {
             $user = Auth::user();
-            $skills = $user->skills()->get();
+            $skills = $user->skills()->get()->map(function($skill) {
+                return [
+                    'id' => $skill->id,
+                    'name' => $skill->name,
+                    'proficiency' => $skill->pivot->proficiency_level,
+                    'category' => $skill->category,
+                ];
+            });
             
             return response()->json([
                 'skills' => $skills
@@ -354,28 +390,30 @@ class ProfileController extends Controller
             
             $user = Auth::user();
             
-            // Check if skill already exists
-            $existingSkill = Skill::where('user_id', $user->id)
-                ->where('name', $request->name)
-                ->first();
-                
-            if ($existingSkill) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Skill already exists'
-                ], 422);
-            }
+            // Find or create the skill
+            $skill = Skill::firstOrCreate(
+                ['name' => $request->name],
+                [
+                    'name' => $request->name,
+                    'category' => 'General',
+                    'is_active' => true
+                ]
+            );
             
-            $skill = Skill::create([
-                'user_id' => $user->id,
-                'name' => $request->name,
-                'proficiency' => $request->proficiency,
-                'is_active' => true
+            // Attach skill to user with proficiency level
+            $user->skills()->syncWithoutDetaching([
+                $skill->id => [
+                    'proficiency_level' => $request->proficiency,
+                ]
             ]);
             
             return response()->json([
                 'success' => true,
-                'skill' => $skill
+                'skill' => [
+                    'id' => $skill->id,
+                    'name' => $skill->name,
+                    'proficiency' => $request->proficiency,
+                ]
             ]);
             
         } catch (\Exception $e) {
@@ -397,16 +435,9 @@ class ProfileController extends Controller
     {
         try {
             $user = Auth::user();
-            $skill = Skill::where('user_id', $user->id)->where('id', $skillId)->first();
             
-            if (!$skill) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Skill not found'
-                ], 404);
-            }
-            
-            $skill->delete();
+            // Detach the skill from the user
+            $user->skills()->detach($skillId);
             
             return response()->json([
                 'success' => true,
@@ -426,43 +457,62 @@ class ProfileController extends Controller
     }
     
     /**
-     * Sync skills for user
+     * Sync skills for user (many-to-many relationship)
      */
     private function syncSkills($user, $skills)
     {
         $skillIds = [];
         
         foreach ($skills as $skillData) {
+            // Check if this is an existing skill (has an ID and not a temp ID)
             if (isset($skillData['id']) && !str_starts_with($skillData['id'], 'temp_')) {
-                // Update existing skill
+                // Existing skill - update pivot table
                 $skill = Skill::find($skillData['id']);
-                if ($skill && $skill->user_id === $user->id) {
-                    $skill->update([
-                        'name' => $skillData['name'],
-                        'proficiency' => $skillData['proficiency'],
+                if ($skill) {
+                    $user->skills()->updateExistingPivot($skill->id, [
+                        'proficiency_level' => $skillData['proficiency'],
                     ]);
                     $skillIds[] = $skill->id;
                 }
             } else {
-                // Create new skill
-                $skill = Skill::create([
-                    'user_id' => $user->id,
-                    'name' => $skillData['name'],
-                    'proficiency' => $skillData['proficiency'],
-                    'is_active' => true
+                // New skill - find existing or create new
+                $skill = Skill::firstOrCreate(
+                    ['name' => $skillData['name']],
+                    [
+                        'name' => $skillData['name'],
+                        'category' => 'General',
+                        'is_active' => true
+                    ]
+                );
+                
+                // Attach skill to user with proficiency level
+                $user->skills()->syncWithoutDetaching([
+                    $skill->id => [
+                        'proficiency_level' => $skillData['proficiency'],
+                    ]
                 ]);
                 $skillIds[] = $skill->id;
             }
         }
         
-        // Remove skills that weren't in the list
-        Skill::where('user_id', $user->id)
-            ->whereNotIn('id', $skillIds)
-            ->delete();
+        // Remove skills that weren't in the list (detach)
+        $user->skills()->whereNotIn('skills.id', $skillIds)->detach();
     }
     
     /**
-     * Upload user avatar image (AJAX version for settings page)
+     * Convert image file to base64
+     */
+    private function convertToBase64($file)
+    {
+        $imageData = file_get_contents($file->getRealPath());
+        $base64 = base64_encode($imageData);
+        $mimeType = $file->getMimeType();
+        
+        return "data:{$mimeType};base64,{$base64}";
+    }
+    
+    /**
+     * Upload user avatar image and store as base64
      */
     public function uploadAvatar(Request $request)
     {
@@ -480,27 +530,17 @@ class ProfileController extends Controller
                 $profile->save();
             }
 
-            // Delete old avatar if exists
-            if ($profile->avatar && Storage::disk('public')->exists($profile->avatar)) {
-                Storage::disk('public')->delete($profile->avatar);
-            }
-
-            // Store new avatar
-            $file = $request->file('avatar');
-            $filename = 'profile_' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs('avatars', $filename, 'public');
+            // Convert image to base64
+            $base64Image = $this->convertToBase64($request->file('avatar'));
             
-            $profile->avatar = $path;
+            // Store base64 in database
+            $profile->profile_image_base64 = $base64Image;
             $profile->save();
 
-            // Refresh user with profile
-            $user->refresh();
-            $user->load('profile');
-            
             return response()->json([
                 'success' => true,
-                'message' => 'Profile picture updated successfully',
-                'path' => Storage::disk('public')->url($path)
+                'message' => 'Profile picture updated successfully!',
+                'image' => $base64Image
             ]);
             
         } catch (\Exception $e) {
@@ -524,9 +564,16 @@ class ProfileController extends Controller
             $user = Auth::user();
             $profile = Profile::where('user_id', $user->id)->first();
 
-            if ($profile && $profile->avatar && Storage::disk('public')->exists($profile->avatar)) {
-                Storage::disk('public')->delete($profile->avatar);
-                $profile->avatar = null;
+            if ($profile) {
+                // Clear the base64 image (this is the main one)
+                $profile->profile_image_base64 = null;
+                
+                // Also clear the old file storage if exists (for backward compatibility)
+                if ($profile->avatar && Storage::disk('public')->exists($profile->avatar)) {
+                    Storage::disk('public')->delete($profile->avatar);
+                    $profile->avatar = null;
+                }
+                
                 $profile->save();
             }
 
@@ -560,12 +607,13 @@ class ProfileController extends Controller
         }
         
         $completionScore = 0;
-        $totalFields = 7;
+        $totalFields = 8;
         
-        if ($profile->position) $completionScore++;
+        if ($profile->title || $profile->position) $completionScore++;
+        if ($profile->company) $completionScore++;
         if ($profile->bio) $completionScore++;
         if ($profile->phone) $completionScore++;
-        if ($profile->location) $completionScore++;
+        if ($profile->address || $profile->city) $completionScore++;
         if ($profile->portfolio_url) $completionScore++;
         if ($user->skills()->count() > 0) $completionScore++;
         if ($user->resumes()->count() > 0) $completionScore++;

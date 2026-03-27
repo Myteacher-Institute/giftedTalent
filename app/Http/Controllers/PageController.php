@@ -72,7 +72,16 @@ class PageController extends Controller
      */
     public function userProfile(): Response
     {
-        return Inertia::render('userProfile');
+        $user = Auth::user();
+        $profile = $user->profile ?? null;
+        
+        return Inertia::render('userProfile', [
+            'user' => $user,
+            'profile' => $profile,
+            'auth' => [
+                'user' => $user,
+            ],
+        ]);
     }
     
     /**
@@ -80,7 +89,14 @@ class PageController extends Controller
      */
     public function easyApplyJob(): Response
     {
-        return Inertia::render('EasyApplyJob');
+        $user = Auth::user();
+        
+        return Inertia::render('EasyApplyJob', [
+            'user' => $user,
+            'auth' => [
+                'user' => $user,
+            ],
+        ]);
     }
 
     /**
@@ -88,19 +104,56 @@ class PageController extends Controller
      */
     public function searchJobs(): Response
     {
+        $user = Auth::user();
+        $profile = $user->profile ?? null;
+        
         return Inertia::render('search-job', [
-            'auth' => ['user' => Auth::user()]
+            'user' => $user,
+            'profile' => $profile,
+            'auth' => [
+                'user' => $user,
+            ],
         ]);
     }
 
     /**
-     * Display all jobs listing.
+     * Display all jobs listing page with full layout data.
      */
-    public function jobs()
+    public function jobs(): Response
     {
+        $user = Auth::user();
         $jobs = Job::latest()->get();
+        $profile = $user->profile ?? null;
+        
+        // Calculate profile completion percentage if user is logged in
+        $profileComplete = 0;
+        $profileStatus = [];
+        
+        if ($user) {
+            // You can calculate profile completion based on your criteria
+            $profileComplete = $user->profile_completed ?? 0;
+            
+            $profileStatus = [
+                'status' => [
+                    'portfolio' => !empty($profile->portfolio_url),
+                    'experience' => $user->experiences()->count() > 0,
+                    'email_verified' => !is_null($user->email_verified_at),
+                    'skills' => $user->skills()->count() > 0,
+                    'cv_uploaded' => $user->resumes()->count() > 0,
+                ]
+            ];
+        }
+        
         return Inertia::render('Jobs', [
-            'jobs' => $jobs
+            'jobs' => $jobs,
+            'user' => $user,
+            'profile' => $profile,
+            'auth' => [
+                'user' => $user,
+            ],
+            'profileComplete' => $profileComplete,
+            'profileStatus' => $profileStatus,
+            'stats' => null, // Jobs page doesn't need application stats
         ]);
     }
 
@@ -123,9 +176,14 @@ class PageController extends Controller
     public function showTalent($id)
     {
         $talent = User::findOrFail($id);
+        $user = Auth::user();
         
         return Inertia::render('TalentProfile', [
             'talent' => $talent,
+            'user' => $user,
+            'auth' => [
+                'user' => $user,
+            ],
         ]);
     }
 

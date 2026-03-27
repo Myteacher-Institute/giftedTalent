@@ -1,9 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { router } from '@inertiajs/react';
+import { useForm, router } from '@inertiajs/react';
 import axios from 'axios';
 
 export default function ProfileSettings({ user, profile, onUpdate }) {
-    const [formData, setFormData] = useState({
+    const [skills, setSkills] = useState([]);
+    const [newSkill, setNewSkill] = useState('');
+    const [newSkillProficiency, setNewSkillProficiency] = useState('intermediate');
+    const [profileImagePreview, setProfileImagePreview] = useState('');
+    const [uploadingImage, setUploadingImage] = useState(false);
+    const [saveStatus, setSaveStatus] = useState(null);
+    const fileInputRef = useRef(null);
+    
+    // Use Inertia form
+    const { data, setData, put, processing, errors, reset } = useForm({
         name: user?.name || '',
         email: user?.email || '',
         position: profile?.position || '',
@@ -14,18 +23,8 @@ export default function ProfileSettings({ user, profile, onUpdate }) {
         github_url: profile?.github_url || '',
         linkedin_url: profile?.linkedin_url || '',
         twitter_url: profile?.twitter_url || '',
+        skills: [],
     });
-    
-    const [skills, setSkills] = useState([]);
-    const [newSkill, setNewSkill] = useState('');
-    const [newSkillProficiency, setNewSkillProficiency] = useState('intermediate');
-    const [loading, setLoading] = useState(false);
-    const [saving, setSaving] = useState(false);
-    const [saveStatus, setSaveStatus] = useState(null);
-    const [errors, setErrors] = useState({});
-    const [profileImagePreview, setProfileImagePreview] = useState('');
-    const [uploadingImage, setUploadingImage] = useState(false);
-    const fileInputRef = useRef(null);
     
     const proficiencyLevels = [
         { value: 'beginner', label: 'Beginner' },
@@ -34,8 +33,25 @@ export default function ProfileSettings({ user, profile, onUpdate }) {
         { value: 'expert', label: 'Expert' }
     ];
     
+    // Load skills from profile
+    useEffect(() => {
+        const userSkills = profile?.skills || user?.profile?.skills || [];
+        if (userSkills.length > 0) {
+            setSkills(userSkills);
+        }
+    }, []);
+    
+    // Updated getProfileImageUrl to check for base64 first
     const getProfileImageUrl = () => {
+        // Priority 1: Preview image (new upload not yet saved)
         if (profileImagePreview) return profileImagePreview;
+        
+        // Priority 2: Base64 image from database
+        if (profile?.profile_image_base64) {
+            return profile.profile_image_base64;
+        }
+        
+        // Priority 3: Avatar from storage (for backward compatibility)
         if (profile?.avatar_url) return profile.avatar_url;
         if (profile?.avatar) {
             const avatarPath = profile.avatar;
@@ -44,12 +60,15 @@ export default function ProfileSettings({ user, profile, onUpdate }) {
             }
             return `/storage/${avatarPath.replace(/^\/+/, '')}`;
         }
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=4F46E5&color=fff&size=150&bold=true`;
+        
+        // Fallback: Avatar from name
+        const userName = user?.name || 'User';
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
     };
     
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setData(name, value);
         setSaveStatus(null);
     };
     
@@ -59,12 +78,12 @@ export default function ProfileSettings({ user, profile, onUpdate }) {
         
         const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
         if (!allowedTypes.includes(file.type)) {
-            setErrors({ profile_image: 'Please upload a valid image (JPEG, PNG, or WebP)' });
+            setSaveStatus({ type: 'error', message: 'Please upload a valid image (JPEG, PNG, or WebP)' });
             return;
         }
         
         if (file.size > 5 * 1024 * 1024) {
-            setErrors({ profile_image: 'Image size should be less than 5MB' });
+            setSaveStatus({ type: 'error', message: 'Image size should be less than 5MB' });
             return;
         }
         
@@ -85,11 +104,14 @@ export default function ProfileSettings({ user, profile, onUpdate }) {
             
             if (response.data.success) {
                 setSaveStatus({ type: 'success', message: 'Profile picture updated!' });
+                // Update the profile data with new base64 image
+                if (onUpdate && response.data.image) {
+                    onUpdate({ ...profile, profile_image_base64: response.data.image });
+                }
                 setTimeout(() => setSaveStatus(null), 3000);
             }
         } catch (error) {
-            console.error('Error uploading profile picture:', error);
-            setErrors({ profile_image: 'Failed to upload image' });
+            setSaveStatus({ type: 'error', message: 'Failed to upload image' });
         } finally {
             setUploadingImage(false);
         }
@@ -104,10 +126,14 @@ export default function ProfileSettings({ user, profile, onUpdate }) {
             if (response.data.success) {
                 setProfileImagePreview('');
                 setSaveStatus({ type: 'success', message: 'Profile picture removed!' });
+                // Update the profile to clear the base64 image
+                if (onUpdate) {
+                    onUpdate({ ...profile, profile_image_base64: null });
+                }
                 setTimeout(() => setSaveStatus(null), 3000);
             }
         } catch (error) {
-            console.error('Error removing profile picture:', error);
+            setSaveStatus({ type: 'error', message: 'Failed to remove image' });
         } finally {
             setUploadingImage(false);
         }
@@ -115,43 +141,53 @@ export default function ProfileSettings({ user, profile, onUpdate }) {
     
     const handleAddSkill = () => {
         if (!newSkill.trim()) {
-            setErrors({ skill: 'Enter a skill name' });
+            setSaveStatus({ type: 'error', message: 'Enter a skill name' });
             return;
         }
         
         if (skills.some(skill => skill.name?.toLowerCase() === newSkill.toLowerCase())) {
-            setErrors({ skill: 'Skill already exists' });
+            setSaveStatus({ type: 'error', message: 'Skill already exists' });
             return;
         }
         
         setSkills([...skills, { id: Date.now(), name: newSkill.trim(), proficiency: newSkillProficiency }]);
         setNewSkill('');
-        setErrors({});
+        setSaveStatus(null);
     };
     
     const handleRemoveSkill = (skillId) => {
         setSkills(skills.filter(skill => skill.id !== skillId));
     };
     
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setSaving(true);
-        
-        try {
-            const response = await axios.put('/user/profile', { ...formData, skills });
-            if (response.data.success) {
-                setSaveStatus({ type: 'success', message: 'Profile updated successfully!' });
-                if (onUpdate) onUpdate(response.data.profile);
-                setTimeout(() => setSaveStatus(null), 3000);
-            }
-        } catch (error) {
-            setSaveStatus({ type: 'error', message: 'Failed to update profile' });
-        } finally {
-            setSaving(false);
-        }
+    const handleUpdateSkillProficiency = (skillId, proficiency) => {
+        setSkills(skills.map(skill => 
+            skill.id === skillId ? { ...skill, proficiency } : skill
+        ));
     };
     
-    // Styles
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        
+        // Add skills to form data
+        setData('skills', skills);
+        
+        // Submit using Inertia
+        put('/user/profile', {
+            preserveScroll: true,
+            onSuccess: () => {
+                setSaveStatus({ type: 'success', message: 'Profile updated successfully!' });
+                if (onUpdate) onUpdate(data);
+                setTimeout(() => setSaveStatus(null), 3000);
+            },
+            onError: (err) => {
+                console.error('Profile update error:', err);
+                const errorMessages = Object.values(err).flat().join(', ');
+                setSaveStatus({ type: 'error', message: errorMessages || 'Failed to update profile' });
+            }
+        });
+    };
+    
+    // Styles - Fixed duplicate key issue
     const styles = {
         container: { maxWidth: '800px' },
         section: { background: 'white', borderRadius: '12px', padding: '24px', marginBottom: '24px', border: '1px solid #e5e7eb' },
@@ -162,6 +198,7 @@ export default function ProfileSettings({ user, profile, onUpdate }) {
         input: { padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '14px' },
         textarea: { padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '14px', resize: 'vertical', minHeight: '100px' },
         hint: { fontSize: '12px', color: '#6b7280', marginTop: '4px' },
+        errorText: { fontSize: '12px', color: '#ef4444', marginTop: '4px' },
         profileImageContainer: { textAlign: 'center', position: 'relative', display: 'inline-block' },
         profileImage: { width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #4F46E5' },
         imageActions: { position: 'absolute', bottom: '0', right: '0', display: 'flex', gap: '8px' },
@@ -179,13 +216,13 @@ export default function ProfileSettings({ user, profile, onUpdate }) {
         cancelBtn: { padding: '12px 24px', background: 'white', color: '#374151', border: '1px solid #e5e7eb', borderRadius: '8px', cursor: 'pointer' },
         saveStatus: { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', marginBottom: '24px' },
         success: { background: '#f0fdf4', border: '1px solid #86efac', color: '#166534' },
-        error: { background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b' }
+        errorStatus: { background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b' }
     };
     
     return (
         <div style={styles.container}>
             {saveStatus && (
-                <div style={{ ...styles.saveStatus, ...(saveStatus.type === 'success' ? styles.success : styles.error) }}>
+                <div style={{ ...styles.saveStatus, ...(saveStatus.type === 'success' ? styles.success : styles.errorStatus) }}>
                     <i className={`fas fa-${saveStatus.type === 'success' ? 'check-circle' : 'exclamation-circle'}`}></i>
                     <span>{saveStatus.message}</span>
                     <button onClick={() => setSaveStatus(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
@@ -219,23 +256,25 @@ export default function ProfileSettings({ user, profile, onUpdate }) {
                     <div style={styles.formGrid}>
                         <div style={styles.formGroup}>
                             <label style={styles.label}>Full Name *</label>
-                            <input type="text" name="name" value={formData.name} onChange={handleInputChange} style={styles.input} />
+                            <input type="text" name="name" value={data.name} onChange={handleInputChange} style={styles.input} />
+                            {errors.name && <span style={styles.errorText}>{errors.name}</span>}
                         </div>
                         <div style={styles.formGroup}>
                             <label style={styles.label}>Email Address *</label>
-                            <input type="email" name="email" value={formData.email} onChange={handleInputChange} style={styles.input} />
+                            <input type="email" name="email" value={data.email} onChange={handleInputChange} style={styles.input} />
+                            {errors.email && <span style={styles.errorText}>{errors.email}</span>}
                         </div>
                         <div style={styles.formGroup}>
                             <label style={styles.label}>Professional Title</label>
-                            <input type="text" name="position" value={formData.position} onChange={handleInputChange} style={styles.input} placeholder="Senior Software Engineer" />
+                            <input type="text" name="position" value={data.position} onChange={handleInputChange} style={styles.input} placeholder="Senior Software Engineer" />
                         </div>
                         <div style={styles.formGroup}>
                             <label style={styles.label}>Phone Number</label>
-                            <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} style={styles.input} />
+                            <input type="tel" name="phone" value={data.phone} onChange={handleInputChange} style={styles.input} />
                         </div>
                         <div style={styles.formGroup}>
                             <label style={styles.label}>Location</label>
-                            <input type="text" name="location" value={formData.location} onChange={handleInputChange} style={styles.input} />
+                            <input type="text" name="location" value={data.location} onChange={handleInputChange} style={styles.input} />
                         </div>
                     </div>
                 </div>
@@ -243,8 +282,8 @@ export default function ProfileSettings({ user, profile, onUpdate }) {
                 {/* Bio */}
                 <div style={styles.section}>
                     <h3 style={styles.title}><i className="fas fa-align-left"></i> Bio / About</h3>
-                    <textarea name="bio" rows="4" value={formData.bio} onChange={handleInputChange} style={styles.textarea} placeholder="Tell employers about yourself..."></textarea>
-                    <p style={styles.hint}>{formData.bio.length}/500 characters</p>
+                    <textarea name="bio" rows="4" value={data.bio} onChange={handleInputChange} style={styles.textarea} placeholder="Tell employers about yourself..."></textarea>
+                    <p style={styles.hint}>{data.bio.length}/500 characters</p>
                 </div>
                 
                 {/* Skills */}
@@ -254,7 +293,11 @@ export default function ProfileSettings({ user, profile, onUpdate }) {
                         {skills.map(skill => (
                             <div key={skill.id} style={styles.skillItem}>
                                 <span>{skill.name}</span>
-                                <select value={skill.proficiency} onChange={(e) => handleUpdateSkillProficiency?.(skill.id, e.target.value)} style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '12px' }}>
+                                <select 
+                                    value={skill.proficiency} 
+                                    onChange={(e) => handleUpdateSkillProficiency(skill.id, e.target.value)} 
+                                    style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '12px' }}
+                                >
                                     {proficiencyLevels.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
                                 </select>
                                 <button type="button" onClick={() => handleRemoveSkill(skill.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af' }}>×</button>
@@ -262,8 +305,18 @@ export default function ProfileSettings({ user, profile, onUpdate }) {
                         ))}
                     </div>
                     <div style={styles.addSkill}>
-                        <input type="text" value={newSkill} onChange={(e) => setNewSkill(e.target.value)} placeholder="Add a skill..." style={styles.addSkillInput} />
-                        <select value={newSkillProficiency} onChange={(e) => setNewSkillProficiency(e.target.value)} style={styles.addSkillSelect}>
+                        <input 
+                            type="text" 
+                            value={newSkill} 
+                            onChange={(e) => setNewSkill(e.target.value)} 
+                            placeholder="Add a skill..." 
+                            style={styles.addSkillInput} 
+                        />
+                        <select 
+                            value={newSkillProficiency} 
+                            onChange={(e) => setNewSkillProficiency(e.target.value)} 
+                            style={styles.addSkillSelect}
+                        >
                             {proficiencyLevels.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
                         </select>
                         <button type="button" onClick={handleAddSkill} style={styles.addSkillBtn}>Add</button>
@@ -276,29 +329,29 @@ export default function ProfileSettings({ user, profile, onUpdate }) {
                     <div style={styles.formGrid}>
                         <div style={styles.formGroup}>
                             <label style={styles.label}>Portfolio Website</label>
-                            <input type="url" name="portfolio_url" value={formData.portfolio_url} onChange={handleInputChange} style={styles.input} placeholder="https://yourportfolio.com" />
+                            <input type="url" name="portfolio_url" value={data.portfolio_url} onChange={handleInputChange} style={styles.input} placeholder="https://yourportfolio.com" />
                         </div>
                         <div style={styles.formGroup}>
                             <label style={styles.label}>GitHub</label>
-                            <input type="url" name="github_url" value={formData.github_url} onChange={handleInputChange} style={styles.input} placeholder="https://github.com/username" />
+                            <input type="url" name="github_url" value={data.github_url} onChange={handleInputChange} style={styles.input} placeholder="https://github.com/username" />
                         </div>
                         <div style={styles.formGroup}>
                             <label style={styles.label}>LinkedIn</label>
-                            <input type="url" name="linkedin_url" value={formData.linkedin_url} onChange={handleInputChange} style={styles.input} placeholder="https://linkedin.com/in/username" />
+                            <input type="url" name="linkedin_url" value={data.linkedin_url} onChange={handleInputChange} style={styles.input} placeholder="https://linkedin.com/in/username" />
                         </div>
                         <div style={styles.formGroup}>
                             <label style={styles.label}>Twitter/X</label>
-                            <input type="url" name="twitter_url" value={formData.twitter_url} onChange={handleInputChange} style={styles.input} placeholder="https://twitter.com/username" />
+                            <input type="url" name="twitter_url" value={data.twitter_url} onChange={handleInputChange} style={styles.input} placeholder="https://twitter.com/username" />
                         </div>
                     </div>
                 </div>
                 
                 {/* Actions */}
                 <div style={styles.formActions}>
-                    <button type="submit" disabled={saving} style={styles.saveBtn}>
-                        {saving ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-save"></i>} Save Changes
+                    <button type="submit" disabled={processing} style={styles.saveBtn}>
+                        {processing ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-save"></i>} Save Changes
                     </button>
-                    <button type="button" onClick={() => window.location.reload()} style={styles.cancelBtn}>Cancel</button>
+                    <button type="button" onClick={() => reset()} style={styles.cancelBtn}>Cancel</button>
                 </div>
             </form>
         </div>

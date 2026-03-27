@@ -18,157 +18,15 @@ body {
     }
 }
 
-/* NAVBAR */
-header {
-    background: #FFFFFF;
-    border-bottom: 1px solid #eee;
-    padding: 15px 5px;
+/* ==================== HIDE CUSTOM HEADER ==================== */
+/* Since we're using AppLayout navbar, hide the custom header */
+.jobs-page header {
+    display: none;
 }
 
-nav {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-}
-
-/* Desktop nav */
-@media (min-width: 1024px) {
-    nav {
-        flex-direction: row;
-        justify-content: space-evenly;
-        gap: 0;
-    }
-}
-
-.logo {
-    margin: 0;
-    padding: 0;
-}
-
-.svg {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.logo a {
-    color: #4B5563;
-    font-size: 16px;
-    text-align: center;
-    font-weight: 600;
-    margin-right: 0;
-}
-
-@media (min-width: 768px) {
-    .logo a {
-        font-size: 18px;
-        margin-right: 5rem;
-    }
-}
-
-@media (min-width: 1024px) {
-    .logo a {
-        font-size: 20px;
-        margin-right: 10rem;
-    }
-}
-
-.logo a span {
-    color: #3B82F6;
-}
-
-.logo-search {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-}
-
-.search-bar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background-color: #f5f5f5;
-    padding: 5px 10px;
-    width: 90%;
-    max-width: 480px;
-    margin-left: 2rem;
-}
-
-.search-bar input {
-    padding: 10px 15px;
-    width: 100%;
-    border: none;
-    border-radius: 4px;
-    background-color: transparent;
-    font-size: 14px;
-}
-
-.search-bar input:focus {
-    outline: none;
-}
-
-/* Desktop search */
-@media (min-width: 1024px) {
-    .logo-search {
-        width: auto;
-    }
-
-    .search-bar {
-        width: 100%;
-        max-width: 400px;
-    }
-
-    .search-bar input {
-        width: 400px;
-    }
-}
-
-.nav-buttons {
-    display: flex;
-    gap: 10px;
-    width: 100%;
-    justify-content: center;
-}
-
-@media (min-width: 1024px) {
-    .nav-buttons {
-        width: auto;
-    }
-}
-
-.nav-buttons button {
-    padding: 8px 16px;
-    border-radius: 19px;
-    border: none;
-    cursor: pointer;
-    white-space: nowrap;
-    flex: 1;
-}
-
-@media (min-width: 1024px) {
-    .nav-buttons button {
-        padding: 8px 20px;
-        margin-left: 10px;
-        flex: 0 1 auto;
-    }
-}
-
-.nav-buttons button:first-child {
-    background: #FFFFFF;
-    border: 1px solid #0A2463;
-}
-
-.nav-buttons button:last-child {
-    background: #0A2463;
-    color: #FFFFFF;
+/* Adjust jobs page spacing since header is hidden */
+.jobs-page {
+    padding-top: 0;
 }
 
 /* FILTER BUTTONS */
@@ -178,6 +36,7 @@ nav {
     justify-content: center;
     gap: 12px;
     padding: 20px 10px;
+    margin-top: 20px;
 }
 
 /* Desktop filters */
@@ -202,6 +61,12 @@ nav {
     color: #4B5563;
     font-size: 14px;
     min-width: 120px;
+    transition: all 0.2s ease;
+}
+
+.filters button:hover {
+    border-color: #0A2463;
+    background: #f5f5f5;
 }
 
 @media (min-width: 1024px) {
@@ -218,7 +83,7 @@ nav {
     margin-left: 5px;
 }
 
-/* HERO */
+/* HERO SECTION */
 .hero {
     text-align: center;
     padding: 20px 15px;
@@ -263,6 +128,12 @@ nav {
     margin-bottom: 20px;
     width: 100%;
     max-width: 200px;
+    transition: all 0.2s ease;
+}
+
+.find-job-btn:hover {
+    background: #0d2d6e;
+    transform: translateY(-2px);
 }
 
 @media (min-width: 1024px) {
@@ -275,14 +146,6 @@ nav {
 /* JOB SECTION */
 .jobs-section {
     padding: 20px 0;
-}
-
-.jobs-header {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    align-items: center;
-    margin-bottom: 25px;
 }
 
 /* Jobs Header */
@@ -302,7 +165,7 @@ nav {
 }
 
 /* Search container with icon */
-.jobs-header>div {
+.jobs-header > div {
     position: relative;
     width: 100%;
     max-width: 400px;
@@ -317,9 +180,7 @@ nav {
     width: 18px;
     height: 18px;
     fill: #9CA3AF;
-    /* Icon color */
     pointer-events: none;
-    /* Allows clicking through to input */
     z-index: 1;
 }
 
@@ -327,7 +188,6 @@ nav {
 .jobs-header input {
     width: 100%;
     padding: 12px 12px 12px 40px;
-    /* Left padding makes room for icon */
     border: 1px solid #E5E7EB;
     border-radius: 8px;
     font-size: 14px;
@@ -364,14 +224,14 @@ nav {
         text-align: left;
     }
 
-    .jobs-header>div {
+    .jobs-header > div {
         max-width: 100%;
     }
 }
 
-/* Optional: Icon color change on focus */
-.jobs-header input:focus+.svg,
-.jobs-header>div:focus-within .svg {
+/* Icon color change on focus */
+.jobs-header input:focus + .svg,
+.jobs-header > div:focus-within .svg {
     fill: #0A2463;
 }
 
@@ -381,26 +241,6 @@ nav {
         flex-direction: row;
         justify-content: space-between;
     }
-}
-
-.jobs-header h3 {
-    font-size: 18px;
-    font-weight: 600;
-    text-align: center;
-}
-
-@media (min-width: 1024px) {
-    .jobs-header h3 {
-        font-size: 20px;
-    }
-}
-
-.jobs-header input {
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    width: 100%;
-    max-width: 400px;
 }
 
 /* JOB GRID */
@@ -427,11 +267,18 @@ nav {
 /* JOB CARD */
 .job-card {
     width: 100%;
-    max-width: 420px;
     background: #FFFFFF;
     padding: 15px;
-    border-radius: 10px;
+    border-radius: 12px;
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    border: 1px solid #e5e7eb;
+}
+
+.job-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border-color: #0A2463;
 }
 
 @media (min-width: 1024px) {
@@ -441,7 +288,7 @@ nav {
 }
 
 .job-card h3 {
-    margin: 5px 0;
+    margin: 8px 0;
     font-weight: 600;
     color: #0A2463;
     font-size: 18px;
@@ -455,51 +302,58 @@ nav {
 
 .company {
     display: flex;
-    gap: 10px;
+    gap: 12px;
+    align-items: flex-start;
 }
 
 .company .svg {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: #eee;
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    background: #f3f4f6;
     display: flex;
     align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
 .company-header {
     display: flex;
     flex-direction: column;
+    flex: 1;
 }
 
-.company div {
+.company-header div {
     display: flex;
+    align-items: center;
+    gap: 4px;
     flex-wrap: wrap;
-}
-
-@media (min-width: 1024px) {
-    .company div {
-        padding: 0 10px;
-    }
 }
 
 .company h2 {
     font-weight: 600;
-    padding: 0;
-    color: #0A2463;
+    color: #111827;
     font-size: 16px;
-    margin: 4px 0 0 0;
+    margin: 0 0 4px 0;
 }
 
 @media (min-width: 1024px) {
     .company h2 {
-        padding: 0 10px;
+        padding: 0;
     }
 }
 
 .company p {
-    font-size: 13px;
-    color: #4B5563;
+    font-size: 12px;
+    color: #6B7280;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.location-icon {
+    width: 14px;
+    height: 14px;
 }
 
 .job-card .job-description {
@@ -507,22 +361,27 @@ nav {
     color: #4B5563;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 95%;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.5;
+    margin: 12px 0;
 }
 
 @media (min-width: 1024px) {
     .job-card p {
-        margin: 0 10px;
+        margin: 10px 0;
     }
 }
 
 .job-footer {
-    margin: 15px 0 0;
+    margin-top: 16px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     align-items: stretch;
+    border-top: 1px solid #f3f4f6;
+    padding-top: 12px;
 }
 
 @media (min-width: 480px) {
@@ -535,13 +394,13 @@ nav {
 
 @media (min-width: 1024px) {
     .job-footer {
-        margin: 15px 0 0 10px;
+        margin-top: 12px;
     }
 }
 
 .job-footer span {
     font-size: 12px;
-    color: #4B5563;
+    color: #6B7280;
     text-align: center;
 }
 
@@ -555,17 +414,39 @@ nav {
     background: #0A2463;
     color: #FFFFFF;
     border: none;
-    padding: 10px 14px;
-    border-radius: 6px;
+    padding: 10px 16px;
+    border-radius: 8px;
     cursor: pointer;
     width: 100%;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.job-footer button:hover {
+    background: #0d2d6e;
+    transform: translateY(-1px);
 }
 
 @media (min-width: 480px) {
     .job-footer button {
         width: auto;
-        padding: 8px 14px;
+        padding: 8px 20px;
     }
+}
+
+/* NO JOBS MESSAGE */
+.no-jobs-message {
+    text-align: center;
+    padding: 60px 20px;
+    background: #f9fafb;
+    border-radius: 16px;
+    grid-column: 1 / -1;
+}
+
+.no-jobs-message p {
+    color: #6B7280;
+    font-size: 16px;
 }
 
 /* FOOTER */
@@ -574,20 +455,22 @@ footer {
     display: flex;
     flex-direction: column;
     padding: 1.5rem 1rem;
-    margin-top: 1rem;
+    margin-top: 2rem;
     gap: 2rem;
     align-items: center;
     border-top: 1px solid #eee;
     background: #f8f9fc;
+    border-radius: 12px;
 }
 
 /* Desktop footer */
 @media (min-width: 1024px) {
     footer {
         flex-direction: row;
-        padding: 1.5rem 0;
+        padding: 1.5rem 2rem;
         gap: 3rem;
         align-items: center;
+        justify-content: space-between;
     }
 }
 
@@ -609,8 +492,8 @@ footer {
 .footer-left .brand {
     text-decoration: none;
     font-weight: 600;
-    margin-left: 0;
     color: #222;
+    font-size: 18px;
 }
 
 .footer-left .brand span {
@@ -628,8 +511,7 @@ footer {
 @media (min-width: 1024px) {
     .footer-right {
         display: flex;
-        gap: 5rem;
-        margin: 0 3rem;
+        gap: 2rem;
         flex-wrap: nowrap;
     }
 }
@@ -638,16 +520,60 @@ footer {
     text-decoration: none;
     color: #4B5563;
     font-size: 14px;
-    margin-left: 0;
+    transition: color 0.2s ease;
     white-space: nowrap;
-}
-
-@media (min-width: 1024px) {
-    .footer-right a {
-        margin-left: 7.8rem;
-    }
 }
 
 .footer-right a:hover {
     color: #0A2463;
+}
+
+/* ==================== RESPONSIVE ADJUSTMENTS ==================== */
+/* Extra small devices */
+@media (max-width: 480px) {
+    .filters {
+        gap: 8px;
+    }
+    
+    .filters button {
+        padding: 6px 12px;
+        font-size: 12px;
+        min-width: 100px;
+    }
+    
+    .hero h1 {
+        font-size: 20px;
+    }
+    
+    .jobs-header h3 {
+        font-size: 16px;
+    }
+    
+    .job-card {
+        padding: 12px;
+    }
+    
+    .company .svg {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .company h2 {
+        font-size: 14px;
+    }
+    
+    .job-card h3 {
+        font-size: 16px;
+    }
+    
+    .footer-right {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+    }
+    
+    .footer-right a {
+        font-size: 12px;
+        white-space: normal;
+    }
 }

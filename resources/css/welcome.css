@@ -24,6 +24,219 @@ body {
     margin: 0 auto;
 }
 
+/* RESPONSIVE ADDITIONS - ONLY THESE WERE ADDED/CHANGED */
+
+/* Hero section mobile responsiveness - keeping your original colors */
+@media (max-width: 992px) {
+    .hero {
+        flex-direction: column;
+        text-align: center;
+        padding: 100px 40px 40px;
+    }
+    
+    .hero-left {
+        max-width: 100%;
+        margin-bottom: 40px;
+    }
+    
+    .hero-buttons {
+        justify-content: center;
+    }
+    
+    .hero-right {
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 576px) {
+    .hero {
+        padding: 80px 20px 40px;
+    }
+    
+    .hero-left h1 {
+        font-size: 32px;
+    }
+    
+    .hero-left p {
+        font-size: 16px;
+        white-space: normal;
+    }
+    
+    .hero-buttons {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .circle1 {
+        width: 180px;
+        height: 180px;
+        top: 50px;
+        right: -60px;
+    }
+    
+    .circle2 {
+        width: 200px;
+        height: 200px;
+        bottom: -60px;
+        left: -60px;
+    }
+}
+
+/* Search container responsiveness */
+@media (max-width: 992px) {
+    .search-container {
+        width: 90%;
+        padding: 25px;
+        margin: -20px auto 0;
+    }
+    
+    .search-box {
+        flex-direction: column;
+    }
+    
+    .search-inputs {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .input-with-icon {
+        width: 100%;
+    }
+    
+    .search-button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .search-container {
+        padding: 20px;
+        margin: -10px auto 0;
+    }
+    
+    .search-box input {
+        height: 48px;
+        font-size: 14px;
+    }
+    
+    .search-button {
+        height: 48px;
+    }
+}
+
+/* Jobs grid responsiveness */
+@media (max-width: 768px) {
+    .jobs-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .feature-jobs,
+    .featured-talents {
+        padding: 60px 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .feature-jobs,
+    .featured-talents {
+        padding: 40px 12px;
+    }
+    
+    .job-buttons {
+        flex-direction: column;
+    }
+    
+    .apply-btn,
+    .save-btn {
+        width: 100%;
+    }
+}
+
+/* Talent cards responsiveness */
+@media (max-width: 768px) {
+    .feature-talent-content {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+}
+
+/* Toast responsiveness - keeping your original colors */
+@media (max-width: 640px) {
+    .toast-notification {
+        left: 20px;
+        right: 20px;
+        min-width: auto;
+        max-width: none;
+    }
+    
+    .toast-content {
+        padding: 14px 16px;
+    }
+    
+    .toast-message {
+        font-size: 13px;
+    }
+}
+
+/* Auth modal responsiveness - keeping your original colors */
+@media (max-width: 640px) {
+    .auth-modal-content {
+        padding: 32px 24px;
+    }
+    
+    .auth-modal h2 {
+        font-size: 24px;
+    }
+    
+    .auth-modal-buttons {
+        flex-direction: column;
+    }
+    
+    .auth-modal-icon {
+        width: 64px;
+        height: 64px;
+    }
+    
+    .auth-modal-icon svg {
+        width: 32px;
+        height: 32px;
+    }
+}
+
+/* Touch-friendly buttons - adds min-height without changing appearance */
+@media (max-width: 768px) {
+    button,
+    .btn-primary,
+    .btn-secondary,
+    .search-button,
+    .apply-btn,
+    .save-btn {
+        min-height: 48px;
+    }
+}
+
+/* Prevent overflow */
+@media (max-width: 480px) {
+    * {
+        max-width: 100%;
+    }
+    
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+}
+
+/* Keep your original styles below - unchanged */
 @media (max-width: 768px) {
     .feature-jobs,
     .featured-talents {
@@ -41,7 +254,6 @@ body {
         padding: 40px 12px;
     }
     
-    /* Prevent any overflow */
     * {
         max-width: 100%;
     }
@@ -65,10 +277,7 @@ body {
     }
 }
 
-
-
-
-/* Toast Notification Styles */
+/* Toast Notification Styles - YOUR ORIGINAL STYLES */
 .toast-notification {
     position: fixed;
     top: 100px;
@@ -187,7 +396,7 @@ body {
     }
 }
 
-/* Responsive adjustments */
+/* Responsive adjustments for toast - YOUR ORIGINAL */
 @media (max-width: 640px) {
     .toast-notification {
         left: 20px;
@@ -205,9 +414,7 @@ body {
     }
 }
 
-
-
-/* Auth Modal Styles */
+/* Auth Modal Styles - YOUR ORIGINAL */
 .auth-modal-overlay {
     position: fixed;
     top: 0;
@@ -381,7 +588,7 @@ body {
     }
 }
 
-/* Responsive adjustments */
+/* Responsive adjustments for auth modal - YOUR ORIGINAL */
 @media (max-width: 640px) {
     .auth-modal-content {
         padding: 32px 24px;
@@ -405,8 +612,6 @@ body {
         height: 32px;
     }
 }
-
-
 
 .job-buttons {
     display: flex;
@@ -432,8 +637,7 @@ body {
     border-color: #d1d5db;
 }
 
-
-/* Featured Talents - Dynamic Version */
+/* Featured Talents - Dynamic Version - YOUR ORIGINAL */
 .feature-talent-avatar-initials {
     width: 80px;
     height: 80px;
