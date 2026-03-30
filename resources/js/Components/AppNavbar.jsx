@@ -1,9 +1,9 @@
 // resources/js/Components/AppNavbar.jsx
 import { Link, router } from '@inertiajs/react';
 import Notification from './Notification';
-import { useState } from 'react';
 
 const AppNavbar = ({ user, newJobsCount, onMenuToggle }) => {
+
     const getProfileImageUrl = () => {
         if (user?.profile?.avatar_url) {
             return user.profile.avatar_url;
@@ -24,6 +24,13 @@ const AppNavbar = ({ user, newJobsCount, onMenuToggle }) => {
         return fallbackUrl;
     };
 
+    const handleMenuToggle = () => {
+        // This will toggle the sidebar in Settings page
+        if (onMenuToggle) {
+            onMenuToggle();
+        }
+    };
+
     return (
         <header className="navbar">
             <div className="logo">
@@ -38,8 +45,8 @@ const AppNavbar = ({ user, newJobsCount, onMenuToggle }) => {
                 <Link href="#">Hire</Link>
             </nav>
 
-            {/* Single Hamburger Menu - Opens Sidebar on Mobile */}
-            <button className="mobile-menu-toggle" onClick={onMenuToggle}>
+            {/* Hamburger Menu Button - Only for Settings page sidebar */}
+            <button className="mobile-menu-toggle" onClick={handleMenuToggle}>
                 <i className="fas fa-bars"></i>
             </button>
 

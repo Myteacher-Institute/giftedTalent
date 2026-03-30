@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import AppNavbar from '../Components/AppNavbar';
-import AppLayout from '../Layouts/AppLayout';
 import '../../css/Dashboard.css';
 
-export default function AppLayout({ children, user, newJobsCount = 0, profile, profileComplete, profileStatus, stats }) {
+export default function DashboardLayout({ children, user, newJobsCount = 0, profile, profileComplete, profileStatus, stats }) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const toggleMobileMenu = () => {

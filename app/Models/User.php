@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -56,9 +57,9 @@ class User extends Authenticatable
     /**
      * Get the user's profile.
      */
-    public function profile(): BelongsTo
+    public function profile(): HasOne
     {
-        return $this->belongsTo(Profile::class, 'user_id', 'user_id');
+        return $this->hasOne(Profile::class, 'user_id', 'id');
     }
 
     /**
@@ -125,5 +126,76 @@ class User extends Authenticatable
     public function hasSavedJob($jobId): bool
     {
         return $this->savedJobs()->where('job_id', $jobId)->where('is_saved', true)->exists();
+    }
+
+    /**
+     * Calculate profile completion percentage using data from all related tables
+     * 
+     * @return int Percentage of profile completion (0-100)
+     */
+    public function calculateProfileCompletion()
+    {
+        $score = 0;
+        $total = 12; // Total fields to check
+        
+        // === FROM USERS TABLE ===
+        // Personal Information (2 points)
+        if (!empty($this->name)) $score++;
+        if (!empty($this->email)) $score++;
+        
+        // Employment Details from users table (2 points)
+        if (!empty($this->availability_status)) $score++;
+        if (!empty($this->employment_type)) $score++;
+        
+        // === FROM PROFILES TABLE (via relationship) ===
+        $profile = $this->profile;
+        
+        if ($profile) {
+            // Professional Details (3 points)
+            if (!empty($profile->title) || !empty($profile->position)) $score++;
+            if (!empty($profile->company)) $score++;
+            if (!empty($profile->bio)) $score++;
+            
+            // Contact & Location (2 points)
+            if (!empty($profile->phone)) $score++;
+            if (!empty($profile->address) || !empty($profile->city)) $score++;
+            
+            // Education (1 point)
+            if (!empty($profile->education)) $score++;
+            
+            // Social Links (1 point) - at least one social link
+            if (!empty($profile->portfolio_url) || !empty($profile->github_url) || !empty($profile->linkedin_url)) {
+                $score++;
+            }
+        }
+        
+        // === FROM SKILLS TABLE (via relationship) ===
+        if ($this->skills()->count() > 0) {
+            $score++;
+        }
+        
+        // === FROM RESUMES TABLE (via relationship) ===
+        if ($this->resumes()->count() > 0) {
+            $score++;
+        }
+        
+        // Calculate percentage
+        $percentage = round(($score / $total) * 100);
+        
+        // Cap at 100
+        return min($percentage, 100);
+    }
+
+    /**
+     * Update profile completion percentage and save to database
+     * 
+     * @return int The updated completion percentage
+     */
+    public function updateProfileCompletion()
+    {
+        $this->profile_completed = $this->calculateProfileCompletion();
+        $this->save();
+        
+        return $this->profile_completed;
     }
 }

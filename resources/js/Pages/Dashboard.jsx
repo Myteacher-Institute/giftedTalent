@@ -145,12 +145,17 @@ export default function Dashboard({
             return profile.profile_image_base64;
         }
         
-        // Priority 2: Avatar URL from profile
+        // Priority 2: Base64 image from currentUser's profile
+        if (currentUser?.profile?.profile_image_base64) {
+            return currentUser.profile.profile_image_base64;
+        }
+        
+        // Priority 3: Avatar URL from profile
         if (profile?.avatar_url) {
             return profile.avatar_url;
         }
         
-        // Priority 3: Avatar from profile storage
+        // Priority 4: Avatar from profile storage
         if (profile?.avatar) {
             const avatarPath = profile.avatar;
             if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
@@ -161,7 +166,7 @@ export default function Dashboard({
             return fullUrl;
         }
         
-        // Priority 4: Avatar from users table (backward compatibility)
+        // Priority 5: Avatar from users table (backward compatibility)
         if (currentUser?.avatar) {
             const avatarPath = currentUser.avatar;
             if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
@@ -397,7 +402,8 @@ export default function Dashboard({
                         </div>
 
                         <h3>{currentUser?.name || 'User'}</h3>
-                        <p>{profile?.title || profile?.position || 'Add position'}</p>
+                        {/* Show title from users table, fallback to profile table */}
+                        <p>{currentUser?.title || profile?.title || profile?.position || 'Add position'}</p>
                         <button>
                             <Link href="/profile/edit" className="profile-button">Edit Profile</Link>
                         </button>
@@ -453,7 +459,6 @@ export default function Dashboard({
                 <main className="main">
                     {/* Rest of your main content remains the same */}
                     {showSavedJobs ? (
-                        // ... keep your existing saved jobs content
                         <div className="flex justify-between items-center mb-4">
                             <h1>Saved Jobs</h1>
                             <button onClick={handleShowAllJobs} className="text-blue-500 hover:text-blue-700">
@@ -625,7 +630,6 @@ export default function Dashboard({
                 </main>
 
                 <aside className="right-panel">
-                    {/* Keep your existing right panel content */}
                     <div className="progress-card">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold text-gray-800">Profile Strength</h3>
@@ -669,42 +673,58 @@ export default function Dashboard({
                             </div>
                         </div>
                         
+                        {/* UPDATED CHECKLIST - Checking BOTH users table AND profiles table */}
                         <ul className="mt-6 space-y-2">
-                            <li className={profile?.title || profile?.position ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
-                                <i className={`fas ${profile?.title || profile?.position ? 'fa-check-circle text-green-500' : 'fa-plus-circle text-gray-400'} mr-2`}></i>
+                            {/* Title - Check users table first, then profile table */}
+                            <li className={(currentUser?.title || profile?.title || profile?.position) ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
+                                <i className={`fas ${(currentUser?.title || profile?.title || profile?.position) ? 'fa-check-circle text-green-500' : 'fa-plus-circle text-gray-400'} mr-2`}></i>
                                 Professional Title
-                                {!profile?.title && !profile?.position && <span className="text-xs text-gray-400 ml-2">(Add your job title)</span>}
+                                {!(currentUser?.title || profile?.title || profile?.position) && <span className="text-xs text-gray-400 ml-2">(Add your job title)</span>}
                             </li>
-                            <li className={profile?.company ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
-                                <i className={`fas ${profile?.company ? 'fa-check-circle text-green-500' : 'fa-plus-circle text-gray-400'} mr-2`}></i>
+                            
+                            {/* Company - Check users table first, then profile table */}
+                            <li className={(currentUser?.company || profile?.company) ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
+                                <i className={`fas ${(currentUser?.company || profile?.company) ? 'fa-check-circle text-green-500' : 'fa-plus-circle text-gray-400'} mr-2`}></i>
                                 Current Company
-                                {!profile?.company && <span className="text-xs text-gray-400 ml-2">(Where do you work?)</span>}
+                                {!(currentUser?.company || profile?.company) && <span className="text-xs text-gray-400 ml-2">(Where do you work?)</span>}
                             </li>
-                            <li className={profile?.bio ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
-                                <i className={`fas ${profile?.bio ? 'fa-check-circle text-green-500' : 'fa-plus-circle text-gray-400'} mr-2`}></i>
+                            
+                            {/* Bio - Check users table first, then profile table */}
+                            <li className={(currentUser?.bio || profile?.bio) ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
+                                <i className={`fas ${(currentUser?.bio || profile?.bio) ? 'fa-check-circle text-green-500' : 'fa-plus-circle text-gray-400'} mr-2`}></i>
                                 Professional Bio
-                                {!profile?.bio && <span className="text-xs text-gray-400 ml-2">(Tell employers about yourself)</span>}
+                                {!(currentUser?.bio || profile?.bio) && <span className="text-xs text-gray-400 ml-2">(Tell employers about yourself)</span>}
                             </li>
+                            
+                            {/* Skills - Check profileStatus */}
                             <li className={profileStatus.status?.skills ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
                                 <i className={`fas ${profileStatus.status?.skills ? 'fa-check-circle text-green-500' : 'fa-plus-circle text-gray-400'} mr-2`}></i>
                                 Skills & Expertise
                                 {!profileStatus.status?.skills && <span className="text-xs text-gray-400 ml-2">(Add your top skills)</span>}
                             </li>
-                            <li className={profile?.phone ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
-                                <i className={`fas ${profile?.phone ? 'fa-check-circle text-green-500' : 'fa-plus-circle text-gray-400'} mr-2`}></i>
+                            
+                            {/* Phone - Check users table first, then profile table */}
+                            <li className={(currentUser?.phone || profile?.phone) ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
+                                <i className={`fas ${(currentUser?.phone || profile?.phone) ? 'fa-check-circle text-green-500' : 'fa-plus-circle text-gray-400'} mr-2`}></i>
                                 Contact Information
-                                {!profile?.phone && <span className="text-xs text-gray-400 ml-2">(Add phone number)</span>}
+                                {!(currentUser?.phone || profile?.phone) && <span className="text-xs text-gray-400 ml-2">(Add phone number)</span>}
                             </li>
-                            <li className={profile?.address ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
-                                <i className={`fas ${profile?.address ? 'fa-check-circle text-green-500' : 'fa-plus-circle text-gray-400'} mr-2`}></i>
+                            
+                            {/* Location - Check users table, also check profile address/city */}
+                            <li className={(currentUser?.location || profile?.address || profile?.city) ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
+                                <i className={`fas ${(currentUser?.location || profile?.address || profile?.city) ? 'fa-check-circle text-green-500' : 'fa-plus-circle text-gray-400'} mr-2`}></i>
                                 Location
-                                {!profile?.address && <span className="text-xs text-gray-400 ml-2">(Where are you based?)</span>}
+                                {!(currentUser?.location || profile?.address || profile?.city) && <span className="text-xs text-gray-400 ml-2">(Where are you based?)</span>}
                             </li>
-                            <li className={profile?.portfolio_url ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
-                                <i className={`fas ${profile?.portfolio_url ? 'fa-check-circle text-green-500' : 'fa-plus-circle text-gray-400'} mr-2`}></i>
+                            
+                            {/* Portfolio - Check users table first, then profile table */}
+                            <li className={(currentUser?.portfolio_url || profile?.portfolio_url) ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
+                                <i className={`fas ${(currentUser?.portfolio_url || profile?.portfolio_url) ? 'fa-check-circle text-green-500' : 'fa-plus-circle text-gray-400'} mr-2`}></i>
                                 Portfolio / Website
-                                {!profile?.portfolio_url && <span className="text-xs text-gray-400 ml-2">(Showcase your work)</span>}
+                                {!(currentUser?.portfolio_url || profile?.portfolio_url) && <span className="text-xs text-gray-400 ml-2">(Showcase your work)</span>}
                             </li>
+                            
+                            {/* CV / Resume */}
                             <li className={hasCV ? 'done' : ''} onClick={() => router.visit('/cv')}>
                                 <i className={`fas ${hasCV ? 'fa-check-circle text-green-500' : 'fa-plus-circle text-gray-400'} mr-2`}></i>
                                 CV / Resume
@@ -759,7 +779,6 @@ export default function Dashboard({
                 onMarkAsRead={markMessageAsRead}
             />
 
-            {/* Mobile Menu Overlay - Removed duplicate hamburger button */}
             <div className={`mobile-overlay ${isMobileMenuOpen ? 'active' : ''}`} onClick={toggleMobileMenu}></div>
         </>
     );

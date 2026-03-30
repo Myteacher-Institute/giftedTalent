@@ -101,7 +101,6 @@ export default function JobPreferences({ user }) {
                     show_urgent_jobs: savedPrefs.show_urgent_jobs !== undefined ? savedPrefs.show_urgent_jobs : true,
                 });
                 
-                // Show success message that preferences loaded
                 setSaveStatus({ type: 'success', message: 'Preferences loaded!' });
                 setTimeout(() => setSaveStatus(null), 2000);
             }
@@ -222,7 +221,9 @@ export default function JobPreferences({ user }) {
         saveStatus: { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', marginBottom: '24px' },
         success: { background: '#f0fdf4', border: '1px solid #86efac', color: '#166534' },
         error: { background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b' },
-        loadingSpinner: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '40px', color: '#6b7280' }
+        loadingSpinner: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '40px', color: '#6b7280' },
+        twoColumn: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' },
+        industriesGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '12px' }
     };
     
     if (loading) {
@@ -250,12 +251,15 @@ export default function JobPreferences({ user }) {
                     <h3 style={styles.title}><i className="fas fa-briefcase"></i> Job Types</h3>
                     <p style={styles.description}>Select the types of jobs you're interested in</p>
                     <div style={styles.optionsGrid}>
-                        {jobTypeOptions.map(type => (
-                            <label key={type} style={styles.optionCard}>
-                                <input type="checkbox" checked={preferences.job_types.includes(type)} onChange={() => handleMultiSelect('job_types', type)} />
-                                <span>{type}</span>
-                            </label>
-                        ))}
+                        {jobTypeOptions.map(type => {
+                            const optionId = `job-type-${type.replace(/\s+/g, '-').toLowerCase()}`;
+                            return (
+                                <label key={type} htmlFor={optionId} style={styles.optionCard}>
+                                    <input id={optionId} name="job_types" type="checkbox" checked={preferences.job_types.includes(type)} onChange={() => handleMultiSelect('job_types', type)} />
+                                    <span>{type}</span>
+                                </label>
+                            );
+                        })}
                     </div>
                 </div>
                 
@@ -264,16 +268,19 @@ export default function JobPreferences({ user }) {
                     <h3 style={styles.title}><i className="fas fa-building"></i> Employment Types</h3>
                     <p style={styles.description}>Choose how you prefer to work</p>
                     <div style={styles.optionsGrid}>
-                        {employmentTypeOptions.map(type => (
-                            <label key={type} style={styles.optionCard}>
-                                <input type="checkbox" checked={preferences.employment_types.includes(type)} onChange={() => handleMultiSelect('employment_types', type)} />
-                                <span>{type}</span>
-                            </label>
-                        ))}
+                        {employmentTypeOptions.map(type => {
+                            const optionId = `employment-type-${type.replace(/\s+/g, '-').toLowerCase()}`;
+                            return (
+                                <label key={type} htmlFor={optionId} style={styles.optionCard}>
+                                    <input id={optionId} name="employment_types" type="checkbox" checked={preferences.employment_types.includes(type)} onChange={() => handleMultiSelect('employment_types', type)} />
+                                    <span>{type}</span>
+                                </label>
+                            );
+                        })}
                     </div>
                     
-                    <label style={styles.toggleSwitch}>
-                        <input type="checkbox" checked={preferences.remote_only} onChange={() => handleToggle('remote_only')} style={{ opacity: 0, width: 0, height: 0 }} />
+                    <label htmlFor="remote-only" style={styles.toggleSwitch}>
+                        <input id="remote-only" name="remote_only" type="checkbox" checked={preferences.remote_only} onChange={() => handleToggle('remote_only')} style={{ opacity: 0, width: 0, height: 0 }} />
                         <span style={{ ...styles.toggleSlider, ...(preferences.remote_only ? styles.toggleSliderActive : {}) }}>
                             <span style={styles.toggleSliderBefore}></span>
                         </span>
@@ -282,8 +289,8 @@ export default function JobPreferences({ user }) {
                     
                     {!preferences.remote_only && (
                         <div style={styles.formGroup}>
-                            <label style={styles.label}>Maximum commute distance (miles)</label>
-                            <input type="range" min="0" max="200" value={preferences.max_commute_distance} onChange={(e) => handleChange('max_commute_distance', parseInt(e.target.value))} style={styles.rangeSlider} />
+                            <label htmlFor="max-commute" style={styles.label}>Maximum commute distance (miles)</label>
+                            <input id="max-commute" name="max_commute_distance" type="range" min="0" max="200" value={preferences.max_commute_distance} onChange={(e) => handleChange('max_commute_distance', parseInt(e.target.value))} style={styles.rangeSlider} />
                             <span style={styles.rangeValue}>{preferences.max_commute_distance} miles</span>
                         </div>
                     )}
@@ -295,7 +302,8 @@ export default function JobPreferences({ user }) {
                     <p style={styles.description}>Select preferred locations</p>
                     
                     <div style={styles.formGroup}>
-                        <input type="text" placeholder="Add a location..." style={styles.input} onKeyPress={(e) => { if (e.key === 'Enter' && e.target.value) { handleAddLocation(e.target.value); e.target.value = ''; e.preventDefault(); } }} />
+                        <label htmlFor="location-input" style={styles.label}>Add a location</label>
+                        <input id="location-input" name="location" type="text" placeholder="Add a location..." style={styles.input} onKeyPress={(e) => { if (e.key === 'Enter' && e.target.value) { handleAddLocation(e.target.value); e.target.value = ''; e.preventDefault(); } }} />
                     </div>
                     
                     <div style={styles.selectedItems}>
@@ -320,24 +328,24 @@ export default function JobPreferences({ user }) {
                 {/* Salary Preferences */}
                 <div style={styles.section}>
                     <h3 style={styles.title}><i className="fas fa-dollar-sign"></i> Salary Expectations</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+                    <div style={styles.twoColumn}>
                         <div style={styles.formGroup}>
-                            <label style={styles.label}>Minimum Salary</label>
-                            <input type="number" value={preferences.salary_min} onChange={(e) => handleChange('salary_min', e.target.value)} placeholder="30,000" style={styles.input} />
+                            <label htmlFor="salary-min" style={styles.label}>Minimum Salary</label>
+                            <input id="salary-min" name="salary_min" type="number" value={preferences.salary_min} onChange={(e) => handleChange('salary_min', e.target.value)} placeholder="30,000" style={styles.input} />
                         </div>
                         <div style={styles.formGroup}>
-                            <label style={styles.label}>Maximum Salary</label>
-                            <input type="number" value={preferences.salary_max} onChange={(e) => handleChange('salary_max', e.target.value)} placeholder="100,000" style={styles.input} />
+                            <label htmlFor="salary-max" style={styles.label}>Maximum Salary</label>
+                            <input id="salary-max" name="salary_max" type="number" value={preferences.salary_max} onChange={(e) => handleChange('salary_max', e.target.value)} placeholder="100,000" style={styles.input} />
                         </div>
-                        <div style={styles.formGroup}>
-                            <label style={styles.label}>Currency</label>
-                            <select value={preferences.salary_currency} onChange={(e) => handleChange('salary_currency', e.target.value)} style={styles.select}>
-                                <option value="USD">USD - US Dollar</option>
-                                <option value="EUR">EUR - Euro</option>
-                                <option value="GBP">GBP - British Pound</option>
-                                <option value="CAD">CAD - Canadian Dollar</option>
-                            </select>
-                        </div>
+                    </div>
+                    <div style={styles.formGroup}>
+                        <label htmlFor="salary-currency" style={styles.label}>Currency</label>
+                        <select id="salary-currency" name="salary_currency" value={preferences.salary_currency} onChange={(e) => handleChange('salary_currency', e.target.value)} style={styles.select}>
+                            <option value="USD">USD - US Dollar</option>
+                            <option value="EUR">EUR - Euro</option>
+                            <option value="GBP">GBP - British Pound</option>
+                            <option value="CAD">CAD - Canadian Dollar</option>
+                        </select>
                     </div>
                 </div>
                 
@@ -357,22 +365,24 @@ export default function JobPreferences({ user }) {
                 <div style={styles.section}>
                     <h3 style={styles.title}><i className="fas fa-chart-pie"></i> Industries</h3>
                     <p style={styles.description}>Select industries you're interested in</p>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '12px' }}>
-                        {industriesList.map(industry => (
-                            <label key={industry} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: '#f9fafb', borderRadius: '8px', cursor: 'pointer' }}>
-                                <input type="checkbox" checked={preferences.industries.includes(industry)} onChange={() => handleMultiSelect('industries', industry)} />
-                                <span>{industry}</span>
-                            </label>
-                        ))}
+                    <div style={styles.industriesGrid}>
+                        {industriesList.map(industry => {
+                            const industryId = `industry-${industry.replace(/\s+/g, '-').toLowerCase()}`;
+                            return (
+                                <label key={industry} htmlFor={industryId} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: '#f9fafb', borderRadius: '8px', cursor: 'pointer' }}>
+                                    <input id={industryId} name="industries" type="checkbox" checked={preferences.industries.includes(industry)} onChange={() => handleMultiSelect('industries', industry)} />
+                                    <span>{industry}</span>
+                                </label>
+                            );
+                        })}
                     </div>
                 </div>
                 
                 {/* Job Alerts */}
                 <div style={styles.section}>
                     <h3 style={styles.title}><i className="fas fa-bell"></i> Job Alerts</h3>
-                    
-                    <label style={styles.toggleSwitch}>
-                        <input type="checkbox" checked={preferences.job_alerts_enabled} onChange={() => handleToggle('job_alerts_enabled')} style={{ opacity: 0, width: 0, height: 0 }} />
+                    <label htmlFor="job-alerts-enabled" style={styles.toggleSwitch}>
+                        <input id="job-alerts-enabled" name="job_alerts_enabled" type="checkbox" checked={preferences.job_alerts_enabled} onChange={() => handleToggle('job_alerts_enabled')} style={{ opacity: 0, width: 0, height: 0 }} />
                         <span style={{ ...styles.toggleSlider, ...(preferences.job_alerts_enabled ? styles.toggleSliderActive : {}) }}>
                             <span style={styles.toggleSliderBefore}></span>
                         </span>
@@ -394,8 +404,8 @@ export default function JobPreferences({ user }) {
                             </div>
                             
                             <div style={styles.formGroup}>
-                                <label style={styles.label}>Alert Email</label>
-                                <input type="email" value={preferences.alert_email} onChange={(e) => handleChange('alert_email', e.target.value)} style={styles.input} />
+                                <label htmlFor="alert-email" style={styles.label}>Alert Email</label>
+                                <input id="alert-email" name="alert_email" type="email" value={preferences.alert_email} onChange={(e) => handleChange('alert_email', e.target.value)} style={styles.input} />
                                 <p style={styles.description}>We'll send job alerts to this email address</p>
                             </div>
                         </>
@@ -404,25 +414,25 @@ export default function JobPreferences({ user }) {
                 
                 {/* Additional Filters */}
                 <div style={styles.section}>
-                    <h3 style={styles.title}><i className="fas fa-filter"></i> Additional Filters</h3>
+                    <h3 style={styles.title}><i className="fas fa-sliders-h"></i> Additional Filters</h3>
                     
                     <div style={{ marginBottom: '16px' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                            <input type="checkbox" checked={preferences.show_remote_jobs} onChange={() => handleToggle('show_remote_jobs')} />
+                        <label htmlFor="show-remote-jobs" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                            <input id="show-remote-jobs" name="show_remote_jobs" type="checkbox" checked={preferences.show_remote_jobs} onChange={() => handleToggle('show_remote_jobs')} />
                             <span>Show remote jobs in recommendations</span>
                         </label>
                     </div>
                     
                     <div style={{ marginBottom: '16px' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                            <input type="checkbox" checked={preferences.show_urgent_jobs} onChange={() => handleToggle('show_urgent_jobs')} />
+                        <label htmlFor="show-urgent-jobs" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                            <input id="show-urgent-jobs" name="show_urgent_jobs" type="checkbox" checked={preferences.show_urgent_jobs} onChange={() => handleToggle('show_urgent_jobs')} />
                             <span>Highlight urgent/featured jobs</span>
                         </label>
                     </div>
                     
                     <div style={styles.formGroup}>
-                        <label style={styles.label}>Minimum match score for recommendations</label>
-                        <input type="range" min="0" max="100" step="10" value={preferences.minimum_match_score} onChange={(e) => handleChange('minimum_match_score', parseInt(e.target.value))} style={styles.rangeSlider} />
+                        <label htmlFor="minimum-match-score" style={styles.label}>Minimum match score for recommendations</label>
+                        <input id="minimum-match-score" name="minimum_match_score" type="range" min="0" max="100" step="10" value={preferences.minimum_match_score} onChange={(e) => handleChange('minimum_match_score', parseInt(e.target.value))} style={styles.rangeSlider} />
                         <span style={styles.rangeValue}>{preferences.minimum_match_score}%</span>
                     </div>
                 </div>

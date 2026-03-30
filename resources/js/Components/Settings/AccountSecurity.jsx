@@ -47,7 +47,7 @@ export default function AccountSecurity({ user }) {
         updateBtn: { padding: '12px 24px', background: '#4F46E5', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px' },
         saveStatus: { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', marginBottom: '24px' },
         success: { background: '#f0fdf4', border: '1px solid #86efac', color: '#166534' },
-        error: { background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b' }
+        errorStatus: { background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b' }
     };
     
     const handleUpdatePassword = async (e) => {
@@ -75,7 +75,7 @@ export default function AccountSecurity({ user }) {
     return (
         <div style={styles.container}>
             {saveStatus && (
-                <div style={{ ...styles.saveStatus, ...(saveStatus.type === 'success' ? styles.success : styles.error) }}>
+                <div style={{ ...styles.saveStatus, ...(saveStatus.type === 'success' ? styles.success : styles.errorStatus) }}>
                     <i className={`fas fa-${saveStatus.type === 'success' ? 'check-circle' : 'exclamation-circle'}`}></i>
                     <span>{saveStatus.message}</span>
                     <button onClick={() => setSaveStatus(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
@@ -101,9 +101,9 @@ export default function AccountSecurity({ user }) {
                     
                     <form onSubmit={handleUpdatePassword}>
                         <div style={styles.formGroup}>
-                            <label style={styles.label}>Current Password</label>
+                            <label htmlFor="current-password" style={styles.label}>Current Password</label>
                             <div style={styles.inputWrapper}>
-                                <input type={showPassword.current ? 'text' : 'password'} name="current_password" value={formData.current_password} onChange={(e) => setFormData({...formData, current_password: e.target.value})} style={styles.input} />
+                                <input id="current-password" type={showPassword.current ? 'text' : 'password'} name="current_password" autoComplete="current-password" value={formData.current_password} onChange={(e) => setFormData({...formData, current_password: e.target.value})} style={styles.input} />
                                 <button type="button" onClick={() => setShowPassword({...showPassword, current: !showPassword.current})} style={styles.toggleBtn}>
                                     <i className={`fas fa-eye${showPassword.current ? '' : '-slash'}`}></i>
                                 </button>
@@ -111,9 +111,9 @@ export default function AccountSecurity({ user }) {
                         </div>
                         
                         <div style={styles.formGroup}>
-                            <label style={styles.label}>New Password</label>
+                            <label htmlFor="new-password" style={styles.label}>New Password</label>
                             <div style={styles.inputWrapper}>
-                                <input type={showPassword.new ? 'text' : 'password'} name="new_password" value={formData.new_password} onChange={(e) => setFormData({...formData, new_password: e.target.value})} style={styles.input} />
+                                <input id="new-password" type={showPassword.new ? 'text' : 'password'} name="new_password" autoComplete="new-password" value={formData.new_password} onChange={(e) => setFormData({...formData, new_password: e.target.value})} style={styles.input} />
                                 <button type="button" onClick={() => setShowPassword({...showPassword, new: !showPassword.new})} style={styles.toggleBtn}>
                                     <i className={`fas fa-eye${showPassword.new ? '' : '-slash'}`}></i>
                                 </button>
@@ -121,9 +121,9 @@ export default function AccountSecurity({ user }) {
                         </div>
                         
                         <div style={styles.formGroup}>
-                            <label style={styles.label}>Confirm New Password</label>
+                            <label htmlFor="confirm-password" style={styles.label}>Confirm New Password</label>
                             <div style={styles.inputWrapper}>
-                                <input type={showPassword.confirm ? 'text' : 'password'} name="new_password_confirmation" value={formData.new_password_confirmation} onChange={(e) => setFormData({...formData, new_password_confirmation: e.target.value})} style={styles.input} />
+                                <input id="confirm-password" type={showPassword.confirm ? 'text' : 'password'} name="new_password_confirmation" autoComplete="new-password" value={formData.new_password_confirmation} onChange={(e) => setFormData({...formData, new_password_confirmation: e.target.value})} style={styles.input} />
                                 <button type="button" onClick={() => setShowPassword({...showPassword, confirm: !showPassword.confirm})} style={styles.toggleBtn}>
                                     <i className={`fas fa-eye${showPassword.confirm ? '' : '-slash'}`}></i>
                                 </button>

@@ -9,7 +9,14 @@ export default function ProfileSettings({ user, profile, onUpdate }) {
     const [profileImagePreview, setProfileImagePreview] = useState('');
     const [uploadingImage, setUploadingImage] = useState(false);
     const [saveStatus, setSaveStatus] = useState(null);
+    const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
     const fileInputRef = useRef(null);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
     
     // Use Inertia form
     const { data, setData, put, processing, errors, reset } = useForm({
@@ -192,7 +199,7 @@ export default function ProfileSettings({ user, profile, onUpdate }) {
         container: { maxWidth: '800px' },
         section: { background: 'white', borderRadius: '12px', padding: '24px', marginBottom: '24px', border: '1px solid #e5e7eb' },
         title: { fontSize: '18px', fontWeight: '600', marginBottom: '20px', color: '#1f2937', display: 'flex', alignItems: 'center', gap: '8px' },
-        formGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' },
+        formGrid: { display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '20px' },
         formGroup: { display: 'flex', flexDirection: 'column', marginBottom: '16px' },
         label: { fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' },
         input: { padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '14px' },
@@ -255,26 +262,26 @@ export default function ProfileSettings({ user, profile, onUpdate }) {
                     <h3 style={styles.title}><i className="fas fa-user"></i> Basic Information</h3>
                     <div style={styles.formGrid}>
                         <div style={styles.formGroup}>
-                            <label style={styles.label}>Full Name *</label>
-                            <input type="text" name="name" value={data.name} onChange={handleInputChange} style={styles.input} />
+                            <label htmlFor="profile-name" style={styles.label}>Full Name *</label>
+                            <input id="profile-name" type="text" name="name" autoComplete="name" value={data.name} onChange={handleInputChange} style={styles.input} />
                             {errors.name && <span style={styles.errorText}>{errors.name}</span>}
                         </div>
                         <div style={styles.formGroup}>
-                            <label style={styles.label}>Email Address *</label>
-                            <input type="email" name="email" value={data.email} onChange={handleInputChange} style={styles.input} />
+                            <label htmlFor="profile-email" style={styles.label}>Email Address *</label>
+                            <input id="profile-email" type="email" name="email" autoComplete="email" value={data.email} onChange={handleInputChange} style={styles.input} />
                             {errors.email && <span style={styles.errorText}>{errors.email}</span>}
                         </div>
                         <div style={styles.formGroup}>
-                            <label style={styles.label}>Professional Title</label>
-                            <input type="text" name="position" value={data.position} onChange={handleInputChange} style={styles.input} placeholder="Senior Software Engineer" />
+                            <label htmlFor="profile-position" style={styles.label}>Professional Title</label>
+                            <input id="profile-position" type="text" name="position" autoComplete="organization-title" value={data.position} onChange={handleInputChange} style={styles.input} placeholder="Senior Software Engineer" />
                         </div>
                         <div style={styles.formGroup}>
-                            <label style={styles.label}>Phone Number</label>
-                            <input type="tel" name="phone" value={data.phone} onChange={handleInputChange} style={styles.input} />
+                            <label htmlFor="profile-phone" style={styles.label}>Phone Number</label>
+                            <input id="profile-phone" type="tel" name="phone" autoComplete="tel" value={data.phone} onChange={handleInputChange} style={styles.input} />
                         </div>
                         <div style={styles.formGroup}>
-                            <label style={styles.label}>Location</label>
-                            <input type="text" name="location" value={data.location} onChange={handleInputChange} style={styles.input} />
+                            <label htmlFor="profile-location" style={styles.label}>Location</label>
+                            <input id="profile-location" type="text" name="location" autoComplete="street-address" value={data.location} onChange={handleInputChange} style={styles.input} />
                         </div>
                     </div>
                 </div>
@@ -282,7 +289,8 @@ export default function ProfileSettings({ user, profile, onUpdate }) {
                 {/* Bio */}
                 <div style={styles.section}>
                     <h3 style={styles.title}><i className="fas fa-align-left"></i> Bio / About</h3>
-                    <textarea name="bio" rows="4" value={data.bio} onChange={handleInputChange} style={styles.textarea} placeholder="Tell employers about yourself..."></textarea>
+                    <label htmlFor="profile-bio" style={styles.label} className="sr-only">Bio / About</label>
+                    <textarea id="profile-bio" name="bio" rows="4" autoComplete="off" value={data.bio} onChange={handleInputChange} style={styles.textarea} placeholder="Tell employers about yourself..."></textarea>
                     <p style={styles.hint}>{data.bio.length}/500 characters</p>
                 </div>
                 
@@ -305,14 +313,21 @@ export default function ProfileSettings({ user, profile, onUpdate }) {
                         ))}
                     </div>
                     <div style={styles.addSkill}>
+                        <label htmlFor="skill-input" style={{ display: 'none' }}>Add skill</label>
                         <input 
+                            id="skill-input"
                             type="text" 
+                            name="new_skill"
                             value={newSkill} 
                             onChange={(e) => setNewSkill(e.target.value)} 
                             placeholder="Add a skill..." 
                             style={styles.addSkillInput} 
+                            autoComplete="off"
                         />
+                        <label htmlFor="skill-proficiency" style={{ display: 'none' }}>Skill proficiency</label>
                         <select 
+                            id="skill-proficiency"
+                            name="new_skill_proficiency"
                             value={newSkillProficiency} 
                             onChange={(e) => setNewSkillProficiency(e.target.value)} 
                             style={styles.addSkillSelect}

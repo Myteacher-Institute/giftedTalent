@@ -92,6 +92,8 @@ class ProfileController extends Controller
                 'email' => 'nullable|email|max:255|unique:users,email,' . $user->id,
                 'phone' => 'nullable|string|max:20',
                 'position' => 'nullable|string|max:100',
+                'title' => 'nullable|string|max:100',
+                'company' => 'nullable|string|max:100',
                 'education' => 'nullable|string|max:100',
                 'bio' => 'nullable|string|max:1000',
                 'address' => 'nullable|string|max:255',
@@ -101,58 +103,31 @@ class ProfileController extends Controller
                 'github_url' => 'nullable|string|max:255',
                 'portfolio_url' => 'nullable|string|max:255',
                 'profile_image' => 'nullable|string', // Base64 image string
+                'employment_type' => 'nullable|string|max:255',
+                'start_date' => 'nullable|string',
+                'availability_status' => 'nullable|string|max:255',
             ]);
 
             Log::info('Validated data:', $validated);
 
             // Handle base64 profile image if present
             $avatarUpdated = false;
-            $newAvatarPath = null;
-            
+
             if (array_key_exists('profile_image', $validated)) {
                 $base64Image = $validated['profile_image'];
                 
                 // Check if it's an empty string (remove avatar)
                 if ($base64Image === '') {
-                    if ($profile->avatar && Storage::disk('public')->exists($profile->avatar)) {
-                        Storage::disk('public')->delete($profile->avatar);
-                    }
-                    $profile->avatar = null;
+                    $profile->profile_image_base64 = null;
                     $avatarUpdated = true;
                     Log::info('Profile image removed');
                 }
                 // Check if it's a valid base64 string (upload new image)
                 elseif ($base64Image && preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
-                    $imageData = substr($base64Image, strpos($base64Image, ',') + 1);
-                    $imageData = base64_decode($imageData);
-                    
-                    if ($imageData !== false) {
-                        $imageType = strtolower($type[1]); // jpg, png, gif
-                        
-                        // Validate image type
-                        if (!in_array($imageType, ['jpg', 'jpeg', 'png', 'gif'])) {
-                            throw new \Exception('Invalid image type. Only JPG, PNG, and GIF are allowed.');
-                        }
-                        
-                        // Generate unique filename
-                        $filename = 'profile_' . $user->id . '_' . time() . '.' . $imageType;
-                        $path = 'avatars/' . $filename;
-                        
-                        // Save file to storage
-                        Storage::disk('public')->put($path, $imageData);
-                        
-                        // Delete old avatar if exists
-                        if ($profile->avatar && Storage::disk('public')->exists($profile->avatar)) {
-                            Storage::disk('public')->delete($profile->avatar);
-                        }
-                        
-                        // Save the path to profile
-                        $profile->avatar = $path;
-                        $newAvatarPath = $path;
-                        $avatarUpdated = true;
-                        Log::info('Profile image saved to: ' . $path);
-                        Log::info('Full URL: ' . Storage::disk('public')->url($path));
-                    }
+                    // Store the base64 string directly in the database
+                    $profile->profile_image_base64 = $base64Image;
+                    $avatarUpdated = true;
+                    Log::info('Profile image saved as base64');
                 }
             }
 
@@ -172,6 +147,19 @@ class ProfileController extends Controller
                 }
             }
             
+            // Update title in users table
+            if (isset($validated['title'])) {
+                $user->title = $validated['title'];
+                $userUpdated = true;
+            }
+            
+            // Update company in users table
+            if (isset($validated['company'])) {
+                $user->company = $validated['company'];
+                $userUpdated = true;
+            }
+            
+            // Update email if changed
             if (isset($validated['email']) && $validated['email'] !== $user->email) {
                 $user->email = $validated['email'];
                 $user->email_verified_at = null;
@@ -180,11 +168,11 @@ class ProfileController extends Controller
             
             if ($userUpdated) {
                 $user->save();
-                Log::info('User updated');
+                Log::info('User updated with title/company/name/email');
             }
 
             // Prepare profile data - remove user fields and profile_image
-            $profileData = Arr::except($validated, ['first_name', 'last_name', 'email', 'profile_image']);
+            $profileData = Arr::except($validated, ['first_name', 'last_name', 'email', 'profile_image', 'title', 'company']);
             
             // Filter out empty values to preserve existing data
             $filteredProfileData = [];
@@ -213,18 +201,11 @@ class ProfileController extends Controller
             $user->refresh();
             $user->load('profile');
             
-            // Set the avatar_url on the profile for frontend use
-            if ($profile->avatar) {
-                $avatarUrl = Storage::disk('public')->url($profile->avatar);
-                $user->profile->avatar_url = $avatarUrl;
-                Log::info('Setting avatar_url: ' . $avatarUrl);
-            } else {
-                $user->profile->avatar_url = null;
-            }
-            
             Log::info('=== PROFILE UPDATE COMPLETED ===');
-            Log::info('Final avatar path: ' . $profile->avatar);
-            Log::info('Final avatar URL: ' . ($profile->avatar ? Storage::disk('public')->url($profile->avatar) : 'none'));
+            Log::info('Final avatar base64: ' . ($profile->profile_image_base64 ? 'Yes' : 'No'));
+
+            // Update profile completion percentage
+            $user->updateProfileCompletion();
 
             // Store success message in flash
             session()->flash('success', 'Profile updated successfully!');
@@ -244,29 +225,23 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update user profile (for settings page) - UPDATED to save to profiles table
+     * Update user profile (for settings page) - UPDATED to save to users table directly
      */
     public function updateProfile(Request $request)
     {
         try {
             $user = Auth::user();
             
-            // Get or create profile
-            $profile = Profile::where('user_id', $user->id)->first();
-            if (!$profile) {
-                $profile = new Profile();
-                $profile->user_id = $user->id;
-            }
-            
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:users,email,' . $user->id,
                 'title' => 'nullable|string|max:255',
-                'position' => 'nullable|string|max:255',
                 'company' => 'nullable|string|max:255',
+                'position' => 'nullable|string|max:255',
                 'bio' => 'nullable|string|max:500',
                 'phone' => 'nullable|string|max:20',
                 'location' => 'nullable|string|max:255',
+                'availability_status' => 'nullable|string|max:255',
                 'employment_type' => 'nullable|string|max:255',
                 'start_date' => 'nullable|date',
                 'portfolio_url' => 'nullable|url|max:255',
@@ -276,46 +251,36 @@ class ProfileController extends Controller
                 'skills' => 'nullable|array',
             ]);
             
-            // Update user basic info (users table)
+            // Update user directly in users table
             $user->update([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
+                'title' => $validated['title'] ?? $user->title,
+                'company' => $validated['company'] ?? $user->company,
+                'position' => $validated['position'] ?? $user->position,
+                'bio' => $validated['bio'] ?? $user->bio,
+                'phone' => $validated['phone'] ?? $user->phone,
+                'location' => $validated['location'] ?? $user->location,
+                'availability_status' => $validated['availability_status'] ?? $user->availability_status,
+                'employment_type' => $validated['employment_type'] ?? $user->employment_type,
+                'start_date' => $validated['start_date'] ?? $user->start_date,
+                'portfolio_url' => $validated['portfolio_url'] ?? $user->portfolio_url,
+                'github_url' => $validated['github_url'] ?? $user->github_url,
+                'linkedin_url' => $validated['linkedin_url'] ?? $user->linkedin_url,
+                'twitter_url' => $validated['twitter_url'] ?? $user->twitter_url,
             ]);
             
-            // Update profile info (profiles table)
-            $profile->fill([
-                'title' => $validated['title'] ?? $validated['position'] ?? null,
-                'company' => $validated['company'] ?? null,
-                'bio' => $validated['bio'] ?? null,
-                'phone' => $validated['phone'] ?? null,
-                'address' => $validated['location'] ?? null,
-                'employment_type' => $validated['employment_type'] ?? null,
-                'start_date' => $validated['start_date'] ?? null,
-                'portfolio_url' => $validated['portfolio_url'] ?? null,
-                'github_url' => $validated['github_url'] ?? null,
-                'linkedin_url' => $validated['linkedin_url'] ?? null,
-                'twitter_url' => $validated['twitter_url'] ?? null,
-            ]);
-            
-            $profile->save();
-            
-            // Handle skills if provided (store as JSON in profile)
+            // Handle skills if provided (store as JSON in users table)
             if ($request->has('skills') && is_array($request->skills)) {
-                $profile->skills = json_encode($request->skills);
-                $profile->save();
+                $user->skills = json_encode($request->skills);
+                $user->save();
             }
             
-            // Also handle skills through the many-to-many relationship if needed
-            if ($request->has('skills') && $this->shouldUseSkillRelationships($request->skills)) {
-                $this->syncSkills($user, $request->skills);
-            }
+            // Update profile completion percentage using the new method
+            $user->updateProfileCompletion();
             
-            // Update profile completion
-            $this->updateProfileCompletion($user);
-            
-            // Refresh user with profile
+            // Refresh user
             $user->refresh();
-            $user->load('profile');
             
             // For Inertia form submission, redirect back with success
             return Redirect::back()->with('success', 'Profile updated successfully!');
@@ -595,35 +560,6 @@ class ProfileController extends Controller
     }
     
     /**
-     * Update profile completion percentage
-     */
-    private function updateProfileCompletion($user)
-    {
-        $profile = $user->profile;
-        if (!$profile) {
-            $user->profile_completed = 0;
-            $user->save();
-            return;
-        }
-        
-        $completionScore = 0;
-        $totalFields = 8;
-        
-        if ($profile->title || $profile->position) $completionScore++;
-        if ($profile->company) $completionScore++;
-        if ($profile->bio) $completionScore++;
-        if ($profile->phone) $completionScore++;
-        if ($profile->address || $profile->city) $completionScore++;
-        if ($profile->portfolio_url) $completionScore++;
-        if ($user->skills()->count() > 0) $completionScore++;
-        if ($user->resumes()->count() > 0) $completionScore++;
-        
-        $percentage = round(($completionScore / $totalFields) * 100);
-        $user->profile_completed = $percentage;
-        $user->save();
-    }
-
-    /**
      * Get user job preferences
      */
     public function getJobPreferences(Request $request)
@@ -827,5 +763,22 @@ class ProfileController extends Controller
                 'message' => 'Failed to save notification preferences: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Display the user's profile page.
+     */
+    public function show()
+    {
+        $user = Auth::user();
+        $profile = $user->profile;
+        
+        return Inertia::render('userProfile', [
+            'user' => $user,
+            'profile' => $profile,
+            'auth' => [
+                'user' => $user,
+            ],
+        ]);
     }
 }

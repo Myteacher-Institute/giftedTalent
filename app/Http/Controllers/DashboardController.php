@@ -9,13 +9,24 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Skill;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        // Force fresh load from database
-        $user = $request->user()->fresh()->loadMissing([
+        $user = Auth::user();
+        
+        if (!$user) {
+            return redirect()->route('login');
+        }
+        
+        // Update profile completion before loading dashboard
+        $user->updateProfileCompletion();
+        
+        // Force fresh load from database with all relationships
+        $user->refresh();
+        $user->loadMissing([
             'profile', 
             'skills', 
             'experiences', 
@@ -24,32 +35,33 @@ class DashboardController extends Controller
             'notifications'
         ]);
         
-        $profile = Profile::where('user_id', $user->id)->first();
-
-        // CRITICAL: Ensure the profile is attached to the user object
-        if ($profile) {
-            $user->setRelation('profile', $profile);
-            // Also add avatar_url to profile for easy access
-            if ($profile->avatar) {
-                $profile->avatar_url = asset('storage/' . $profile->avatar);
-            }
-        } else {
-            // Create a default profile if none exists
+        $profile = $user->profile;
+        
+        // Create default profile if none exists
+        if (!$profile) {
             $profile = Profile::create(['user_id' => $user->id]);
             $user->setRelation('profile', $profile);
             Log::info('Created default profile for user: ' . $user->id);
+        } else {
+            // Set avatar_url for easy access
+            if ($profile->avatar) {
+                $profile->avatar_url = asset('storage/' . $profile->avatar);
+            }
         }
 
         // Debug: Log profile status
         Log::info('Dashboard loaded', [
             'user_id' => $user->id,
             'user_name' => $user->name,
+            'profile_completed' => $user->profile_completed,
             'profile_exists' => $user->profile ? 'yes' : 'no',
             'profile_id' => $user->profile->id ?? 'null',
             'profile_position' => $user->profile->position ?? 'null',
             'profile_bio' => $user->profile->bio ?? 'null',
             'avatar' => $user->profile->avatar ?? 'null',
             'avatar_url' => $user->profile->avatar_url ?? 'null',
+            'skills_count' => $user->skills()->count(),
+            'resumes_count' => $user->resumes()->count(),
         ]);
 
         // Search parameters
@@ -82,16 +94,21 @@ class DashboardController extends Controller
         // Get jobs
         $jobs = $jobsQuery->limit(10)->get();
 
-        // Profile completion status
-        $profileStatus = ['percent' => 0, 'status' => []];
-        $profileComplete = 0;
-        if ($user->profile) {
-            $completion = $this->calculateProfileCompletion($user->profile);
-            $profileStatus = $completion;
-            $profileComplete = $completion['percent'];
-        }
+        // Profile completion status from user model
+        $profileComplete = $user->profile_completed;
+        
+        // Get profile status for checklist items
+        $profileStatus = [
+            'status' => [
+                'portfolio' => !empty($profile->portfolio_url),
+                'experience' => $user->experiences()->count() > 0,
+                'email_verified' => !is_null($user->email_verified_at),
+                'skills' => $user->skills()->count() > 0,
+                'cv_uploaded' => $user->resumes()->count() > 0,
+            ]
+        ];
 
-        // Notifications data for bell/navbar
+        // Job types for filter
         $jobTypes = Job::whereHas('user', fn($q) => $q->where('is_admin', true))
                           ->distinct()
                           ->pluck('job_type')
@@ -185,34 +202,8 @@ class DashboardController extends Controller
         return response()->json($appliedJobs->values());
     }
 
-    private function calculateProfileCompletion(Profile $profile): array
-    {
-        $user = $profile->user;
-        
-        $status = [
-            'email_verified' => $user->email_verified_at !== null,
-            'bio' => !empty($profile->bio) && strlen(trim($profile->bio)) > 20,
-            'skills' => $user->skills()->count() >= 3,
-            'experience' => $user->experiences()->count() > 0,
-            'education' => !empty($profile->education),
-            'portfolio' => !empty($profile->portfolio_url),
-            'position' => !empty($profile->position),
-            'cv_uploaded' => $user->resumes()->count() > 0,
-            'phone' => !empty($profile->phone),
-        ];
-
-        $total = count($status);
-        $complete = array_sum(array_map(fn($v) => $v ? 1 : 0, $status));
-        
-        return [
-            'percent' => round(($complete / $total) * 100),
-            'status' => $status
-        ];
-    }
-
     private function calculateMatchScore($user, $job)
     {
-        
         $userSkills = $user->skills->pluck('name')->toArray();
         $jobSkills = $job->required_skills ?? [];
         

@@ -265,8 +265,10 @@ export default function NotificationSettings({ user }) {
                     </h3>
                     <p style={styles.description}>Choose which emails you'd like to receive</p>
                     
-                    <label style={styles.checkboxLabel}>
+                    <label htmlFor="email-job-alerts" style={styles.checkboxLabel}>
                         <input 
+                            id="email-job-alerts"
+                            name="email_job_alerts"
                             type="checkbox" 
                             checked={notifications.email_job_alerts} 
                             onChange={() => handleToggle('email_job_alerts')} 
@@ -274,8 +276,10 @@ export default function NotificationSettings({ user }) {
                         <span>Job alerts - New jobs matching your preferences</span>
                     </label>
                     
-                    <label style={styles.checkboxLabel}>
+                    <label htmlFor="email-application-updates" style={styles.checkboxLabel}>
                         <input 
+                            id="email-application-updates"
+                            name="email_application_updates"
                             type="checkbox" 
                             checked={notifications.email_application_updates} 
                             onChange={() => handleToggle('email_application_updates')} 
@@ -283,8 +287,10 @@ export default function NotificationSettings({ user }) {
                         <span>Application updates - Status changes for your applications</span>
                     </label>
                     
-                    <label style={styles.checkboxLabel}>
+                    <label htmlFor="email-message-notifications" style={styles.checkboxLabel}>
                         <input 
+                            id="email-message-notifications"
+                            name="email_message_notifications"
                             type="checkbox" 
                             checked={notifications.email_message_notifications} 
                             onChange={() => handleToggle('email_message_notifications')} 
@@ -292,8 +298,10 @@ export default function NotificationSettings({ user }) {
                         <span>Message notifications - When you receive new messages</span>
                     </label>
                     
-                    <label style={styles.checkboxLabel}>
+                    <label htmlFor="email-marketing" style={styles.checkboxLabel}>
                         <input 
+                            id="email-marketing"
+                            name="email_marketing"
                             type="checkbox" 
                             checked={notifications.email_marketing} 
                             onChange={() => handleToggle('email_marketing')} 
@@ -301,8 +309,10 @@ export default function NotificationSettings({ user }) {
                         <span>Marketing emails - Tips, tricks, and special offers</span>
                     </label>
                     
-                    <label style={styles.checkboxLabel}>
+                    <label htmlFor="email-newsletter" style={styles.checkboxLabel}>
                         <input 
+                            id="email-newsletter"
+                            name="email_newsletter"
                             type="checkbox" 
                             checked={notifications.email_newsletter} 
                             onChange={() => handleToggle('email_newsletter')} 
@@ -319,8 +329,10 @@ export default function NotificationSettings({ user }) {
                     </h3>
                     <p style={styles.description}>Notifications that appear in your dashboard</p>
                     
-                    <label style={styles.checkboxLabel}>
+                    <label htmlFor="inapp-job-alerts" style={styles.checkboxLabel}>
                         <input 
+                            id="inapp-job-alerts"
+                            name="in_app_job_alerts"
                             type="checkbox" 
                             checked={notifications.in_app_job_alerts} 
                             onChange={() => handleToggle('in_app_job_alerts')} 
@@ -328,8 +340,10 @@ export default function NotificationSettings({ user }) {
                         <span>Job alerts</span>
                     </label>
                     
-                    <label style={styles.checkboxLabel}>
+                    <label htmlFor="inapp-application-updates" style={styles.checkboxLabel}>
                         <input 
+                            id="inapp-application-updates"
+                            name="in_app_application_updates"
                             type="checkbox" 
                             checked={notifications.in_app_application_updates} 
                             onChange={() => handleToggle('in_app_application_updates')} 
@@ -337,8 +351,10 @@ export default function NotificationSettings({ user }) {
                         <span>Application updates</span>
                     </label>
                     
-                    <label style={styles.checkboxLabel}>
+                    <label htmlFor="inapp-messages" style={styles.checkboxLabel}>
                         <input 
+                            id="inapp-messages"
+                            name="in_app_messages"
                             type="checkbox" 
                             checked={notifications.in_app_messages} 
                             onChange={() => handleToggle('in_app_messages')} 
@@ -355,8 +371,10 @@ export default function NotificationSettings({ user }) {
                     </h3>
                     <p style={styles.description}>Browser push notifications</p>
                     
-                    <label style={styles.toggleSwitch}>
+                    <label htmlFor="push-enabled" style={styles.toggleSwitch}>
                         <input 
+                            id="push-enabled"
+                            name="push_enabled"
                             type="checkbox" 
                             checked={notifications.push_enabled} 
                             onChange={() => handleToggle('push_enabled')} 
@@ -373,8 +391,10 @@ export default function NotificationSettings({ user }) {
                     
                     {notifications.push_enabled && (
                         <div style={{ marginTop: '16px' }}>
-                            <label style={styles.checkboxLabel}>
+                            <label htmlFor="push-job-alerts" style={styles.checkboxLabel}>
                                 <input 
+                                    id="push-job-alerts"
+                                    name="push_job_alerts"
                                     type="checkbox" 
                                     checked={notifications.push_job_alerts} 
                                     onChange={() => handleToggle('push_job_alerts')} 
@@ -382,8 +402,10 @@ export default function NotificationSettings({ user }) {
                                 <span>Job alerts</span>
                             </label>
                             
-                            <label style={styles.checkboxLabel}>
+                            <label htmlFor="push-messages" style={styles.checkboxLabel}>
                                 <input 
+                                    id="push-messages"
+                                    name="push_messages"
                                     type="checkbox" 
                                     checked={notifications.push_messages} 
                                     onChange={() => handleToggle('push_messages')} 
@@ -403,8 +425,8 @@ export default function NotificationSettings({ user }) {
                     <p style={styles.description}>How often you want to receive summary emails</p>
                     
                     <div style={styles.formGroup}>
-                        <label style={styles.label}>Email digest frequency</label>
-                        <select 
+                        <label htmlFor="digest-frequency" style={styles.label}>Email digest frequency</label>
+                        <select id="digest-frequency" name="digest_frequency" 
                             value={notifications.digest_frequency} 
                             onChange={(e) => handleChange('digest_frequency', e.target.value)} 
                             style={styles.select}
@@ -424,8 +446,10 @@ export default function NotificationSettings({ user }) {
                     </h3>
                     <p style={styles.description}>Mute notifications during certain hours</p>
                     
-                    <label style={styles.toggleSwitch}>
+                    <label htmlFor="quiet-hours-enabled" style={styles.toggleSwitch}>
                         <input 
+                            id="quiet-hours-enabled"
+                            name="quiet_hours_enabled"
                             type="checkbox" 
                             checked={notifications.quiet_hours_enabled} 
                             onChange={() => handleToggle('quiet_hours_enabled')} 
@@ -443,8 +467,10 @@ export default function NotificationSettings({ user }) {
                     {notifications.quiet_hours_enabled && (
                         <div style={styles.timeInputs}>
                             <div style={{ flex: 1 }}>
-                                <label style={{ ...styles.label, fontSize: '12px' }}>Start time</label>
+                                <label htmlFor="quiet-hours-start" style={{ ...styles.label, fontSize: '12px' }}>Start time</label>
                                 <input 
+                                    id="quiet-hours-start"
+                                    name="quiet_hours_start"
                                     type="time" 
                                     value={notifications.quiet_hours_start} 
                                     onChange={(e) => handleChange('quiet_hours_start', e.target.value)} 
@@ -452,8 +478,10 @@ export default function NotificationSettings({ user }) {
                                 />
                             </div>
                             <div style={{ flex: 1 }}>
-                                <label style={{ ...styles.label, fontSize: '12px' }}>End time</label>
+                                <label htmlFor="quiet-hours-end" style={{ ...styles.label, fontSize: '12px' }}>End time</label>
                                 <input 
+                                    id="quiet-hours-end"
+                                    name="quiet_hours_end"
                                     type="time" 
                                     value={notifications.quiet_hours_end} 
                                     onChange={(e) => handleChange('quiet_hours_end', e.target.value)} 
@@ -471,8 +499,10 @@ export default function NotificationSettings({ user }) {
                         Additional Settings
                     </h3>
                     
-                    <label style={styles.checkboxLabel}>
+                    <label htmlFor="desktop-enabled" style={styles.checkboxLabel}>
                         <input 
+                            id="desktop-enabled"
+                            name="desktop_enabled"
                             type="checkbox" 
                             checked={notifications.desktop_enabled} 
                             onChange={() => handleToggle('desktop_enabled')} 
@@ -480,8 +510,10 @@ export default function NotificationSettings({ user }) {
                         <span>Show desktop notifications</span>
                     </label>
                     
-                    <label style={styles.checkboxLabel}>
+                    <label htmlFor="sound-enabled" style={styles.checkboxLabel}>
                         <input 
+                            id="sound-enabled"
+                            name="sound_enabled"
                             type="checkbox" 
                             checked={notifications.sound_enabled} 
                             onChange={() => handleToggle('sound_enabled')} 

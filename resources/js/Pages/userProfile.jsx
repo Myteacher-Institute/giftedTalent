@@ -101,16 +101,23 @@ export default function EditProfile({ user, flash, profile }) {
         }
     }, [user, profile]);
 
-    // Track changes
+    // Track changes with debug
     useEffect(() => {
         const hasAnyChanges = Object.keys(data).some(
             key => data[key] !== initialData.current[key]
         );
+        console.log('Checking changes...');
+        console.log('Has changes:', hasAnyChanges);
         setHasChanges(hasAnyChanges);
     }, [data]);
 
     const submit = (e) => {
         e.preventDefault();
+        
+        console.log('Submit button clicked!');
+        console.log('isSubmitting:', isSubmitting);
+        console.log('hasChanges:', hasChanges);
+        console.log('processing:', processing);
         
         if (isSubmitting) return;
         
@@ -122,13 +129,14 @@ export default function EditProfile({ user, flash, profile }) {
             }
         });
         
+        console.log('Changed fields:', changedFields);
+        
         // Check if there are any changes
         if (Object.keys(changedFields).length === 0) {
             alertify.message('No changes to update');
             return;
         }
         
-        console.log('Sending changed fields:', changedFields);
         clearErrors();
         setIsSubmitting(true);
         
@@ -138,24 +146,10 @@ export default function EditProfile({ user, flash, profile }) {
             preserveScroll: true,
             onSuccess: (response) => {
                 console.log('Success response:', response);
-                
                 alertify.success('Profile updated successfully!');
-                
-                // Store a flag in sessionStorage to show success message on dashboard
                 sessionStorage.setItem('profileUpdated', 'true');
                 sessionStorage.setItem('profileUpdateTime', Date.now().toString());
-                
-                // Redirect to dashboard
-                router.visit('/dashboard', {
-                    preserveState: false,
-                    preserveScroll: false,
-                    onSuccess: () => {
-                        setIsSubmitting(false);
-                    },
-                    onError: () => {
-                        setIsSubmitting(false);
-                    }
-                });
+                router.visit('/dashboard');
             },
             onError: (errors) => {
                 console.error('Validation errors:', errors);
@@ -171,6 +165,7 @@ export default function EditProfile({ user, flash, profile }) {
         setData(initialData.current);
         setPreviewImage(profile?.profile_image_base64 || profile?.avatar_url || null);
         alertify.message('Changes discarded');
+        setHasChanges(false);
     };
 
     // Handle image upload with base64 conversion
@@ -178,14 +173,12 @@ export default function EditProfile({ user, flash, profile }) {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Validate file type
         const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
         if (!validTypes.includes(file.type)) {
             alertify.error('Please upload a valid image file (JPEG, PNG, GIF, or WebP)');
             return;
         }
 
-        // Validate file size (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
             alertify.error('Image size should be less than 5MB');
             return;
@@ -194,10 +187,7 @@ export default function EditProfile({ user, flash, profile }) {
         setUploading(true);
 
         try {
-            // Convert to base64
             const base64 = await convertToBase64(file);
-            
-            // Update form data with base64 image
             setData('profile_image', base64);
             setPreviewImage(base64);
             alertify.success('Image ready. Click Save Changes to apply.');
@@ -221,8 +211,6 @@ export default function EditProfile({ user, flash, profile }) {
 
     const removeAvatar = () => {
         if (!confirm('Remove profile picture?')) return;
-        
-        // Set profile_image to empty string to trigger removal
         setData('profile_image', '');
         setPreviewImage(null);
         alertify.message('Image will be removed when you save changes');
@@ -230,19 +218,15 @@ export default function EditProfile({ user, flash, profile }) {
 
     // Function to get profile image URL with proper fallback
     const getProfileImageUrl = () => {
-        // If there's a preview image (new upload), show that
         if (previewImage) {
             return previewImage;
         }
-        // Check if profile has base64 image
         if (profile?.profile_image_base64) {
             return profile.profile_image_base64;
         }
-        // Check if profile has avatar_url
         if (profile?.avatar_url) {
             return profile.avatar_url;
         }
-        // Check if there's an avatar path
         if (profile?.avatar) {
             const avatarPath = profile.avatar;
             if (avatarPath.startsWith('/storage/')) {
@@ -250,16 +234,12 @@ export default function EditProfile({ user, flash, profile }) {
             }
             return `/storage/${avatarPath}`;
         }
-        // Check user profile fallback
         if (user?.profile?.avatar_url) {
             return user.profile.avatar_url;
         }
-        // Fallback to UI Avatars with user's name
         const userName = user?.name || 'User';
         return `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
     };
-
-    const recentExperience = user?.experiences?.[0] || { company: 'No experience added', job_title: 'Add experience' };
 
     return (
         <>
@@ -591,12 +571,23 @@ export default function EditProfile({ user, flash, profile }) {
                                     >
                                         Cancel
                                     </button>
-                                    <PrimaryButton 
-                                        className="btn-primary" 
-                                        disabled={processing || !hasChanges || isSubmitting}
+                                    <button 
+                                        type="submit" 
+                                        className="btn-primary"
+                                        disabled={isSubmitting}
+                                        style={{
+                                            padding: '12px 24px',
+                                            background: '#4F46E5',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            fontSize: '14px',
+                                            fontWeight: '600'
+                                        }}
                                     >
-                                        {isSubmitting ? 'Saving...' : (processing ? 'Saving...' : 'Save Changes')}
-                                    </PrimaryButton>
+                                        {isSubmitting ? 'Saving...' : 'Save Changes'}
+                                    </button>
                                 </div>
                             </form>
                         </div>

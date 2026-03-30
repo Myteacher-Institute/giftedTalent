@@ -3,21 +3,68 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PrivacySettingsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ResumeController;
 use App\Models\Job;
 use App\Models\User;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 // Public Routes
 Route::get('/', function () {
     $jobs = Job::latest()->take(6)->get();
-    $featuredTalents = User::where('profile_completed', true)
-                            ->inRandomOrder()
-                            ->take(3)
-                            ->get();
+    
+    // Get featured talents - users with 50%+ profile completion
+    $featuredTalents = User::where('profile_completed', '>=', 50)
+                            ->with('profile')  // IMPORTANT: Load the profile relationship
+                            ->orderBy('profile_completed', 'desc')
+                            ->take(6)
+                            ->get()
+                            ->map(function($user) {
+                                // Parse skills if they exist
+                                $skills = [];
+                                if ($user->skills) {
+                                    $skills = is_string($user->skills) ? json_decode($user->skills, true) : $user->skills;
+                                }
+                                if (empty($skills)) {
+                                    $skills = ['Available for work'];
+                                }
+                                
+                                // Calculate rating based on profile completion
+                                $rating = 3.5;
+                                if ($user->profile_completed >= 90) $rating = 5.0;
+                                elseif ($user->profile_completed >= 80) $rating = 4.8;
+                                elseif ($user->profile_completed >= 70) $rating = 4.5;
+                                elseif ($user->profile_completed >= 60) $rating = 4.2;
+                                elseif ($user->profile_completed >= 50) $rating = 4.0;
+                                
+                                // FIX: Get avatar from profile relationship
+                                $avatar = null;
+                                if ($user->profile && $user->profile->avatar_url) {
+                                    $avatar = $user->profile->avatar_url;
+                                }
+                                
+                                // Also get title from profile if available
+                                $title = $user->title;
+                                if (!$title && $user->profile && $user->profile->title) {
+                                    $title = $user->profile->title;
+                                }
+                                
+                                return [
+                                    'id' => $user->id,
+                                    'name' => $user->name,
+                                    'title' => $title ?? 'Professional',
+                                    'avatar' => $avatar,
+                                    'avatar_url' => $avatar,
+                                    'profile_image_base64' => $avatar,
+                                    'skills' => $skills,
+                                    'rating' => $rating,
+                                    'profile_completed' => $user->profile_completed,
+                                ];
+                            });
      
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
@@ -69,6 +116,7 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'read'])->name('notifications.read');
     Route::get('/user/applied-jobs', [\App\Http\Controllers\DashboardController::class, 'appliedJobs'])->name('user.applied-jobs');
     Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'readAll'])->name('notifications.readAll');
+    
     // Notification Preferences Routes
     Route::get('/user/notification-preferences', [ProfileController::class, 'getNotificationPreferences'])->name('user.notification-preferences.get');
     Route::put('/user/notification-preferences', [ProfileController::class, 'updateNotificationPreferences'])->name('user.notification-preferences.update');
@@ -94,7 +142,6 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     Route::post('/user/upload-avatar', [ProfileController::class, 'uploadAvatar'])->name('user.avatar.upload');
     Route::delete('/user/remove-avatar', [ProfileController::class, 'removeAvatar'])->name('user.avatar.remove');
     
-    
     // Avatar Upload Routes (keeping for compatibility)
     Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar'])->name('profile.avatar.upload');
     Route::delete('/profile/avatar', [ProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
@@ -118,6 +165,10 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     // Job Preferences Routes
     Route::get('/user/job-preferences', [ProfileController::class, 'getJobPreferences'])->name('user.job-preferences.get');
     Route::put('/user/job-preferences', [ProfileController::class, 'updateJobPreferences'])->name('user.job-preferences.update');
+    
+    // Privacy Settings Routes
+    Route::get('/user/privacy-settings', [PrivacySettingsController::class, 'getSettings'])->name('user.privacy-settings.get');
+    Route::put('/user/privacy-settings', [PrivacySettingsController::class, 'updateSettings'])->name('user.privacy-settings.update');
 });
 
 // Admin Routes - Protected by IsAdmin middleware
