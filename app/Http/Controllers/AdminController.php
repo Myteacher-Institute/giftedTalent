@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Contact;
 use App\Models\Job;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -183,18 +184,18 @@ class AdminController extends Controller
         ]);
 
         $tags = $request->tags ?? [];
-        
+
         $job = Job::create([
             'user_id'          => Auth::id(),
             'company_name'     => $request->company_name,
             'company_logo_url' => $request->company_logo_url,
             'company_location' => $request->company_location,
-            'job_title' => $request->job_title,
-            'job_type' => $request->job_type,
-            'salary_range' => $request->salary_range,
-            'description' => $request->description,
-'status' => 'active',
-            'posted_at' => now(),
+            'job_title'        => $request->job_title,
+            'job_type'         => $request->job_type,
+            'salary_range'     => $request->salary_range,
+            'description'      => $request->description,
+            'status'           => 'active',
+            'posted_at'        => now(),
             'applicants_count' => 0,
         ]);
 
@@ -233,5 +234,11 @@ class AdminController extends Controller
         $job->delete();
 
         return redirect()->route('admin.jobs')->with('success', 'Job deleted successfully!');
+    }
+
+    public function messages()
+    {
+        $messages = Contact::latest()->paginate(10);
+        return Inertia::render('Admin/Messages', ['messages' => $messages]);
     }
 }

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use App\Models\Job;
@@ -10,7 +11,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    $jobs = Job::latest()->take(6)->get();
+    $jobs = Job::latest()->take(10)->get();
 
     return Inertia::render('Welcome', [
         'canLogin'       => Route::has('login'),
@@ -28,15 +29,32 @@ Route::get('/jobs/{id}', function ($id) {
 
 // Navigation Pages
 Route::get('/jobs', [PageController::class, 'findJobs'])->name('pages.findJobs');
+
 Route::get('/find-talents', [PageController::class, 'findTalents'])->name('pages.findTalents');
+
 Route::get('/how-it-works', [PageController::class, 'howItWorks'])->name('pages.howItWorks');
+
 Route::get('/about', [PageController::class, 'about'])->name('pages.about');
+
 Route::get('/user-profile', [ProfileController::class, 'show'])->middleware('auth')->name('pages.userProfile');
+
 Route::get('/easy-apply-job', [PageController::class, 'easyApplyJob'])->middleware(['auth', 'verified'])->name('pages.easyApplyJob');
 
 Route::get('/search-jobs', [PageController::class, 'searchJobs'])->middleware(['auth', 'verified'])->name('pages.searchJobs');
 
 Route::get('/jobs', [PageController::class, 'jobs'])->name('jobs');
+
+Route::get('/contact', [ContactController::class, 'index'])->name('contact');
+
+Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
+
+Route::get('/privacy', function () {
+    return Inertia::render('Privacy');
+})->name('privacy');
+
+Route::get('/guidelines', function () {
+    return Inertia::render('Guidelines');
+})->name('guidelines');
 
 Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->middleware(['auth', 'verified', 'not_admin'])->name('dashboard');
 
@@ -77,6 +95,8 @@ Route::middleware(['auth', 'admin'])->prefix('Admin')->name('admin.')->group(fun
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
     Route::get('/jobs/create', [AdminController::class, 'createJob'])->name('jobs.create');
+
+    Route::get('/messages', [AdminController::class, 'messages'])->name('messages');
 
     Route::get('/users', [AdminController::class, 'users'])->name('users');
 

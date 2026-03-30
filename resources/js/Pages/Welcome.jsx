@@ -212,9 +212,9 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
     ];
     // Stats data for mission section
     const stats = [
-        { number: "10K+", label: "Active Users" },
-        { number: "500+", label: "Companies" },
-        { number: "5K+", label: "Jobs Posted" },
+        { number: "100+", label: "Active Users" },
+        { number: "50+", label: "Companies" },
+        { number: "30+", label: "Jobs Posted" },
         { number: "98%", label: "Success Rate" }
     ];
 
