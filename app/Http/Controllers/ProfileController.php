@@ -81,254 +81,487 @@ class ProfileController extends Controller
      */
     public function updateExtendedProfile(Request $request): RedirectResponse
     {
-        Log::info('Profile update started', ['user_id' => $request->user()->id, 'data' => $request->all()]);
+        try {
+            Log::info('Profile update started', ['user_id' => $request->user()->id, 'data' => $request->all()]);
 
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:100',
-            'last_name' => 'required|string|max:100',
-            'email' => 'required|email|max:255',
-            'phone' => 'nullable|string|max:20',
-            'position' => 'nullable|string|max:100',
-            'education' => 'nullable|string|max:100',
-            'bio' => 'nullable|string|max:1000',
-            'address' => 'nullable|string|max:255',
-            'city' => 'nullable|string|max:100',
-            'country' => 'nullable|string|max:100',
-            'linkedin_url' => 'nullable|string|max:255',
-            'github_url' => 'nullable|string|max:255',
-            'portfolio_url' => 'nullable|string|max:255',
-        ]);
+            $user = $request->user();
+            $profile = $user->profile;
 
-        Log::info('Profile data validated', ['validated' => $validated]);
+            // Create profile if it doesn't exist
+            if (!$profile) {
+                $profile = Profile::create(['user_id' => $user->id]);
+                $user->setRelation('profile', $profile);
+            }
 
-        $user = $request->user();
-        $user->forceFill([
-            'name' => trim($validated['first_name'] . ' ' . $validated['last_name']),
-            'email' => $validated['email'],
-        ])->save();
+            // Validate all fields including profile_image
+            $validated = $request->validate([
+                'first_name' => 'nullable|string|max:100',
+                'last_name' => 'nullable|string|max:100',
+                'email' => 'nullable|email|max:255|unique:users,email,' . $user->id,
+                'phone' => 'nullable|string|max:20',
+                'position' => 'nullable|string|max:100',
+                'title' => 'nullable|string|max:100',
+                'company' => 'nullable|string|max:100',
+                'education' => 'nullable|string|max:100',
+                'bio' => 'nullable|string|max:1000',
+                'address' => 'nullable|string|max:255',
+                'city' => 'nullable|string|max:100',
+                'country' => 'nullable|string|max:100',
+                'linkedin_url' => 'nullable|string|max:255',
+                'github_url' => 'nullable|string|max:255',
+                'portfolio_url' => 'nullable|string|max:255',
+                'profile_image' => 'nullable|string', // Base64 image string
+                'employment_type' => 'nullable|string|max:255',
+                'start_date' => 'nullable|string',
+                'availability_status' => 'nullable|string|max:255',
+            ]);
 
-        Profile::updateOrCreate(
-            ['user_id' => $user->id],
-            Arr::except($validated, ['first_name', 'last_name', 'email'])
-        );
+            // Update user email if changed
+            if (isset($validated['email']) && $validated['email'] !== $user->email) {
+                $user->email = $validated['email'];
+                $user->email_verified_at = null;
+                $user->save();
+            }
 
-        Log::info('Profile updated successfully', ['user_id' => $user->id]);
+            // Handle base64 profile image if present
+            $avatarUpdated = false;
 
-        return Redirect::route('pages.userProfile')->with('success', 'Profile updated successfully!');
+            if (array_key_exists('profile_image', $validated)) {
+                $base64Image = $validated['profile_image'];
+                
+                // Check if it's an empty string (remove avatar)
+                if ($base64Image === '') {
+                    $profile->profile_image_base64 = null;
+                    $avatarUpdated = true;
+                    Log::info('Profile image removed');
+                }
+                // Check if it's a valid base64 string (upload new image)
+                elseif ($base64Image && preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                    // Store the base64 string directly in the database
+                    $profile->profile_image_base64 = $base64Image;
+                    $avatarUpdated = true;
+                    Log::info('Profile image saved as base64');
+                }
+            }
+
+            // Update user basic info
+            $userUpdated = false;
+            if (isset($validated['first_name']) || isset($validated['last_name'])) {
+                $currentFirstName = explode(' ', $user->name)[0] ?? '';
+                $currentLastName = explode(' ', $user->name, 2)[1] ?? '';
+                
+                $firstName = $validated['first_name'] ?? $currentFirstName;
+                $lastName = $validated['last_name'] ?? $currentLastName;
+                
+                $newName = trim($firstName . ' ' . $lastName);
+                if ($user->name !== $newName) {
+                    $user->name = $newName;
+                    $userUpdated = true;
+                }
+            }
+            
+            // Update title in users table
+            if (isset($validated['title'])) {
+                $user->title = $validated['title'];
+                $userUpdated = true;
+            }
+            
+            // Update company in users table
+            if (isset($validated['company'])) {
+                $user->company = $validated['company'];
+                $userUpdated = true;
+            }
+            
+            if ($userUpdated) {
+                $user->save();
+                Log::info('User updated with title/company/name');
+            }
+
+            // Prepare profile data - remove user fields and profile_image
+            $profileData = Arr::except($validated, ['first_name', 'last_name', 'email', 'profile_image', 'title', 'company']);
+            
+            // Filter out empty values to preserve existing data
+            $filteredProfileData = [];
+            foreach ($profileData as $key => $value) {
+                // Only update if the value is not null and not empty string
+                if ($value !== null && $value !== '') {
+                    $filteredProfileData[$key] = $value;
+                    Log::info("Will update {$key}: '{$value}'");
+                }
+            }
+            
+            // Update the existing profile
+            if (!empty($filteredProfileData)) {
+                foreach ($filteredProfileData as $key => $value) {
+                    $profile->$key = $value;
+                }
+                $profile->save();
+                Log::info('Profile updated with fields:', $filteredProfileData);
+            } elseif ($avatarUpdated) {
+                // Save profile if only avatar was updated
+                $profile->save();
+                Log::info('Profile saved with avatar update only');
+            }
+
+            // CRITICAL: Refresh the user and profile to get the latest data
+            $user->refresh();
+            $user->load('profile');
+            
+            Log::info('=== PROFILE UPDATE COMPLETED ===');
+            Log::info('Final avatar base64: ' . ($profile->profile_image_base64 ? 'Yes' : 'No'));
+
+            // Update profile completion percentage
+            if (method_exists($user, 'updateProfileCompletion')) {
+                $user->updateProfileCompletion();
+            }
+
+            // Store success message in flash
+            session()->flash('success', 'Profile updated successfully!');
+            
+            // IMPORTANT: Redirect to dashboard instead of profile edit page
+            // This ensures the dashboard shows the updated profile
+            return Redirect::route('dashboard');
+            
+        } catch (\Exception $e) {
+            Log::error('Profile update error:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            session()->flash('error', 'An error occurred while updating profile: ' . $e->getMessage());
+            return Redirect::route('profile.editExtended')->withErrors(['error' => 'Update failed: ' . $e->getMessage()]);
+        }
     }
 
     /**
-     * Upload user avatar image.
+     * Update user profile (for settings page) - UPDATED to save to users table directly
      */
     public function uploadAvatar(Request $request): RedirectResponse
     {
-        $request->validate([
-            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
-
-        $user = $request->user();
-        $profile = $user->profile ?? Profile::firstOrCreate(['user_id' => $user->id]);
-
-        // Delete old avatar if exists
-        if ($profile->avatar && Storage::disk('public')->exists($profile->avatar)) {
-            Storage::disk('public')->delete($profile->avatar);
+        try {
+            $user = Auth::user();
+            
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email,' . $user->id,
+                'title' => 'nullable|string|max:255',
+                'company' => 'nullable|string|max:255',
+                'position' => 'nullable|string|max:255',
+                'bio' => 'nullable|string|max:500',
+                'phone' => 'nullable|string|max:20',
+                'location' => 'nullable|string|max:255',
+                'availability_status' => 'nullable|string|max:255',
+                'employment_type' => 'nullable|string|max:255',
+                'start_date' => 'nullable|date',
+                'portfolio_url' => 'nullable|url|max:255',
+                'github_url' => 'nullable|url|max:255',
+                'linkedin_url' => 'nullable|url|max:255',
+                'twitter_url' => 'nullable|url|max:255',
+                'skills' => 'nullable|array',
+            ]);
+            
+            // Update user directly in users table
+            $user->update([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'title' => $validated['title'] ?? $user->title,
+                'company' => $validated['company'] ?? $user->company,
+                'position' => $validated['position'] ?? $user->position,
+                'bio' => $validated['bio'] ?? $user->bio,
+                'phone' => $validated['phone'] ?? $user->phone,
+                'location' => $validated['location'] ?? $user->location,
+                'availability_status' => $validated['availability_status'] ?? $user->availability_status,
+                'employment_type' => $validated['employment_type'] ?? $user->employment_type,
+                'start_date' => $validated['start_date'] ?? $user->start_date,
+                'portfolio_url' => $validated['portfolio_url'] ?? $user->portfolio_url,
+                'github_url' => $validated['github_url'] ?? $user->github_url,
+                'linkedin_url' => $validated['linkedin_url'] ?? $user->linkedin_url,
+                'twitter_url' => $validated['twitter_url'] ?? $user->twitter_url,
+            ]);
+            
+            // Handle skills if provided (store as JSON in users table)
+            if ($request->has('skills') && is_array($request->skills)) {
+                $user->skills = json_encode($request->skills);
+                $user->save();
+            }
+            
+            // Handle avatar upload if file exists
+            if ($request->hasFile('avatar')) {
+                $file = $request->file('avatar');
+                $filename = $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+                
+                Storage::disk('public')->putFileAs('avatars', $file, $filename);
+                
+                $profile = Profile::where('user_id', $user->id)->first();
+                if ($profile) {
+                    $profile->update(['avatar' => 'avatars/' . $filename]);
+                }
+            }
+            
+            // Update profile completion percentage using the new method
+            if (method_exists($user, 'updateProfileCompletion')) {
+                $user->updateProfileCompletion();
+            }
+            
+            // Refresh user
+            $user->refresh();
+            
+            // For Inertia form submission, redirect back with success
+            return Redirect::back()->with('success', 'Profile updated successfully!');
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return Redirect::back()->withErrors($e->errors());
+        } catch (\Exception $e) {
+            Log::error('Profile update error (settings):', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return Redirect::back()->withErrors(['error' => 'Failed to update profile: ' . $e->getMessage()]);
         }
-
-        $file = $request->file('avatar');
-        $filename = $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
-        
-        Storage::disk('public')->putFileAs('avatars', $file, $filename);
-        
-$profile->update(['avatar' => 'avatars/' . $filename]);
-
-        return Redirect::route('profile.editExtended')->with('success', 'Avatar uploaded successfully.');
     }
 
     /**
      * Remove user avatar.
      */
-    public function removeAvatar(Request $request): RedirectResponse
+    public function removeAvatar(Request $request)
     {
-        $user = $request->user();
-        $profile = $user->profile;
+        try {
+            $user = Auth::user();
+            $profile = Profile::where('user_id', $user->id)->first();
 
-        if ($profile && $profile->avatar && Storage::disk('public')->exists($profile->avatar)) {
-            Storage::disk('public')->delete($profile->avatar);
-            $profile->update(['avatar' => null]);
+            if ($profile) {
+                // Clear the base64 image (this is the main one)
+                $profile->profile_image_base64 = null;
+                
+                // Also clear the old file storage if exists (for backward compatibility)
+                if ($profile->avatar && Storage::disk('public')->exists($profile->avatar)) {
+                    Storage::disk('public')->delete($profile->avatar);
+                    $profile->avatar = null;
+                }
+                
+                $profile->save();
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile picture removed successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error removing avatar:', [
+                'message' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to remove profile picture'
+            ], 500);
         }
-
-        return Redirect::route('pages.userProfile')->with('success', 'Avatar removed successfully.');
     }
-
+    
     /**
-     * Add a skill to the user's profile.
+     * Get user job preferences
      */
-    public function addSkill(Request $request): RedirectResponse
+    public function getJobPreferences(Request $request)
     {
-        $validated = $request->validate([
-            'skill_id' => 'required|exists:skills,id',
-            'proficiency_level' => 'required|in:beginner,intermediate,advanced,expert',
-            'years_experience' => 'nullable|integer|min:0',
-        ]);
-
-        $request->user()->skills()->syncWithoutDetaching([
-            $validated['skill_id'] => [
-                'proficiency_level' => $validated['proficiency_level'],
-                'years_experience' => $validated['years_experience'] ?? 0,
-            ]
-        ]);
-
-        return Redirect::route('profile.editExtended')->with('success', 'Skill added successfully.');
-    }
-
-    /**
-     * Remove a skill from the user's profile.
-     */
-    public function removeSkill(Request $request, int $skillId): RedirectResponse
-    {
-        $request->user()->skills()->detach($skillId);
-
-        return Redirect::route('profile.editExtended')->with('success', 'Skill removed successfully.');
-    }
-
-    /**
-     * Add work experience.
-     */
-    public function addExperience(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'company_name' => 'required|string|max:255',
-            'job_title' => 'required|string|max:255',
-            'location' => 'nullable|string|max:255',
-            'start_date' => 'required|date',
-            'end_date' => 'nullable|date|after:start_date',
-            'is_current' => 'boolean',
-            'description' => 'nullable|string|max:2000',
-        ]);
-
-        $request->user()->experiences()->create($validated);
-
-        return Redirect::route('profile.editExtended')->with('success', 'Experience added successfully.');
-    }
-
-    /**
-     * Update work experience.
-     */
-    public function updateExperience(Request $request, Experience $experience): RedirectResponse
-    {
-        if (!$experience->isOwnedBy($request->user())) {
-            return Redirect::back()->with('error', 'Unauthorized action.');
+        try {
+            $user = Auth::user();
+            
+            // Get preferences from database or return defaults
+            $preferences = $user->job_preferences ?? [
+                'job_types' => [],
+                'employment_types' => [],
+                'locations' => [],
+                'remote_only' => false,
+                'max_commute_distance' => 50,
+                'salary_min' => '',
+                'salary_max' => '',
+                'salary_currency' => 'USD',
+                'job_alerts_enabled' => true,
+                'alert_frequency' => 'daily',
+                'alert_email' => $user->email,
+                'experience_level' => '',
+                'industries' => [],
+                'minimum_match_score' => 60,
+                'show_remote_jobs' => true,
+                'show_urgent_jobs' => true,
+            ];
+            
+            return response()->json([
+                'success' => true,
+                'preferences' => $preferences
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error fetching job preferences:', [
+                'message' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch job preferences'
+            ], 500);
         }
-
-        $validated = $request->validate([
-            'company_name' => 'required|string|max:255',
-            'job_title' => 'required|string|max:255',
-            'location' => 'nullable|string|max:255',
-            'start_date' => 'required|date',
-            'end_date' => 'nullable|date|after:start_date',
-            'is_current' => 'boolean',
-            'description' => 'nullable|string|max:2000',
-        ]);
-
-        $experience->update($validated);
-
-        return Redirect::route('profile.editExtended')->with('success', 'Experience updated successfully.');
     }
 
     /**
-     * Delete work experience.
+     * Update user job preferences
      */
-    public function deleteExperience(Request $request, Experience $experience): RedirectResponse
+    public function updateJobPreferences(Request $request)
     {
-        if (!$experience->isOwnedBy($request->user())) {
-            return Redirect::back()->with('error', 'Unauthorized action.');
+        try {
+            $user = Auth::user();
+            
+            $validated = $request->validate([
+                'job_types' => 'nullable|array',
+                'employment_types' => 'nullable|array',
+                'locations' => 'nullable|array',
+                'remote_only' => 'boolean',
+                'max_commute_distance' => 'nullable|integer|min:0|max:500',
+                'salary_min' => 'nullable|string',
+                'salary_max' => 'nullable|string',
+                'salary_currency' => 'nullable|string|size:3',
+                'job_alerts_enabled' => 'boolean',
+                'alert_frequency' => 'nullable|in:instant,daily,weekly',
+                'alert_email' => 'nullable|email',
+                'experience_level' => 'nullable|string',
+                'industries' => 'nullable|array',
+                'minimum_match_score' => 'nullable|integer|min:0|max:100',
+                'show_remote_jobs' => 'boolean',
+                'show_urgent_jobs' => 'boolean',
+            ]);
+            
+            // Save preferences to user
+            $user->job_preferences = $validated;
+            $user->save();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Job preferences saved successfully!',
+                'preferences' => $validated
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error saving job preferences:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to save preferences: ' . $e->getMessage()
+            ], 500);
         }
-
-        $experience->delete();
-
-        return Redirect::route('profile.editExtended')->with('success', 'Experience deleted successfully.');
     }
 
     /**
-     * Delete the user's account.
+     * Get user notification preferences
      */
-    public function destroy(Request $request): RedirectResponse
+    public function getNotificationPreferences(Request $request)
     {
-        $request->validate([
-            'password' => ['required', 'current_password'],
-        ]);
-
-        $user = $request->user();
-
-        Auth::logout();
-        $user->delete();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return Redirect::to('/');
-    }
-
-    /**
-     * CV Upload Page
-     */
-    public function cv(Request $request)
-    {
-        $user = $request->user()->loadMissing(['profile', 'resumes']);
-        return Inertia::render('cv', [
-            'user' => $user,
-            'resumes' => $user->resumes ?? [],
-        ]);
-    }
-
-    /**
-     * Store CV upload
-     */
-    public function storeResume(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'cv' => 'required|file|mimes:pdf,doc,docx|max:2048',
-            'title' => 'nullable|string|max:255',
-            'is_primary' => 'boolean',
-        ]);
-
-        $user = $request->user();
-        
-        $file = $request->file('cv');
-        $title = $request->title ?: $file->getClientOriginalName();
-        $filename = $user->id . '_' . time() . '_' . $file->getClientOriginalName();
-        
-        $path = $file->storeAs('resumes', $filename, 'public');
-        
-        // Demote other resumes if this is primary
-        if ($request->boolean('is_primary')) {
-            $user->resumes()->update(['is_primary' => false]);
+        try {
+            $user = Auth::user();
+            
+            // Default notification preferences
+            $defaultPreferences = [
+                // Email Notifications
+                'email_job_alerts' => true,
+                'email_application_updates' => true,
+                'email_message_notifications' => true,
+                'email_marketing' => false,
+                'email_newsletter' => false,
+                
+                // In-App Notifications
+                'in_app_job_alerts' => true,
+                'in_app_application_updates' => true,
+                'in_app_messages' => true,
+                
+                // Push Notifications
+                'push_enabled' => false,
+                'push_job_alerts' => true,
+                'push_messages' => true,
+                
+                // Frequency
+                'digest_frequency' => 'daily',
+                'quiet_hours_enabled' => false,
+                'quiet_hours_start' => '22:00',
+                'quiet_hours_end' => '08:00',
+                
+                // Desktop Notifications
+                'desktop_enabled' => true,
+                
+                // Sound
+                'sound_enabled' => true,
+            ];
+            
+            // Get saved preferences or return defaults
+            $preferences = $user->notification_preferences ?? $defaultPreferences;
+            
+            return response()->json([
+                'success' => true,
+                'preferences' => $preferences
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error fetching notification preferences:', [
+                'message' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch notification preferences'
+            ], 500);
         }
-        
-        $user->resumes()->create([
-            'title' => $title,
-            'file_path' => $path,
-            'file_name' => $filename,
-            'file_size' => $file->getSize(),
-            'is_primary' => $request->boolean('is_primary', false),
-            'status' => 'pending',
-        ]);
-
-        return back()->with('success', 'CV uploaded successfully');
     }
 
     /**
-     * Delete CV
+     * Update user notification preferences
      */
-    public function destroyResume(Request $request, $id): RedirectResponse
+    public function updateNotificationPreferences(Request $request)
     {
-        $user = $request->user();
-        $resume = $user->resumes()->findOrFail($id);
-        
-        Storage::disk('public')->delete($resume->file_path);
-        $resume->delete();
-
-        return back()->with('success', 'CV deleted');
+        try {
+            $user = Auth::user();
+            
+            $validated = $request->validate([
+                'email_job_alerts' => 'boolean',
+                'email_application_updates' => 'boolean',
+                'email_message_notifications' => 'boolean',
+                'email_marketing' => 'boolean',
+                'email_newsletter' => 'boolean',
+                'in_app_job_alerts' => 'boolean',
+                'in_app_application_updates' => 'boolean',
+                'in_app_messages' => 'boolean',
+                'push_enabled' => 'boolean',
+                'push_job_alerts' => 'boolean',
+                'push_messages' => 'boolean',
+                'digest_frequency' => 'nullable|in:instant,daily,weekly',
+                'quiet_hours_enabled' => 'boolean',
+                'quiet_hours_start' => 'nullable|string',
+                'quiet_hours_end' => 'nullable|string',
+                'desktop_enabled' => 'boolean',
+                'sound_enabled' => 'boolean',
+            ]);
+            
+            // Save preferences to user
+            $user->notification_preferences = $validated;
+            $user->save();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Notification preferences saved successfully!',
+                'preferences' => $validated
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error saving notification preferences:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to save notification preferences: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
-

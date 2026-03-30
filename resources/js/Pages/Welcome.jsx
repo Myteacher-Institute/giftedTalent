@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import '../../css/nav.css';
 import '../../css/hero.css';
@@ -96,88 +96,188 @@ function Hero() {
     );
 }
 
-const featuresData = [
-    {
-        image: sample1,
-        name: 'Sarah Johnson',
-        role: 'Senior Frontend Developer',
-        stars: 5,
-        halfStar: false,
-        icon: starIcon,
-        halfStarIcon: halfStarIcon,
-        rating: '5.0',
-        tech: ['React', 'TypeScript', 'Tailwind'],
-        bg: { backgroundColor: '#eff6ff' },
-        border: { borderColor: '#0ea5e9', borderWidth: '1px', borderStyle: 'solid' }
-    },
-    {
-        image: sample2,
-        name: 'Michael Chen',
-        role: 'Full Stack Engineer',
-        stars: 4,
-        halfStar: true,
-        icon: starIcon,
-        halfStarIcon: halfStarIcon,
-        rating: '4.5',
-        tech: ['Node.js', 'Python', 'PostgreSQL'],
-        bg: { backgroundColor: '#f0fdf4' },
-        border: { borderColor: '#10b981', borderWidth: '1px', borderStyle: 'solid' }
-    },
-    {
-        image: sample3,
-        name: 'Emily Rodriguez',
-        role: 'UX/UI Designer',
-        stars: 4,
-        halfStar: false,
-        icon: starIcon,
-        halfStarIcon: halfStarIcon,
-        rating: '4.0',
-        tech: ['Figma', 'Adobe XD', 'Prototyping'],
-        bg: { backgroundColor: '#fdf4ff' },
-        border: { borderColor: '#ec4899', borderWidth: '1px', borderStyle: 'solid' }
-    },
-    {
-        image: sample4,
-        name: 'David Kim',
-        role: 'DevOps Specialist',
-        stars: 5,
-        halfStar: false,
-        icon: starIcon,
-        halfStarIcon: halfStarIcon,
-        rating: '5.0',
-        tech: ['AWS', 'Docker', 'Kubernetes'],
-        bg: { backgroundColor: '#fef3c7' },
-        border: { borderColor: '#f59e0b', borderWidth: '1px', borderStyle: 'solid' }
-    },
-    {
-        image: sample1,
-        name: 'Lisa Wang',
-        role: 'Product Manager',
-        stars: 4,
-        halfStar: true,
-        icon: starIcon,
-        halfStarIcon: halfStarIcon,
-        rating: '4.5',
-        tech: ['Agile', 'Jira', 'Analytics'],
-        bg: { backgroundColor: '#f3f4f6' },
-        border: { borderColor: '#6b7280', borderWidth: '1px', borderStyle: 'solid' }
-    },
-    {
-        image: sample2,
-        name: 'Alex Patel',
-        role: 'Data Scientist',
-        stars: 5,
-        halfStar: false,
-        icon: starIcon,
-        halfStarIcon: halfStarIcon,
-        rating: '5.0',
-        tech: ['Python', 'ML', 'TensorFlow'],
-        bg: { backgroundColor: '#dbeafe' },
-        border: { borderColor: '#3b82f6', borderWidth: '1px', borderStyle: 'solid' }
-    }
-];
+export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], featuredTalents = [] }) {
+    // State for search inputs
+    const [searchInputs, setSearchInputs] = useState({
+        keyword: '',
+        skill: '',
+        location: ''
+    });
+    
+    // State for search results
+    const [searchResults, setSearchResults] = useState([]);
+    
+    // State for loading and error
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchError, setSearchError] = useState('');
+    const [submitting, setSubmitting] = useState(false);
+    
+    // Toast notification state
+    const [toast, setToast] = useState({
+        show: false,
+        message: '',
+        type: 'info'
+    });
+    
+    // Auth Modal state
+    const [showAuthModal, setShowAuthModal] = useState(false);
+    const [intendedJob, setIntendedJob] = useState(null);
+    
+    // Auto-hide toast after 3 seconds
+    useEffect(() => {
+        if (toast.show) {
+            const timer = setTimeout(() => {
+                setToast(prev => ({ ...prev, show: false }));
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [toast.show]);
+    
+    // Function to show toast messages
+    const showToast = (message, type = 'info') => {
+        setToast({
+            show: true,
+            message,
+            type
+        });
+    };
 
-export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] }) {
+    // Function to check if user is authenticated
+    const isAuthenticated = () => {
+        return auth && auth.user !== null;
+    };
+
+    // Function to handle protected actions with modal
+    const requireAuthWithModal = (action, event, jobData = null) => {
+        if (!isAuthenticated()) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            // Store the intended job/action
+            setIntendedJob(jobData);
+            setShowAuthModal(true);
+            
+            return false;
+        }
+        return true;
+    };
+
+    // Handle input changes
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setSearchInputs(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    // Handle search
+    const handleSearch = () => {
+        const hasSearchCriteria = searchInputs.keyword || searchInputs.skill || searchInputs.location;
+        
+        if (!hasSearchCriteria) {
+            showToast('Please enter at least one search criteria', 'error');
+            return;
+        }
+        
+        setIsSearching(true);
+        setSearchError('');
+        showToast('Searching for jobs...', 'loading');
+        
+        setTimeout(() => {
+            try {
+                const filtered = jobs.filter(job => {
+                    const keyword = searchInputs.keyword.toLowerCase().trim();
+                    const skill = searchInputs.skill.toLowerCase().trim();
+                    const location = searchInputs.location.toLowerCase().trim();
+                    
+                    const jobTitle = (job.job_title || job.title || '').toLowerCase();
+                    const jobSkills = (job.skills_required || job.skills || '').toLowerCase();
+                    const jobLocation = (job.company_location || job.location || '').toLowerCase();
+                    
+                    let matchesKeyword = true;
+                    let matchesSkill = true;
+                    let matchesLocation = true;
+                    
+                    if (keyword) matchesKeyword = jobTitle.includes(keyword);
+                    if (skill) matchesSkill = jobSkills.includes(skill);
+                    if (location) matchesLocation = jobLocation.includes(location);
+                    
+                    return matchesKeyword && matchesSkill && matchesLocation;
+                });
+                
+                setSearchResults(filtered);
+                
+                if (filtered.length > 0) {
+                    showToast(`Found ${filtered.length} job${filtered.length !== 1 ? 's' : ''} matching your criteria`, 'success');
+                } else {
+                    showToast('No jobs found matching your criteria. Try different keywords!', 'error');
+                }
+                
+            } catch (err) {
+                showToast('An error occurred while searching. Please try again.', 'error');
+                console.error('Search error:', err);
+            } finally {
+                setIsSearching(false);
+            }
+        }, 500);
+    };
+
+    // Handle apply button click - Navigate to easy apply page
+    const handleApplyClick = (job, event) => {
+        if (requireAuthWithModal('apply_job', event, job)) {
+            router.visit(`/easy-apply-job?job_id=${job.id}`);
+        }
+    };
+
+    // Handle view profile click - Navigate to talent profile
+    const handleViewProfile = (talent, event) => {
+        if (requireAuthWithModal('view_profile', event, talent)) {
+            router.visit(`/talent/${talent.id}`);
+        }
+    };
+
+    // Handle saved jobs
+    const handleSaveJob = async (job, event) => {
+        if (requireAuthWithModal('save_job', event, job)) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            try {
+                const response = await fetch(`/saved-jobs/${job.id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showToast(data.message || 'Job saved successfully!', 'success');
+                } else {
+                    showToast(data.message || 'Failed to save job', 'error');
+                }
+            } catch (error) {
+                showToast('Network error. Please try again.', 'error');
+                console.error('Save job error:', error);
+            }
+        }
+    };
+
+    // Get initials for avatar fallback
+    const getInitials = (name) => {
+        return name
+            .split(' ')
+            .map(word => word[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
+    };
 
     return (
         <>
@@ -189,8 +289,6 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
 
                 <Hero />
 
-
-
                 {/* search bar */}
                 <div className="search-container">
                     <div className="search-box">
@@ -201,7 +299,13 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                                     <circle cx="11" cy="11" r="8"></circle>
                                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                                 </svg>
-                                <input type="text" placeholder="Job title or Keyword" />
+                                <input 
+                                    type="text" 
+                                    name="keyword"
+                                    placeholder="Job title or Keyword" 
+                                    value={searchInputs.keyword}
+                                    onChange={handleInputChange}
+                                />
                             </div>
                             <div className="input-with-icon">
                                 {/* briefcase / skill */}
@@ -209,7 +313,13 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                                     <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
                                     <path d="M16 3H8v4h8V3z"></path>
                                 </svg>
-                                <input type="text" placeholder="Skill" />
+                                <input 
+                                    type="text" 
+                                    name="skill"
+                                    placeholder="Skill" 
+                                    value={searchInputs.skill}
+                                    onChange={handleInputChange}
+                                />
                             </div>
                             <div className="input-with-icon">
                                 {/* map pin / location */}
@@ -217,18 +327,106 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                                     <path d="M21 10c0 6-9 13-9 13S3 16 3 10a9 9 0 1118 0z"></path>
                                     <circle cx="12" cy="10" r="3"></circle>
                                 </svg>
-                                <input type="text" placeholder="Location" />
+                                <input 
+                                    type="text" 
+                                    name="location"
+                                    placeholder="Location" 
+                                    value={searchInputs.location}
+                                    onChange={handleInputChange}
+                                />
                             </div>
                         </div>
 
-                        <button className="search-button">Search Jobs</button>
+                        <button onClick={handleSearch} className="search-button">Search Jobs</button>
                     </div>
                 </div>
 
+                {/* Toast Notification */}
+                {toast.show && (
+                    <div className={`toast-notification toast-${toast.type}`}>
+                        <div className="toast-content">
+                            {toast.type === 'loading' && (
+                                <svg className="toast-icon spinning" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M12 6v6l4 2"></path>
+                                </svg>
+                            )}
+                            {toast.type === 'success' && (
+                                <svg className="toast-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M20 6L9 17l-5-5"></path>
+                                </svg>
+                            )}
+                            {toast.type === 'error' && (
+                                <svg className="toast-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                                </svg>
+                            )}
+                            {toast.type === 'info' && (
+                                <svg className="toast-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                </svg>
+                            )}
+                            <span className="toast-message">{toast.message}</span>
+                            <button className="toast-close" onClick={() => setToast(prev => ({ ...prev, show: false }))}>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                )}
 
-                {/* christopher - Featured Jobs Section */}
+                {/* Search Results */}
+                {searchResults.length > 0 && (
+                    <div className="search-results-section">
+                        <h2>Search Results ({searchResults.length})</h2>
+                        <div className="jobs-grid">
+                            {searchResults.map((job) => (
+                                <div key={job.id} className="job-card">
+                                    <div className="job-card-header">
+                                        <div className={`job-icon ${job.gradient || 'gradient-blue'}`}>
+                                            <img src={`/assets/svg/${job.icon || 'code.svg'}`} alt="" className="job-icon-img" />
+                                        </div>
+                                        <span className="job-type">
+                                            {job.job_type || job.type || 'Full-time'}
+                                        </span>
+                                    </div>
+                                    <h3 className="job-title">{job.job_title || job.title || 'Job Title'}</h3>
+                                    <p className="job-company">{job.company_name || job.company || 'Company Name'}</p>
+                                    <div className="job-details">
+                                        <div className="job-location">
+                                            <img src="/assets/svg/location.svg" alt="" className="location-icon" />
+                                            <span>{job.company_location || job.location || 'Location'}</span>
+                                        </div>
+                                        <span className="job-salary">{job.salary_range || job.salary || 'Salary'}</span>
+                                    </div>
+                                    <div className="job-buttons">
+                                        <button 
+                                            className="apply-btn" 
+                                            onClick={(e) => handleApplyClick(job, e)}
+                                        >
+                                            Apply Now
+                                        </button>
+                                        <button 
+                                            className="save-btn" 
+                                            onClick={(e) => handleSaveJob(job, e)}
+                                        >
+                                            Save Job
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Featured Jobs Section */}
                 <div className="feature-jobs">
-
                     <div className="jobs-wrapper">
                         {/* Header */}
                         <div className="jobs-header">
@@ -238,75 +436,41 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
 
                         <div className="jobs-grid">
                             {jobs.length > 0 ? (
-                                jobs.map((job) => {
-                                    // Determine job type styling
-                                    const getJobTypeStyle = () => {
-                                        const jobType = job.job_type || job.type || 'Full-time';
-                                        const type = jobType.toLowerCase();
-
-                                        if (type === 'contract' || type === 'part-time') {
-                                            return { className: 'job-type job-type-blue', id: '' };
-                                        }
-                                        if (type === 'full-time' || type === 'remote') {
-                                            return { className: 'job-type job-type-green', id: '' };
-                                        }
-                                        return { className: 'job-type', id: '' };
-                                    };
-
-                                    const jobTypeStyle = getJobTypeStyle();
-                                    // Get tags array - default empty array if none
-                                    const tags = job.tags || [];
-
-                                    return (
-                                        <div key={job.id} className="job-card">
-                                            <div className="job-card-header">
-                                                <div className={`job-icon ${job.gradient || 'gradient-blue'}`}>
-                                                    <img src={`/assets/svg/${job.icon || 'code.svg'}`} alt="" className="job-icon-img" />
-                                                </div>
-                                                <span className={jobTypeStyle.className} id={jobTypeStyle.id}>
-                                                    {job.job_type || job.type || 'Full-time'}
-                                                </span>
+                                jobs.map((job) => (
+                                    <div key={job.id} className="job-card">
+                                        <div className="job-card-header">
+                                            <div className={`job-icon ${job.gradient || 'gradient-blue'}`}>
+                                                <img src={`/assets/svg/${job.icon || 'code.svg'}`} alt="" className="job-icon-img" />
                                             </div>
-                                            <h3 className="job-title">{job.job_title || job.title || 'Job Title'}</h3>
-                                            <p className="job-company">{job.company_name || job.company || 'Company Name'}</p>
-
-
-                                            <div className="job-details">
-                                                <div className="job-location">
-                                                    <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                                    <span>{job.company_location || job.location || 'Location'}</span>
-                                                </div>
-                                                <span className="job-salary">{job.salary_range || job.salary || 'Salary'}</span>
+                                            <span className="job-type">
+                                                {job.job_type || job.type || 'Full-time'}
+                                            </span>
+                                        </div>
+                                        <h3 className="job-title">{job.job_title || job.title || 'Job Title'}</h3>
+                                        <p className="job-company">{job.company_name || job.company || 'Company Name'}</p>
+                                        <div className="job-details">
+                                            <div className="job-location">
+                                                <img src="/assets/svg/location.svg" alt="" className="location-icon" />
+                                                <span>{job.company_location || job.location || 'Location'}</span>
                                             </div>
-                                            {/* Tags Section */}
-                                            {tags.length > 0 && (
-                                                <div className="job-tags">
-                                                    {tags.slice(0, 3).map((tag, index) => (
-                                                        <span key={index} className="job-tag">{tag}</span>
-                                                    ))}
-                                                    {tags.length > 3 && (
-                                                        <span className="job-tag-more">+{tags.length - 3}</span>
-                                                    )}
-                                                </div>
-                                            )}
-                                            <div>
-                                                <span className="job-date">{new Date(job.created_at).toLocaleDateString('en-US', {
-                                                    month: 'short',
-                                                    day: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })}</span>
-                                            </div>
-
-                                            <button
-                                                className="apply-btn"
-                                                onClick={() => window.location.href = `/jobs/${job.id}`}
+                                            <span className="job-salary">{job.salary_range || job.salary || 'Salary'}</span>
+                                        </div>
+                                        <div className="job-buttons">
+                                            <button 
+                                                className="apply-btn" 
+                                                onClick={(e) => handleApplyClick(job, e)}
                                             >
                                                 Apply Now
                                             </button>
+                                            <button 
+                                                className="save-btn" 
+                                                onClick={(e) => handleSaveJob(job, e)}
+                                            >
+                                                Save Job
+                                            </button>
                                         </div>
-                                    );
-                                })
+                                    </div>
+                                ))
                             ) : (
                                 <div className="no-jobs-message">
                                     <p>No jobs posted yet. Check back soon!</p>
@@ -322,65 +486,122 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                 </div>
 
                 <div className="featured-talents">
-
                     <div className="feature-talent-header">
                         <h3>Featured Talents</h3>
                         <p>Connect with skilled professionals ready to work</p>
                     </div>
 
                     <div className="feature-talent-content">
-                        {featuresData.map((feature, index) => (
-                            <div className="feature-talent-card" key={index} style={{ ...feature.bg, ...feature.border }}>
-                                <div className="feature-talent-card-header">
-                                    <img src={feature.image} alt="" />
-                                </div>
+                        {featuredTalents.length > 0 ? (
+                            featuredTalents.map((talent) => (
+                                <div key={talent.id} className="feature-talent-card">
+                                    <div className="feature-talent-card-header">
+                                        {talent.avatar ? (
+                                            <img src={talent.avatar} alt={talent.name} />
+                                        ) : (
+                                            <div className="feature-talent-avatar-initials">
+                                                {getInitials(talent.name)}
+                                            </div>
+                                        )}
+                                    </div>
 
-                                <div className="feature-talent-card-body">
-                                    <h3>{feature.name}</h3>
-                                    <p>{feature.role}</p>
-                                </div>
+                                    <div className="feature-talent-card-body">
+                                        <h3>{talent.name}</h3>
+                                        <p>{talent.role}</p>
+                                    </div>
 
-                                <div className="feature-talent-card-stars">
-                                    {[...Array(5)].map((_, starIndex) => {
-                                        if (starIndex < feature.stars) {
-                                            return <img key={starIndex} src={feature.icon} alt="star" />;
-                                        } else if (starIndex === feature.stars && feature.halfStar) {
-                                            return <img key={starIndex} src={feature.halfStarIcon} alt="half star" />;
-                                        }
-                                        return null;
-                                    })}
-                                    <span>{`(${feature.rating})`}</span>
-                                </div>
+                                    <div className="feature-talent-card-stars">
+                                        {[...Array(5)].map((_, starIndex) => {
+                                            const starValue = talent.stars || 0;
+                                            const hasHalfStar = talent.halfStar || false;
+                                            if (starIndex < starValue) {
+                                                return <img key={starIndex} src={starIcon} alt="star" />;
+                                            } else if (starIndex === starValue && hasHalfStar) {
+                                                return <img key={starIndex} src={halfStarIcon} alt="half star" />;
+                                            }
+                                            return null;
+                                        })}
+                                        <span>{`(${talent.rating || 0})`}</span>
+                                    </div>
 
-                                <div className="feature-talent-card-roles">
-                                    {feature.tech.map((tech, techIndex) => (
-                                        <span key={techIndex}>{tech}</span>
-                                    ))}
-                                </div>
+                                    <div className="feature-talent-card-roles">
+                                        {(talent.tech || []).map((tech, techIndex) => (
+                                            <span key={techIndex}>{tech}</span>
+                                        ))}
+                                    </div>
 
-                                <div className="feature-talent-card-footer">
-                                    <Link href="">View Profile</Link>
+                                    <div className="feature-talent-card-footer">
+                                        <Link 
+                                            href={`/talent/${talent.id}`}
+                                            onClick={(e) => {
+                                                if (!isAuthenticated()) {
+                                                    e.preventDefault();
+                                                    requireAuthWithModal('view_profile', e, talent);
+                                                }
+                                            }}
+                                        >
+                                            View Profile
+                                        </Link>
+                                    </div>
                                 </div>
+                            ))
+                        ) : (
+                            <div className="no-talents-message">
+                                <p>No featured talents yet. Check back soon!</p>
                             </div>
-                        ))}
-
+                        )}
                     </div>
 
-                    <Link href="" className='browse-all-btn'>Browse All Talents</Link>
+                    <Link href="/find-talents" className='browse-all-btn'>Browse All Talents</Link>
                 </div>
 
-                {/* FOOTER */}
-                <footer>
-                    <div className="footer-left">
-                        <a href="#" className="brand" onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
-                            GiftedTalents<span>.online</span>
-                        </a>
-                        <div>
-                            <p>©</p>
-                            <span>2026</span>
+                {/* Auth Modal */}
+                {showAuthModal && (
+                    <div className="auth-modal-overlay" onClick={() => setShowAuthModal(false)}>
+                        <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
+                            <button className="auth-modal-close" onClick={() => setShowAuthModal(false)}>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                            
+                            <div className="auth-modal-content">
+                                <div className="auth-modal-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                                        <circle cx="12" cy="12" r="4"/>
+                                    </svg>
+                                </div>
+                                
+                                <h2>Join GiftedTalent to Continue</h2>
+                                <p>You need to be a member to apply for jobs and view talent profiles. It only takes a minute!</p>
+                                
+                                {intendedJob && (
+                                    <div className="auth-modal-job">
+                                        <p>You were about to apply for:</p>
+                                        <strong>{intendedJob.job_title || intendedJob.title || intendedJob.role}</strong>
+                                    </div>
+                                )}
+                                
+                                <div className="auth-modal-buttons">
+                                    <Link href={route('login')} className="auth-modal-btn auth-modal-btn-primary">
+                                        Sign In
+                                    </Link>
+                                    <Link href={route('register')} className="auth-modal-btn auth-modal-btn-secondary">
+                                        Create Account
+                                    </Link>
+                                </div>
+                                
+                                <p className="auth-modal-footer">
+                                    By continuing, you agree to our Terms of Service and Privacy Policy
+                                </p>
+                            </div>
                         </div>
                     </div>
+                )}
 
+                <footer className="footer">
                     <div className="footer-right">
                         <a href="/about">About</a>
                         <a href="/contact">Contact</a>
@@ -388,7 +609,6 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                         <a href="/guidelines">Community Guideline</a>
                     </div>
                 </footer>
-
             </div>
         </>
     );
