@@ -120,7 +120,8 @@ nav div p {
     color: #0A2463;
 }
 
-.sidebar-nav img, .logout-icon svg {
+.sidebar-nav img,
+.logout-icon svg {
     margin-right: 1rem;
 }
 
@@ -873,4 +874,37 @@ footer {
         flex-direction: column;
         gap: 0.5rem;
     }
+}
+
+.avatar-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.icon-wrapper {
+    position: relative;
+    cursor: pointer;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -8px;
+    background: #EF4444;
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+}
+
+.user-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: #1A1E24;
+    margin-left: 8px;
 }

@@ -14,12 +14,15 @@ class Contact extends Model
         'email',
         'subject',
         'message',
-        'is_read'
+        'is_read',
+        'admin_reply',
+        'replied_at' 
     ];
 
     protected $casts = [
         'is_read' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'replied_at' => 'datetime', 
     ];
 }

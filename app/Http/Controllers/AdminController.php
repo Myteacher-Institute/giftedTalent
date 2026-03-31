@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Contact;
 use App\Models\Job;
+use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -100,6 +102,10 @@ class AdminController extends Controller
             'jobStats'   => $jobStats,
             'recentJobs' => $recentJobs,
             'filters'    => $request->all(),
+            'auth'       => [
+                'user' => $adminUser,
+            ],
+            'unreadNotifications' => Notification::unread()->count(),
         ]);
     }
 
@@ -236,9 +242,111 @@ class AdminController extends Controller
         return redirect()->route('admin.jobs')->with('success', 'Job deleted successfully!');
     }
 
-    public function messages()
+    /**
+     * Display messages from contact form
+     */
+    public function messages(Request $request): Response
     {
-        $messages = Contact::latest()->paginate(10);
-        return Inertia::render('Admin/Messages', ['messages' => $messages]);
+        $query = Contact::query();
+
+        // Filter by read status
+        if ($request->has('status') && $request->status !== '') {
+            $query->where('is_read', $request->status === 'read');
+        }
+
+        // Search by name, email, or subject
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('subject', 'like', "%{$search}%")
+                    ->orWhere('message', 'like', "%{$search}%");
+            });
+        }
+
+        $messages = $query->latest()->paginate(10);
+
+        // Get counts for stats
+        $stats = [
+            'total'   => Contact::count(),
+            'unread'  => Contact::where('is_read', false)->count(),
+            'read'    => Contact::where('is_read', true)->count(),
+            'replied' => Contact::whereNotNull('admin_reply')->count(),
+        ];
+
+        return Inertia::render('Admin/Messages', [
+            'messages' => $messages,
+            'stats'    => $stats,
+            'filters'  => $request->only(['status', 'search']),
+        ]);
+    }
+
+    /**
+     * Reply to a message - REAL email sending
+     */
+    public function replyMessage(Request $request, $id)
+    {
+        $request->validate([
+            'reply' => 'required|string|min:3',
+        ]);
+
+        $message = Contact::findOrFail($id);
+
+        try {
+            Mail::send([], [], function ($mail) use ($message, $request) {
+                $mail->to($message->email)
+                    ->subject('Re: ' . $message->subject)
+                    ->html('
+                    <html>
+                    <head><title>Reply to your message</title></head>
+                    <body>
+                        <h2>Hello ' . htmlspecialchars($message->name) . ',</h2>
+                        <p>Thank you for contacting GiftedTalents.</p>
+                        <p><strong>Your message:</strong></p>
+                        <p style="background:#f5f5f5; padding:15px; border-radius:5px;">' . nl2br(htmlspecialchars($message->message)) . '</p>
+                        <p><strong>Our response:</strong></p>
+                        <p style="background:#e8f4fd; padding:15px; border-radius:5px;">' . nl2br(htmlspecialchars($request->reply)) . '</p>
+                        <p>Best regards,<br>GiftedTalents Team</p>
+                        <hr>
+                        <p style="font-size:12px; color:#999;">This is an automated response from GiftedTalents. Please do not reply to this email.</p>
+                    </body>
+                    </html>
+                ');
+            });
+
+            $message->update([
+                'is_read'     => true,
+                'admin_reply' => $request->reply,
+                'replied_at'  => now(),
+            ]);
+
+            return redirect()->back()->with('success', 'Reply sent successfully to ' . $message->email);
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to send reply: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete a message
+     */
+    public function deleteMessage($id)
+    {
+        $message = Contact::findOrFail($id);
+        $message->delete();
+
+        return redirect()->back()->with('success', 'Message deleted successfully!');
+    }
+
+    /**
+     * Mark message as read/unread
+     */
+    public function markAsRead(Request $request, $id)
+    {
+        $message = Contact::findOrFail($id);
+        $message->update(['is_read' => $request->is_read]);
+
+        return redirect()->back()->with('success', 'Message status updated!');
     }
 }
