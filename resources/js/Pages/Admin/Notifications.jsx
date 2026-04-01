@@ -117,7 +117,11 @@ export default function Notifications({ notifications: initialNotifications, unr
                         </div>
                     ) : (
                         notifications.map((notification) => {
-                            const notificationLink = notification.data?.link || notification.link;
+                            // Use the simple columns directly - NO JSON parsing
+                            const notificationTitle = notification.title || 'Notification';
+                            const notificationMessage = notification.message || '';
+                            const notificationLink = notification.link || null;
+                            
                             return (
                                 <div
                                     key={notification.id}
@@ -130,14 +134,14 @@ export default function Notifications({ notifications: initialNotifications, unr
                                     style={{ cursor: notificationLink ? 'pointer' : 'default' }}
                                 >
                                     <div className="notification-icon">
-                                        {getIcon(notification.data?.type || notification.type)}
+                                        {getIcon(notification.type)}
                                     </div>
                                     <div className="notification-content">
                                         <div className="notification-header">
-                                            <h3>{notification.data?.title || notification.title || 'Notification'}</h3>
+                                            <h3>{notificationTitle}</h3>
                                             <span className="notification-date">{formatDate(notification.created_at)}</span>
                                         </div>
-                                        <p>{notification.data?.message || notification.message}</p>
+                                        <p>{notificationMessage}</p>
                                         {notificationLink && (
                                             <span className="notification-link">
                                                 View details

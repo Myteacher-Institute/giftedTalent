@@ -30,7 +30,7 @@ class ContactController extends Controller
             'is_read' => false,
         ]);
 
-        // Create notification - NO UUID needed, ID auto increments
+        // Create notification
         Notification::create([
             'type'    => 'new_message',
             'title'   => 'New Contact Message',

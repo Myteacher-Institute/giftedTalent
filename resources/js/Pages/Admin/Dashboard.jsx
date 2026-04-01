@@ -455,10 +455,10 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
                         </div>
 
                         <div className="footer-right">
-                            <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/about'); }}>About</a>
-                            <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/contact'); }}>Contact</a>
-                            <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/privacy'); }}>Privacy Policy</a>
-                            <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/guidelines'); }}>Community Guideline</a>
+                            <a href="/about" onClick={(e) => { e.preventDefault(); navigateTo('/about'); }}>About</a>
+                            <a href="contact" onClick={(e) => { e.preventDefault(); navigateTo('/contact'); }}>Contact</a>
+                            <a href="privacy" onClick={(e) => { e.preventDefault(); navigateTo('/privacy'); }}>Privacy Policy</a>
+                            <a href="guidelines" onClick={(e) => { e.preventDefault(); navigateTo('/guidelines'); }}>Community Guideline</a>
                         </div>
                     </footer>
                 </main>

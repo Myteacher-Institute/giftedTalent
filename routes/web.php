@@ -104,6 +104,11 @@ Route::middleware(['auth', 'admin'])->prefix('Admin')->name('admin.')->group(fun
     Route::delete('/messages/{id}', [AdminController::class, 'deleteMessage'])->name('messages.delete');
     Route::patch('/messages/{id}/read', [AdminController::class, 'markAsRead'])->name('messages.read');
 
+    Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
+
+    Route::patch('/profile', [AdminController::class, 'updateProfile'])->name('profile.update');
+    Route::put('/password', [AdminController::class, 'updatePassword'])->name('password.update');
+
     // CV Review Routes
     Route::resource('cv-review', \App\Http\Controllers\Admin\CvReviewController::class)->only(['index', 'show']);
     Route::patch('cv-review/{resume}', [\App\Http\Controllers\Admin\CvReviewController::class, 'update'])->name('admin.cv-review.update');

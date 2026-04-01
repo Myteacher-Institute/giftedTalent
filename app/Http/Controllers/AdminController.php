@@ -8,7 +8,9 @@ use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -99,10 +101,10 @@ class AdminController extends Controller
         ];
 
         return Inertia::render('Admin/Dashboard', [
-            'jobStats'   => $jobStats,
-            'recentJobs' => $recentJobs,
-            'filters'    => $request->all(),
-            'auth'       => [
+            'jobStats'            => $jobStats,
+            'recentJobs'          => $recentJobs,
+            'filters'             => $request->all(),
+            'auth'                => [
                 'user' => $adminUser,
             ],
             'unreadNotifications' => Notification::unread()->count(),
@@ -348,5 +350,72 @@ class AdminController extends Controller
         $message->update(['is_read' => $request->is_read]);
 
         return redirect()->back()->with('success', 'Message status updated!');
+    }
+
+    public function settings()
+    {
+        return Inertia::render('Admin/Settings', [
+            'auth' => [
+                'user' => Auth::user()->load('profile'),
+            ],
+        ]);
+    }
+
+    /**
+     * Update admin profile
+     */
+    public function updateProfile(Request $request)
+    {
+        $request->validate([
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|max:255|unique:users,email,' . Auth::id(),
+            'bio'      => 'nullable|string|max:500',
+            'phone'    => 'nullable|string|max:20',
+            'location' => 'nullable|string|max:255',
+        ]);
+
+        $user = Auth::user();
+
+        // Update user
+        $user->update([
+            'name'  => $request->name,
+            'email' => $request->email,
+        ]);
+
+        // Update or create profile
+        if ($user->profile) {
+            $user->profile->update([
+                'bio'      => $request->bio,
+                'phone'    => $request->phone,
+                'location' => $request->location,
+            ]);
+        } else {
+            // When creating a new profile, include user_id
+            $user->profile()->create([
+                'user_id'  => $user->id, // Add this line
+                'bio'      => $request->bio,
+                'phone'    => $request->phone,
+                'location' => $request->location,
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Profile updated successfully!');
+    }
+
+/**
+ * Update admin password
+ */
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'new_password'     => ['required', 'confirmed', Password::defaults()],
+        ]);
+
+        Auth::user()->update([
+            'password' => Hash::make($request->new_password),
+        ]);
+
+        return redirect()->back()->with('success', 'Password updated successfully!');
     }
 }
