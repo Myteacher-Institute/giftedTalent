@@ -1,0 +1,337 @@
+import { Head, Link, router } from '@inertiajs/react';
+import { useState } from 'react';
+import '../../css/talent_profile.css';
+
+export default function TalentProfile({ auth, talent }) {
+    const [imageError, setImageError] = useState(false);
+
+    // Get initials for avatar fallback
+    const getInitials = (name) => {
+        if (!name) return '?';
+        return name
+            .split(' ')
+            .map(word => word[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
+    };
+
+    // Format availability status color
+    const getStatusColor = (status) => {
+        if (!status) return '#10b981';
+        switch(status?.toLowerCase()) {
+            case 'open to work':
+                return '#10b981';
+            case 'available':
+                return '#10b981';
+            case 'not available':
+                return '#ef4444';
+            default:
+                return '#f59e0b';
+        }
+    };
+
+    const handleMessage = () => {
+        alert('Messaging feature coming soon!');
+    };
+
+    // If no talent data, show loading
+    if (!talent) {
+        return (
+            <div className="talent-profile-page">
+                <div className="talent-profile-container">
+                    <div className="talent-profile-card-full">
+                        <p>Loading talent profile...</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <>
+            <Head title={`${talent.name || 'Talent'} - GiftedTalent Profile`} />
+            
+            <div className="talent-profile-page">
+                <div className="talent-profile-container">
+                    <div className="talent-profile-card-full">
+                        {/* Cover Image - Professional gradient */}
+                        <div className="talent-cover-image-full"></div>
+                        
+                        {/* Profile Image */}
+                        <div className="talent-profile-image-full">
+                            {!imageError && talent.avatar ? (
+                                <img 
+                                    src={talent.avatar} 
+                                    alt={talent.name}
+                                    onError={() => setImageError(true)}
+                                />
+                            ) : (
+                                <div className="talent-avatar-initials-full">
+                                    {getInitials(talent.name)}
+                                </div>
+                            )}
+                        </div>
+                        
+                        {/* Profile Info */}
+                        <div className="talent-profile-info-full">
+                            <h1 className="talent-name-full">{talent.name || 'Name not provided'}</h1>
+                            <div className="talent-title-full">{talent.title || 'Professional'}</div>
+                            
+                            {/* Stats Row */}
+                            <div className="talent-stats-row">
+                                {talent.years_experience > 0 && (
+                                    <div className="talent-stat-item">
+                                        <span className="talent-stat-value">{talent.years_experience}+</span>
+                                        <span className="talent-stat-label">Years Exp</span>
+                                    </div>
+                                )}
+                                {talent.expected_salary && (
+                                    <div className="talent-stat-item">
+                                        <span className="talent-stat-value">{talent.expected_salary}</span>
+                                        <span className="talent-stat-label">{talent.currency}/hr</span>
+                                    </div>
+                                )}
+                                <div className="talent-stat-item">
+                                    <span className="talent-stat-value">⭐ {talent.rating || '4.5'}</span>
+                                    <span className="talent-stat-label">Rating</span>
+                                </div>
+                            </div>
+                            
+                            <div className="talent-company-full">
+                                <svg className="company-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                    <path d="M16 3H8v4h8V3z"></path>
+                                </svg>
+                                {talent.company || 'Freelancer'}
+                                <span className="current-badge-full">Member since {talent.member_since}</span>
+                            </div>
+                        </div>
+                        
+                        <div className="talent-divider-full"></div>
+                        
+                        {/* Bio Section */}
+                        {talent.bio && (
+                            <>
+                                <div className="talent-bio-section">
+                                    <div className="talent-section-title-full">About</div>
+                                    <p className="talent-bio-text">{talent.bio}</p>
+                                </div>
+                                <div className="talent-divider-full"></div>
+                            </>
+                        )}
+                        
+                        {/* Availability Section */}
+                        <div className="talent-availability-section-full">
+                            <div className="talent-section-title-full">Availability</div>
+                            <div className="talent-availability-status-full">
+                                <span 
+                                    className="talent-status-badge-full"
+                                    style={{ backgroundColor: getStatusColor(talent.availability_status) }}
+                                >
+                                    {talent.availability_status || 'Open to work'}
+                                </span>
+                                <div className="talent-availability-text-full">
+                                    {talent.employment_type || 'Full-Time, Remote'}
+                                </div>
+                                <div className="talent-start-date-full">
+                                    Start Date: {talent.start_date || 'Available Immediately'}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="talent-divider-full"></div>
+                        
+                        {/* Contact Info Section */}
+                        <div className="talent-contact-section-full">
+                            <div className="talent-section-title-full">Contact Info</div>
+                            
+                            {talent.email && (
+                                <div className="talent-contact-item-full">
+                                    <div className="talent-contact-icon-full">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                            <polyline points="22,6 12,13 2,6"></polyline>
+                                        </svg>
+                                    </div>
+                                    <div className="talent-contact-text-full">{talent.email}</div>
+                                </div>
+                            )}
+                            
+                            {talent.phone && (
+                                <div className="talent-contact-item-full">
+                                    <div className="talent-contact-icon-full">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                                        </svg>
+                                    </div>
+                                    <div className="talent-contact-text-full">{talent.phone}</div>
+                                </div>
+                            )}
+                            
+                            <div className="talent-contact-item-full">
+                                <div className="talent-contact-icon-full">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                    </svg>
+                                </div>
+                                <div className="talent-contact-text-full"></div>
+                                <button 
+                                    className="talent-message-btn-full"
+                                    onClick={handleMessage}
+                                >
+                                    Send Message
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div className="talent-divider-full"></div>
+                        
+                        {/* Social Links Section */}
+                        {(talent.linkedin_url || talent.github_url || talent.portfolio_url) && (
+                            <>
+                                <div className="talent-social-section">
+                                    <div className="talent-section-title-full">Connect</div>
+                                    <div className="talent-social-links">
+                                        {talent.linkedin_url && (
+                                            <a href={talent.linkedin_url} target="_blank" rel="noopener noreferrer" className="talent-social-link">
+                                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451c.979 0 1.771-.773 1.771-1.729V1.729C24 .774 23.204 0 22.225 0z"/>
+                                                </svg>
+                                                LinkedIn
+                                            </a>
+                                        )}
+                                        {talent.github_url && (
+                                            <a href={talent.github_url} target="_blank" rel="noopener noreferrer" className="talent-social-link">
+                                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.39-1.335-1.76-1.335-1.76-1.09-.745.082-.73.082-.73 1.205.085 1.838 1.237 1.838 1.237 1.07 1.834 2.807 1.304 3.492.997.108-.775.418-1.305.762-1.604-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.4 3-.405 1.02.005 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12z"/>
+                                                </svg>
+                                                GitHub
+                                            </a>
+                                        )}
+                                        {talent.portfolio_url && (
+                                            <a href={talent.portfolio_url} target="_blank" rel="noopener noreferrer" className="talent-social-link">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <path d="M3 9l9-6 9 6v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"></path>
+                                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                                </svg>
+                                                Portfolio
+                                            </a>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="talent-divider-full"></div>
+                            </>
+                        )}
+                        
+                        {/* Location Section */}
+                        {talent.location && (
+                            <>
+                                <div className="talent-location-section">
+                                    <div className="talent-section-title-full">Location</div>
+                                    <div className="talent-location-text">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <path d="M21 10c0 6-9 13-9 13S3 16 3 10a9 9 0 1118 0z"></path>
+                                            <circle cx="12" cy="10" r="3"></circle>
+                                        </svg>
+                                        {talent.location}
+                                    </div>
+                                </div>
+                                <div className="talent-divider-full"></div>
+                            </>
+                        )}
+                        
+                        {/* Skills Section */}
+                        {talent.skills && talent.skills.length > 0 && (
+                            <div className="talent-skills-section-full">
+                                <div className="talent-section-title-full">Skills & Expertise</div>
+                                <div className="talent-skills-container-full">
+                                    {talent.skills.map((skill, index) => (
+                                        <span key={index} className="talent-skill-tag-full">
+                                            {skill}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        
+                        {/* Experience Section */}
+                        {talent.experiences && talent.experiences.length > 0 && (
+                            <>
+                                <div className="talent-divider-full"></div>
+                                <div className="talent-experience-section">
+                                    <div className="talent-section-title-full">Work Experience</div>
+                                    {talent.experiences.map((exp, index) => (
+                                        <div key={index} className="talent-experience-item">
+                                            <h4>{exp.title}</h4>
+                                            <p className="talent-company-name">{exp.company}</p>
+                                            <p className="talent-date-range">{exp.start_date} - {exp.end_date}</p>
+                                            {exp.description && <p className="talent-experience-desc">{exp.description}</p>}
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+                        
+                        {/* Education Section */}
+                        {talent.education && talent.education.length > 0 && (
+                            <>
+                                <div className="talent-divider-full"></div>
+                                <div className="talent-education-section">
+                                    <div className="talent-section-title-full">Education</div>
+                                    {talent.education.map((edu, index) => (
+                                        <div key={index} className="talent-education-item">
+                                            <h4>{edu.degree}</h4>
+                                            <p className="talent-institution-name">{edu.institution}</p>
+                                            <p className="talent-year">{edu.year}</p>
+                                            {edu.description && <p className="talent-education-desc">{edu.description}</p>}
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+                        
+                        {/* Resume Button */}
+                        <div className="talent-resume-section-full">
+                            {talent.resume_url ? (
+                                <a 
+                                    href={talent.resume_url} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="talent-view-resume-btn-full"
+                                >
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                                        <polyline points="10 9 9 9 8 9"></polyline>
+                                    </svg>
+                                    View Resume
+                                </a>
+                            ) : (
+                                <button className="talent-view-resume-btn-full disabled" disabled>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                    </svg>
+                                    No Resume Uploaded
+                                </button>
+                            )}
+                        </div>
+                        
+                        {/* Back Button */}
+                        <div className="talent-back-btn-container">
+                            <button 
+                                className="talent-back-btn"
+                                onClick={() => window.history.back()}
+                            >
+                                ← Back to Talents
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </>
+    );
+}
