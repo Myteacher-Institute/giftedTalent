@@ -1,6 +1,8 @@
-import '@/css/EasyApplyJob.css';
-import { useState } from 'react';
 import { Head } from '@inertiajs/react';
+import { useState } from 'react';
+import '../../css/EasyApplyJob.css';
+// import '@/css/EasyApplyJob.css';
+// import AuthenticatedLayout from '@/js/Layouts/AuthenticatedLayout';
 import AuthenticatedLayout from '../Layouts/AuthenticatedLayout';
 
 export default function EasyApplyJob({ auth }) {

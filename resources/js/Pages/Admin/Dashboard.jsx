@@ -3,9 +3,10 @@ import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 import '../../../css/admindashboard.css';
 
-export default function AdminDashboard({ jobStats, recentJobs: initialJobs }) {
+export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filters: initialFilters, auth, unreadNotifications }) {
     console.log('Initial Jobs from server:', initialJobs);
     console.log('Job Stats from server:', jobStats);
+    console.log('Initial Filters from server:', initialFilters);
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [filteredJobs, setFilteredJobs] = useState(initialJobs || []);
@@ -152,7 +153,7 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs }) {
                         </div>
                         <ul>
                             <li>
-                                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/admin/dashboard'); }}>
+                                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/Admin/dashboard'); }}>
                                     <img src="/assets/svg/column.svg" alt="" className="column-icon" />Dashboard
                                 </a>
                             </li>
@@ -162,17 +163,17 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs }) {
                                 </a>
                             </li>
                             <li>
-                                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/admin/candidates'); }}>
+                                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/Admin/candidates'); }}>
                                     <img src="/assets/svg/forward-out.svg" alt="" className="forward-out-icon" />Candidates
                                 </a>
                             </li>
                             <li>
-                                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/admin/messages'); }}>
+                                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/Admin/messages'); }}>
                                     <img src="/assets/svg/message.svg" alt="" className="message-icon" />Messages
                                 </a>
                             </li>
                             <li>
-                                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/admin/settings'); }}>
+                                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/Admin/settings'); }}>
                                     <img src="/assets/svg/setting.svg" alt="" className="setting-icon" />Settings
                                 </a>
                             </li>
@@ -226,16 +227,32 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs }) {
                         </div>
 
                         <div className="top-nav-img">
-                            <img src="/assets/svg/chats.svg" alt="" className="chats-icon" onClick={() => navigateTo('/admin/messages')} style={{ cursor: 'pointer' }} />
-                            <img src="/assets/svg/notification.svg" alt="" className="notification-icon" onClick={() => navigateTo('/admin/notifications')} style={{ cursor: 'pointer' }} />
+                            <div className="icon-wrapper" onClick={() => navigateTo('/Admin/messages')} style={{ cursor: 'pointer' }}>
+                                <img src="/assets/svg/chats.svg" alt="" className="chats-icon" />
+                            </div>
 
+                            <div className="icon-wrapper" onClick={() => navigateTo('/Admin/notifications')} style={{ cursor: 'pointer' }}>
+                                <img src="/assets/svg/notification.svg" alt="" className="notification-icon" />
+                                {unreadNotifications > 0 && (
+                                    <span className="notification-badge">{unreadNotifications}</span>
+                                )}
+                            </div>
 
                             <div className="user-profile" onClick={() => navigateTo('/admin/profile')} style={{ cursor: 'pointer' }}>
                                 <div className="avatar">
-                                    <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
-                                        <path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" />
-                                    </svg>
+                                    {auth?.user?.avatar ? (
+                                        <img
+                                            src={auth.user.avatar}
+                                            alt={auth.user.name}
+                                            className="avatar-img"
+                                        />
+                                    ) : (
+                                        <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+                                            <path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" />
+                                        </svg>
+                                    )}
                                 </div>
+                                <span className="user-name">{auth?.user?.name || 'Admin'}</span>
                             </div>
                         </div>
                     </header>
@@ -438,10 +455,10 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs }) {
                         </div>
 
                         <div className="footer-right">
-                            <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/about'); }}>About</a>
-                            <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/contact'); }}>Contact</a>
-                            <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/privacy'); }}>Privacy Policy</a>
-                            <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/guidelines'); }}>Community Guideline</a>
+                            <a href="/about" onClick={(e) => { e.preventDefault(); navigateTo('/about'); }}>About</a>
+                            <a href="contact" onClick={(e) => { e.preventDefault(); navigateTo('/contact'); }}>Contact</a>
+                            <a href="privacy" onClick={(e) => { e.preventDefault(); navigateTo('/privacy'); }}>Privacy Policy</a>
+                            <a href="guidelines" onClick={(e) => { e.preventDefault(); navigateTo('/guidelines'); }}>Community Guideline</a>
                         </div>
                     </footer>
                 </main>
