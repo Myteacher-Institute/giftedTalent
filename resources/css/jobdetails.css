@@ -35,12 +35,14 @@
 }
 
 .job-icon {
-    width: 64px;
-    height: 64px;
+    width: 94px;
+    height: 94px;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
+    background-color: #f6f9fd;
+    padding: 6px;
 }
 
 .job-icon-img {
@@ -62,12 +64,10 @@
 }
 
 #job-type-fulltime {
-    background-color: #F0FDF4;
     color: #15803D;
 }
 
 #job-type-contract {
-    background-color: #EFF6FF;
     color: #2563EB;
 }
 
@@ -187,12 +187,11 @@
 .job-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 3.5rem;
 }
 
 .job-tag {
-    padding: 6px 16px;
-    background-color: #EFF6FF;
+    padding: 6px 0;
     color: #3B82F6;
     border-radius: 30px;
     font-size: 14px;

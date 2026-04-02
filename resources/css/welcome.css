@@ -18,7 +18,335 @@ body {
     width: 100%;
 }
 
-.feature-jobs .job-date {
+/* Story Section */
+.about-hero-content {
+    padding: 10px 0 80px 0;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+.about-hero-content h1 {
+    font-size: 56px;
+    font-weight: 700;
+    color: #0A2463;
+    margin-bottom: 20px;
+    letter-spacing: -0.5px;
+}
+
+.about-hero-content p {
+    font-size: 20px;
+    color: #0A2463;
+    line-height: 1.6;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+    .about-hero-content {
+        padding: 100px 20px 60px;
+    }
+
+    .about-hero-content h1 {
+        font-size: 40px;
+    }
+
+    .about-hero-content p {
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .about-hero-content h1 {
+        font-size: 32px;
+    }
+
+    .about-hero-content p {
+        font-size: 16px;
+    }
+}
+
+.about-story {
+    padding: 80px 20px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFF 100%);
+}
+
+.story-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 60px;
+}
+
+.story-image {
+    flex: 1;
+}
+
+.story-image img {
+    width: 100%;
+    border-radius: 24px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.story-text {
+    flex: 1;
+    text-align: left;
+}
+
+.story-text h2 {
+    font-size: 36px;
+    font-weight: 700;
+    color: #0A2463;
+    margin-bottom: 20px;
+    letter-spacing: -0.5px;
+}
+
+.story-text p {
+    font-size: 18px;
+    color: #4B5563;
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.story-footer {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.story-btn {
+    display: inline-block;
+    background: #0A2463;
+    color: #FFFFFF;
+    padding: 12px 32px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 16px;
+    transition: all 0.2s ease;
+}
+
+.story-btn:hover {
+    background: #051A44;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px -4px rgba(10, 36, 99, 0.3);
+}
+
+.whatsapp-icon-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #25D366;
+    color: white;
+    padding: 4px 24px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.whatsapp-icon-link svg {
+    width: 40px;
+    height: 40px;
+}
+
+.whatsapp-icon-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px -4px rgba(37, 211, 102, 0.4);
+    background: #128C7E;
+}
+
+@media (max-width: 1024px) {
+    .story-container {
+        gap: 40px;
+    }
+}
+
+@media (max-width: 768px) {
+    .about-story {
+        padding: 60px 20px;
+    }
+
+    .story-container {
+        flex-direction: column;
+        gap: 40px;
+    }
+
+    .story-text h2 {
+        font-size: 28px;
+        text-align: center;
+    }
+
+    .story-text p {
+        font-size: 16px;
+        text-align: center;
+    }
+
+    .story-footer {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .story-text h2 {
+        font-size: 24px;
+    }
+
+    .story-text p {
+        font-size: 14px;
+    }
+
+    .story-btn,
+    .whatsapp-icon-link {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .story-footer {
+        flex-direction: column;
+        gap: 12px;
+    }
+}
+
+/* Mission Section - Added to Homepage */
+.about-mission {
+    padding: 80px 20px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFF 100%);
+    margin: 4rem 0;
+}
+
+.mission-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 60px;
+}
+
+.mission-text {
+    flex: 1;
+}
+
+.mission-text h2 {
+    font-size: 36px;
+    font-weight: 700;
+    color: #0A2463;
+    margin-bottom: 20px;
+    letter-spacing: -0.5px;
+}
+
+.mission-text p {
+    font-size: 18px;
+    color: #4B5563;
+    line-height: 1.6;
+    margin-bottom: 40px;
+}
+
+.mission-stats {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+.mission-stats .stat-item {
+    text-align: center;
+}
+
+.mission-stats .stat-number {
+    display: block;
+    font-size: 32px;
+    font-weight: 700;
+    color: #0A2463;
+    margin-bottom: 8px;
+}
+
+.mission-stats .stat-label {
+    font-size: 14px;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.mission-image {
+    flex: 1;
+}
+
+.mission-image img {
+    width: 100%;
+    border-radius: 24px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 1024px) {
+    .mission-container {
+        gap: 40px;
+    }
+
+    .mission-text h2 {
+        font-size: 32px;
+    }
+}
+
+@media (max-width: 768px) {
+    .about-mission {
+        padding: 60px 20px;
+    }
+
+    .mission-container {
+        flex-direction: column;
+        gap: 40px;
+    }
+
+    .mission-text h2 {
+        font-size: 28px;
+        text-align: center;
+    }
+
+    .mission-text p {
+        font-size: 16px;
+        text-align: center;
+    }
+
+    .mission-stats {
+        justify-content: center;
+    }
+
+    .mission-image {
+        order: -1;
+    }
+}
+
+@media (max-width: 480px) {
+    .mission-text h2 {
+        font-size: 24px;
+    }
+
+    .mission-text p {
+        font-size: 14px;
+    }
+
+    .mission-stats {
+        gap: 20px;
+    }
+
+    .mission-stats .stat-number {
+        font-size: 24px;
+    }
+
+    .mission-stats .stat-label {
+        font-size: 12px;
+    }
+}
+
+.job-date {
     color: #4B5563;
     margin-bottom: 1rem;
 }
@@ -277,7 +605,6 @@ body {
 
 .feature-talent-card-roles span {
     padding: 4px 12px;
-    background-color: #EFF6FF;
     color: #3B82F6;
     border-radius: 30px;
     font-size: 12px;
@@ -433,6 +760,164 @@ body {
 @media (max-width: 480px) {
     .featured-talents {
         padding: 40px 12px;
+    }
+}
+
+/* FAQ Section */
+.about-faq {
+    padding: 80px 20px;
+    background: #FFFFFF;
+}
+
+.faq-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.faq-header {
+    text-align: center;
+    margin-bottom: 48px;
+}
+
+.faq-header h2 {
+    font-size: 36px;
+    font-weight: 700;
+    color: #0A2463;
+    margin-bottom: 16px;
+    letter-spacing: -0.5px;
+}
+
+.faq-header p {
+    font-size: 18px;
+    color: #4B5563;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.faq-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+}
+
+.faq-item {
+    background: #F9FAFB;
+    border: 1px solid #EDF2F7;
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.faq-item:hover {
+    border-color: #DBEAFE;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.faq-question {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    cursor: pointer;
+    background: #FFFFFF;
+    transition: background 0.2s ease;
+}
+
+.faq-question:hover {
+    background: #F8FAFF;
+}
+
+.faq-question h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #0A2463;
+    margin: 0;
+}
+
+.faq-icon {
+    width: 20px;
+    height: 20px;
+    stroke: #64748B;
+    transition: transform 0.3s ease;
+}
+
+.faq-item.open .faq-icon {
+    transform: rotate(180deg);
+}
+
+.faq-answer {
+    padding: 0 24px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+}
+
+.faq-item.open .faq-answer {
+    padding: 0 24px 20px 24px;
+    max-height: 200px;
+}
+
+.faq-answer p {
+    font-size: 15px;
+    color: #4B5563;
+    line-height: 1.6;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .about-faq {
+        padding: 60px 20px;
+    }
+
+    .faq-header h2 {
+        font-size: 28px;
+    }
+
+    .faq-header p {
+        font-size: 16px;
+    }
+
+    .faq-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .faq-question {
+        padding: 16px 20px;
+    }
+
+    .faq-question h3 {
+        font-size: 16px;
+    }
+
+    .faq-answer p {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .about-faq {
+        padding: 40px 16px;
+    }
+
+    .faq-header h2 {
+        font-size: 24px;
+    }
+
+    .faq-header p {
+        font-size: 14px;
+    }
+
+    .faq-question {
+        padding: 14px 16px;
+    }
+
+    .faq-question h3 {
+        font-size: 14px;
+    }
+
+    .faq-item.open .faq-answer {
+        padding: 0 16px 16px 16px;
     }
 }
 

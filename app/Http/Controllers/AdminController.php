@@ -2,10 +2,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Contact;
 use App\Models\Job;
+use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -69,7 +74,7 @@ class AdminController extends Controller
 
         // Get recent jobs (with filters applied)
         $recentJobs = $query->latest()
-            ->take(10)
+            ->take(20)
             ->get()
             ->map(function ($job) {
                 return [
@@ -96,9 +101,13 @@ class AdminController extends Controller
         ];
 
         return Inertia::render('Admin/Dashboard', [
-            'jobStats'   => $jobStats,
-            'recentJobs' => $recentJobs,
-            'filters'    => $request->all(),
+            'jobStats'            => $jobStats,
+            'recentJobs'          => $recentJobs,
+            'filters'             => $request->all(),
+            'auth'                => [
+                'user' => $adminUser,
+            ],
+            'unreadNotifications' => Notification::unread()->count(),
         ]);
     }
 
@@ -183,18 +192,18 @@ class AdminController extends Controller
         ]);
 
         $tags = $request->tags ?? [];
-        
+
         $job = Job::create([
             'user_id'          => Auth::id(),
             'company_name'     => $request->company_name,
             'company_logo_url' => $request->company_logo_url,
             'company_location' => $request->company_location,
-            'job_title' => $request->job_title,
-            'job_type' => $request->job_type,
-            'salary_range' => $request->salary_range,
-            'description' => $request->description,
-'status' => 'active',
-            'posted_at' => now(),
+            'job_title'        => $request->job_title,
+            'job_type'         => $request->job_type,
+            'salary_range'     => $request->salary_range,
+            'description'      => $request->description,
+            'status'           => 'active',
+            'posted_at'        => now(),
             'applicants_count' => 0,
         ]);
 
@@ -233,5 +242,180 @@ class AdminController extends Controller
         $job->delete();
 
         return redirect()->route('admin.jobs')->with('success', 'Job deleted successfully!');
+    }
+
+    /**
+     * Display messages from contact form
+     */
+    public function messages(Request $request): Response
+    {
+        $query = Contact::query();
+
+        // Filter by read status
+        if ($request->has('status') && $request->status !== '') {
+            $query->where('is_read', $request->status === 'read');
+        }
+
+        // Search by name, email, or subject
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('subject', 'like', "%{$search}%")
+                    ->orWhere('message', 'like', "%{$search}%");
+            });
+        }
+
+        $messages = $query->latest()->paginate(10);
+
+        // Get counts for stats
+        $stats = [
+            'total'   => Contact::count(),
+            'unread'  => Contact::where('is_read', false)->count(),
+            'read'    => Contact::where('is_read', true)->count(),
+            'replied' => Contact::whereNotNull('admin_reply')->count(),
+        ];
+
+        return Inertia::render('Admin/Messages', [
+            'messages' => $messages,
+            'stats'    => $stats,
+            'filters'  => $request->only(['status', 'search']),
+        ]);
+    }
+
+    /**
+     * Reply to a message - REAL email sending
+     */
+    public function replyMessage(Request $request, $id)
+    {
+        $request->validate([
+            'reply' => 'required|string|min:3',
+        ]);
+
+        $message = Contact::findOrFail($id);
+
+        try {
+            Mail::send([], [], function ($mail) use ($message, $request) {
+                $mail->to($message->email)
+                    ->subject('Re: ' . $message->subject)
+                    ->html('
+                    <html>
+                    <head><title>Reply to your message</title></head>
+                    <body>
+                        <h2>Hello ' . htmlspecialchars($message->name) . ',</h2>
+                        <p>Thank you for contacting GiftedTalents.</p>
+                        <p><strong>Your message:</strong></p>
+                        <p style="background:#f5f5f5; padding:15px; border-radius:5px;">' . nl2br(htmlspecialchars($message->message)) . '</p>
+                        <p><strong>Our response:</strong></p>
+                        <p style="background:#e8f4fd; padding:15px; border-radius:5px;">' . nl2br(htmlspecialchars($request->reply)) . '</p>
+                        <p>Best regards,<br>GiftedTalents Team</p>
+                        <hr>
+                        <p style="font-size:12px; color:#999;">This is an automated response from GiftedTalents. Please do not reply to this email.</p>
+                    </body>
+                    </html>
+                ');
+            });
+
+            $message->update([
+                'is_read'     => true,
+                'admin_reply' => $request->reply,
+                'replied_at'  => now(),
+            ]);
+
+            return redirect()->back()->with('success', 'Reply sent successfully to ' . $message->email);
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to send reply: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete a message
+     */
+    public function deleteMessage($id)
+    {
+        $message = Contact::findOrFail($id);
+        $message->delete();
+
+        return redirect()->back()->with('success', 'Message deleted successfully!');
+    }
+
+    /**
+     * Mark message as read/unread
+     */
+    public function markAsRead(Request $request, $id)
+    {
+        $message = Contact::findOrFail($id);
+        $message->update(['is_read' => $request->is_read]);
+
+        return redirect()->back()->with('success', 'Message status updated!');
+    }
+
+    public function settings()
+    {
+        return Inertia::render('Admin/Settings', [
+            'auth' => [
+                'user' => Auth::user()->load('profile'),
+            ],
+        ]);
+    }
+
+    /**
+     * Update admin profile
+     */
+    public function updateProfile(Request $request)
+    {
+        $request->validate([
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|max:255|unique:users,email,' . Auth::id(),
+            'bio'      => 'nullable|string|max:500',
+            'phone'    => 'nullable|string|max:20',
+            'location' => 'nullable|string|max:255',
+        ]);
+
+        $user = Auth::user();
+
+        // Update user
+        $user->update([
+            'name'  => $request->name,
+            'email' => $request->email,
+        ]);
+
+        // Update or create profile
+        if ($user->profile) {
+            $user->profile->update([
+                'bio'      => $request->bio,
+                'phone'    => $request->phone,
+                'location' => $request->location,
+            ]);
+        } else {
+            // When creating a new profile, include user_id
+            $user->profile()->create([
+                'user_id'  => $user->id, // Add this line
+                'bio'      => $request->bio,
+                'phone'    => $request->phone,
+                'location' => $request->location,
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Profile updated successfully!');
+    }
+
+/**
+ * Update admin password
+ */
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'new_password'     => ['required', 'confirmed', Password::defaults()],
+        ]);
+
+        Auth::user()->update([
+            'password' => Hash::make($request->new_password),
+        ]);
+
+        return redirect()->back()->with('success', 'Password updated successfully!');
     }
 }

@@ -32,10 +32,10 @@ class HandleInertiaRequests extends Middleware
     {
         return [
             ...parent::share($request),
-'auth' => [
+            'auth' => [
                 'user' => $request->user()?->loadMissing(['profile', 'skills', 'resumes']),
             ],
-            'notifications' => $request->user() 
+            'notifications' => $request->user()
                 ? [
                     'unread_count' => $request->user()->unreadNotifications->count(),
                     'recent_unread' => $request->user()->notifications()
@@ -45,13 +45,11 @@ class HandleInertiaRequests extends Middleware
                         ->get()
                         ->map(fn($n) => [
                             'id' => $n->id,
-                            'title' => $n->data['title'],
-                            'message' => $n->data['message'],
+                            'title' => $n->title ?? 'Notification',
+                            'message' => $n->message ?? '',
                             'time' => $n->created_at->diffForHumans(),
-                            'resume_id' => $n->data['resume_id'] ?? null,
-                            'status' => $n->data['status'] ?? null,
                         ]),
-                ] 
+                ]
                 : ['unread_count' => 0, 'recent_unread' => []],
         ];
     }

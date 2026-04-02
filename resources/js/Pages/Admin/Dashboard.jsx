@@ -1,12 +1,12 @@
-
 import { Head } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 import '/resources/css/admindashboard.css';
 
-export default function AdminDashboard({ jobStats, recentJobs: initialJobs }) {
+export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filters: initialFilters, auth, unreadNotifications }) {
     console.log('Initial Jobs from server:', initialJobs);
     console.log('Job Stats from server:', jobStats);
+    console.log('Initial Filters from server:', initialFilters);
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [filteredJobs, setFilteredJobs] = useState(initialJobs || []);
@@ -153,7 +153,7 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs }) {
                         </div>
                         <ul>
                             <li>
-                                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/admin/dashboard'); }}>
+                                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/Admin/dashboard'); }}>
                                     <img src="/assets/svg/column.svg" alt="" className="column-icon" />Dashboard
                                 </a>
                             </li>
@@ -163,27 +163,24 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs }) {
                                 </a>
                             </li>
                             <li>
-                                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/admin/candidates'); }}>
+                                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/Admin/candidates'); }}>
                                     <img src="/assets/svg/forward-out.svg" alt="" className="forward-out-icon" />Candidates
                                 </a>
                             </li>
                             <li>
-                                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/admin/messages'); }}>
+                                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/Admin/messages'); }}>
                                     <img src="/assets/svg/message.svg" alt="" className="message-icon" />Messages
                                 </a>
                             </li>
-
                             <li>
-                                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/admin/settings'); }}>
+                                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/Admin/settings'); }}>
                                     <img src="/assets/svg/setting.svg" alt="" className="setting-icon" />Settings
                                 </a>
                             </li>
-
-                            {/* Logout Button - Add this */}
                             <li className="logout-item">
                                 <a href="/" onClick={(e) => { e.preventDefault(); handleLogout(); }}>
                                     <svg className="logout-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
-                                        <path fill="rgb(61, 75, 227)" d="M160 96C142.3 96 128 110.3 128 128V512C128 529.7 142.3 544 160 544H352C369.7 544 384 529.7 384 512V416C384 398.3 398.3 384 416 384C433.7 384 448 398.3 448 416V512C448 565 405 608 352 608H160C106.1 608 64 565 64 512V128C64 74.1 106.1 32 160 32H352C405 32 448 74.1 448 128V224C448 241.7 433.7 256 416 256C398.3 256 384 241.7 384 224V128C384 110.3 369.7 96 352 96H160zM432.1 201L552.1 321C563.3 331.3 563.3 348.7 552.1 359L432.1 479C421.8 490.3 404.3 490.3 393 479C381.8 467.7 381.8 450.3 393 439L473 359H224C207.4 359 194 345.6 194 329C194 312.4 207.4 299 224 299H473L393 219C381.8 207.7 381.8 190.3 393 179C404.3 167.8 421.8 167.8 432.1 179L552.1 299L432.1 419V201z" />
+                                        <path fill="currentColor" d="M160 96C142.3 96 128 110.3 128 128V512C128 529.7 142.3 544 160 544H352C369.7 544 384 529.7 384 512V416C384 398.3 398.3 384 416 384C433.7 384 448 398.3 448 416V512C448 565 405 608 352 608H160C106.1 608 64 565 64 512V128C64 74.1 106.1 32 160 32H352C405 32 448 74.1 448 128V224C448 241.7 433.7 256 416 256C398.3 256 384 241.7 384 224V128C384 110.3 369.7 96 352 96H160zM432.1 201L552.1 321C563.3 331.3 563.3 348.7 552.1 359L432.1 479C421.8 490.3 404.3 490.3 393 479C381.8 467.7 381.8 450.3 393 439L473 359H224C207.4 359 194 345.6 194 329C194 312.4 207.4 299 224 299H473L393 219C381.8 207.7 381.8 190.3 393 179C404.3 167.8 421.8 167.8 432.1 179L552.1 299L432.1 419V201z" />
                                     </svg>
                                     Logout
                                 </a>
@@ -213,7 +210,7 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs }) {
                             </div>
                         </div>
 
-                        {/* Simple search (optional) */}
+                        {/* Simple search */}
                         <div className="search-bar">
                             <input
                                 type="text"
@@ -229,14 +226,33 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs }) {
                             </button>
                         </div>
 
-                        <img src="/assets/svg/chats.svg" alt="" className="chats-icon" onClick={() => navigateTo('/admin/messages')} style={{ cursor: 'pointer' }} />
-                        <img src="/assets/svg/notification.svg" alt="" className="notification-icon" onClick={() => navigateTo('/admin/notifications')} style={{ cursor: 'pointer' }} />
+                        <div className="top-nav-img">
+                            <div className="icon-wrapper" onClick={() => navigateTo('/Admin/messages')} style={{ cursor: 'pointer' }}>
+                                <img src="/assets/svg/chats.svg" alt="" className="chats-icon" />
+                            </div>
 
-                        <div className="user-profile" onClick={() => navigateTo('/admin/profile')} style={{ cursor: 'pointer' }}>
-                            <div className="avatar">
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
-                                    <path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" />
-                                </svg>
+                            <div className="icon-wrapper" onClick={() => navigateTo('/Admin/notifications')} style={{ cursor: 'pointer' }}>
+                                <img src="/assets/svg/notification.svg" alt="" className="notification-icon" />
+                                {unreadNotifications > 0 && (
+                                    <span className="notification-badge">{unreadNotifications}</span>
+                                )}
+                            </div>
+
+                            <div className="user-profile" onClick={() => navigateTo('/admin/profile')} style={{ cursor: 'pointer' }}>
+                                <div className="avatar">
+                                    {auth?.user?.avatar ? (
+                                        <img
+                                            src={auth.user.avatar}
+                                            alt={auth.user.name}
+                                            className="avatar-img"
+                                        />
+                                    ) : (
+                                        <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+                                            <path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" />
+                                        </svg>
+                                    )}
+                                </div>
+                                <span className="user-name">{auth?.user?.name || 'Admin'}</span>
                             </div>
                         </div>
                     </header>
@@ -376,7 +392,6 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs }) {
                             {filteredJobs.length > 0 ? (
                                 filteredJobs.map((job) => (
                                     <div key={job.id} className="job-card">
-                                        {/* Your job card JSX here */}
                                         <div className="job-card-header">
                                             <div className="company-info">
                                                 <div className="user-profile">
@@ -440,10 +455,10 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs }) {
                         </div>
 
                         <div className="footer-right">
-                            <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/about'); }}>About</a>
-                            <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/contact'); }}>Contact</a>
-                            <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/privacy'); }}>Privacy Policy</a>
-                            <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/guidelines'); }}>Community Guideline</a>
+                            <a href="/about" onClick={(e) => { e.preventDefault(); navigateTo('/about'); }}>About</a>
+                            <a href="contact" onClick={(e) => { e.preventDefault(); navigateTo('/contact'); }}>Contact</a>
+                            <a href="privacy" onClick={(e) => { e.preventDefault(); navigateTo('/privacy'); }}>Privacy Policy</a>
+                            <a href="guidelines" onClick={(e) => { e.preventDefault(); navigateTo('/guidelines'); }}>Community Guideline</a>
                         </div>
                     </footer>
                 </main>
