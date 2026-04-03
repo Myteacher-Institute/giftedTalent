@@ -5,13 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Profile extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-'user_id',
+        'user_id',
         'bio',
         'phone',
         'address',
@@ -30,12 +31,18 @@ class Profile extends Model
         'linkedin_url',
         'github_url',
         'portfolio_url',
+        'profile_image_base64', // Add this for base64 image storage
+        'title',                 // Add job title
+        'company',               // Add company name
+        'employment_type',       // Add employment type
+        'start_date',            // Add start date
     ];
 
     protected $casts = [
         'expected_salary' => 'decimal:2',
         'years_experience' => 'integer',
         'is_verified' => 'boolean',
+        'profile_image_base64' => 'string', // Cast base64 as string
     ];
 
     /**
@@ -53,6 +60,10 @@ class Profile extends Model
      */
     public function getAvatarUrlAttribute(): ?string
     {
+        // If there's a base64 image, return that first
+        if ($this->profile_image_base64) {
+            return $this->profile_image_base64;
+        }
         return $this->avatar ? \Illuminate\Support\Facades\Storage::url($this->avatar) : null;
     }
 
@@ -85,4 +96,3 @@ class Profile extends Model
         return $this->user->resumes()->exists();
     }
 }
-

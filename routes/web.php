@@ -5,15 +5,62 @@ use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PrivacySettingsController;
 use App\Http\Controllers\ProfileController;
 use App\Models\Job;
+use App\Models\User;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 Route::get('/', function () {
     $jobs = Job::latest()->take(10)->get();
 
+    $featuredTalents = User::where('profile_completed', '>=', 50)
+                            ->with('profile')
+                            ->orderBy('profile_completed', 'desc')
+                            ->take(6)
+                            ->get()
+                            ->map(function($user) {
+                                $skills = [];
+                                if ($user->skills) {
+                                    $skills = is_string($user->skills) ? json_decode($user->skills, true) : $user->skills;
+                                }
+                                if (empty($skills)) {
+                                    $skills = ['Available for work'];
+                                }
+                                
+                                $rating = 3.5;
+                                if ($user->profile_completed >= 90) $rating = 5.0;
+                                elseif ($user->profile_completed >= 80) $rating = 4.8;
+                                elseif ($user->profile_completed >= 70) $rating = 4.5;
+                                elseif ($user->profile_completed >= 60) $rating = 4.2;
+                                elseif ($user->profile_completed >= 50) $rating = 4.0;
+                                
+                                $avatar = null;
+                                if ($user->profile && $user->profile->avatar_url) {
+                                    $avatar = $user->profile->avatar_url;
+                                }
+                                
+                                $title = $user->title;
+                                if (!$title && $user->profile && $user->profile->title) {
+                                    $title = $user->profile->title;
+                                }
+                                
+                                return [
+                                    'id' => $user->id,
+                                    'name' => $user->name,
+                                    'title' => $title ?? 'Professional',
+                                    'avatar' => $avatar,
+                                    'avatar_url' => $avatar,
+                                    'profile_image_base64' => $avatar,
+                                    'skills' => $skills,
+                                    'rating' => $rating,
+                                    'profile_completed' => $user->profile_completed,
+                                ];
+                            });
+     
     return Inertia::render('Welcome', [
         'canLogin'       => Route::has('login'),
         'canRegister'    => Route::has('register'),
@@ -61,6 +108,16 @@ Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'ind
 
 // Authenticated User Routes
 Route::middleware(['auth', 'not_admin'])->group(function () {
+    // ========== SETTINGS ROUTE ==========
+    Route::get('/settings', function () {
+        return Inertia::render('Settings', [
+            'user' => auth()->user(),
+            'profile' => auth()->user()->profile,
+            'auth' => ['user' => auth()->user()],
+        ]);
+    })->name('settings');
+    // ====================================
+
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'read'])->name('notifications.read');
     Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'readAll'])->name('notifications.readAll');
@@ -81,6 +138,21 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     Route::post('/profile/experiences', [ProfileController::class, 'addExperience'])->name('profile.experiences.add');
     Route::put('/profile/experiences/{experience}', [ProfileController::class, 'updateExperience'])->name('profile.experiences.update');
     Route::delete('/profile/experiences/{experience}', [ProfileController::class, 'deleteExperience'])->name('profile.experiences.delete');
+
+    // Saved Jobs Routes
+    Route::get('/saved-jobs', [\App\Http\Controllers\Api\SavedJobController::class, 'index'])->name('saved-jobs.index');
+    Route::post('/saved-jobs/{jobId}', [\App\Http\Controllers\Api\SavedJobController::class, 'store'])->name('saved-jobs.store');
+    Route::delete('/saved-jobs/{jobId}', [\App\Http\Controllers\Api\SavedJobController::class, 'destroy'])->name('saved-jobs.destroy');
+    Route::get('/saved-jobs/check/{jobId}', [\App\Http\Controllers\Api\SavedJobController::class, 'check'])->name('saved-jobs.check');
+    Route::get('/saved-jobs/count', [\App\Http\Controllers\Api\SavedJobController::class, 'count'])->name('saved-jobs.count');
+
+    // Job Preferences Routes
+    Route::get('/user/job-preferences', [ProfileController::class, 'getJobPreferences'])->name('user.job-preferences.get');
+    Route::put('/user/job-preferences', [ProfileController::class, 'updateJobPreferences'])->name('user.job-preferences.update');
+    
+    // Privacy Settings Routes
+    Route::get('/user/privacy-settings', [PrivacySettingsController::class, 'getSettings'])->name('user.privacy-settings.get');
+    Route::put('/user/privacy-settings', [PrivacySettingsController::class, 'updateSettings'])->name('user.privacy-settings.update');
 });
 
 // Admin Routes - Protected by IsAdmin middleware
