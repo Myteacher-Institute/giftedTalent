@@ -15,6 +15,7 @@ import sample2 from '../../assets/img/sample2.jpg';
 import sample3 from '../../assets/img/sample3.jpg';
 import sample4 from '../../assets/img/sample4.jpg';
 import heroImage from '../../assets/img/giftedtalentimage.png';
+import ApplicationLogo from '@/Components/ApplicationLogo';
 
 
 // Nav Component
@@ -37,15 +38,16 @@ function Nav({ auth }) {
 
     return (
         <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
-            <div className="logo">
-                GiftedTalent<span>.Online</span>
-            </div>
+            <a className="logo">
+                <ApplicationLogo className="w-10 h-10 mr-2" />
+            </a>
             <ul className={`nav-links ${isActive ? 'active' : ''}`}>
                 <li><Link href="/" className="nav-link">Home</Link></li>
                 <li><Link href="/jobs" className="nav-link">Find Jobs</Link></li>
                 <li><Link href="/find-talents" className="nav-link">Find Talents</Link></li>
                 <li><Link href="/how-it-works" className="nav-link">How It Works</Link></li>
                 <li><Link href="/about" className="nav-link">About</Link></li>
+                <li><Link href="/contact" className="nav-link">Contact</Link></li>
             </ul>
             <div className="nav-right">
 
@@ -161,123 +163,14 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
             
             return false;
         }
-        return true;
-    };
-
-    // Handle input changes
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setSearchInputs(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
-
-    // Handle search
-    const handleSearch = () => {
-        const hasSearchCriteria = searchInputs.keyword || searchInputs.skill || searchInputs.location;
-        
-        if (!hasSearchCriteria) {
-            showToast('Please enter at least one search criteria', 'error');
-            return;
-        }
-        
-        setIsSearching(true);
-        setSearchError('');
-        showToast('Searching for jobs...', 'loading');
-        
-        setTimeout(() => {
-            try {
-                const filtered = jobs.filter(job => {
-                    const keyword = searchInputs.keyword.toLowerCase().trim();
-                    const skill = searchInputs.skill.toLowerCase().trim();
-                    const location = searchInputs.location.toLowerCase().trim();
-                    
-                    const jobTitle = (job.job_title || job.title || '').toLowerCase();
-                    const jobSkills = (job.skills_required || job.skills || '').toLowerCase();
-                    const jobLocation = (job.company_location || job.location || '').toLowerCase();
-                    
-                    let matchesKeyword = true;
-                    let matchesSkill = true;
-                    let matchesLocation = true;
-                    
-                    if (keyword) matchesKeyword = jobTitle.includes(keyword);
-                    if (skill) matchesSkill = jobSkills.includes(skill);
-                    if (location) matchesLocation = jobLocation.includes(location);
-                    
-                    return matchesKeyword && matchesSkill && matchesLocation;
-                });
-                
-                setSearchResults(filtered);
-                
-                if (filtered.length > 0) {
-                    showToast(`Found ${filtered.length} job${filtered.length !== 1 ? 's' : ''} matching your criteria`, 'success');
-                } else {
-                    showToast('No jobs found matching your criteria. Try different keywords!', 'error');
-                }
-                
-            } catch (err) {
-                showToast('An error occurred while searching. Please try again.', 'error');
-                console.error('Search error:', err);
-            } finally {
-                setIsSearching(false);
-            }
-        }, 500);
-    };
-
-    // Handle apply button click - Navigate to easy apply page
-    const handleApplyClick = (job, event) => {
-        if (requireAuthWithModal('apply_job', event, job)) {
-            router.visit(`/easy-apply-job?job_id=${job.id}`);
-        }
-    };
-
-    // Handle view profile click - Navigate to talent profile
-    const handleViewProfile = (talent, event) => {
-        if (requireAuthWithModal('view_profile', event, talent)) {
-            router.visit(`/talent/${talent.id}`);
-        }
-    };
-
-    // Handle saved jobs
-    const handleSaveJob = async (job, event) => {
-        if (requireAuthWithModal('save_job', event, job)) {
-            event.preventDefault();
-            event.stopPropagation();
-            
-            try {
-                const response = await fetch(`/saved-jobs/${job.id}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    showToast(data.message || 'Job saved successfully!', 'success');
-                } else {
-                    showToast(data.message || 'Failed to save job', 'error');
-                }
-            } catch (error) {
-                showToast('Network error. Please try again.', 'error');
-                console.error('Save job error:', error);
-            }
-        }
-    };
-
-    // Get initials for avatar fallback
-    const getInitials = (name) => {
-        return name
-            .split(' ')
-            .map(word => word[0])
-            .join('')
-            .toUpperCase()
-            .slice(0, 2);
-    };
+    ];
+    // Stats data for mission section
+    const stats = [
+        { number: "100+", label: "Active Users" },
+        { number: "50+", label: "Companies" },
+        { number: "30+", label: "Jobs Posted" },
+        { number: "98%", label: "Success Rate" }
+    ];
 
     return (
         <>
@@ -592,11 +485,20 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
                                         Create Account
                                     </Link>
                                 </div>
-                                
-                                <p className="auth-modal-footer">
-                                    By continuing, you agree to our Terms of Service and Privacy Policy
-                                </p>
-                            </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* FOOTER */}
+                <footer>
+                    <div className="footer-left">
+                        <a href="#" className="brand" onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
+                            <ApplicationLogo className="w-10 h-10 mr-2" />
+                        </a>
+                        <div>
+                            <p>©</p>
+                            <span>2026</span>
                         </div>
                     </div>
                 )}
