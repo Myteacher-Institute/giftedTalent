@@ -2,20 +2,14 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import '../../css/nav.css';
 import '../../css/hero.css';
-
 import '../../css/feature.css';
 import '../../css/welcome.css';
 import '../../css/feature_talent_section.css';
+import '../../css/auth-modal.css';
 
 import starIcon from '../../assets/svg/star.svg';
 import halfStarIcon from '../../assets/svg/half-star.svg';
-
-import sample1 from '../../assets/img/sample1.jpg';
-import sample2 from '../../assets/img/sample2.jpg';
-import sample3 from '../../assets/img/sample3.jpg';
-import sample4 from '../../assets/img/sample4.jpg';
 import heroImage from '../../assets/img/giftedtalentimage.png';
-
 
 // Nav Component
 function Nav({ auth }) {
@@ -48,20 +42,16 @@ function Nav({ auth }) {
                 <li><Link href="/about" className="nav-link">About</Link></li>
             </ul>
             <div className="nav-right">
-
                 <div className="auth-links">
-                    {
-                        auth.user ? (
-                            <Link href='dashboard' className="nav-auth-link">Dashboard</Link>
-                        ) : (
-                            <>
-                                <Link href={route('login')} className="nav-auth-link">Sign In</Link>
-                                <Link href={route('register')} className="get-started">Get Started</Link>
-                            </>
-                        )
-                    }
+                    {auth.user ? (
+                        <Link href='/dashboard' className="nav-auth-link">Dashboard</Link>
+                    ) : (
+                        <>
+                            <Link href={route('login')} className="nav-auth-link">Sign In</Link>
+                            <Link href={route('register')} className="get-started">Get Started</Link>
+                        </>
+                    )}
                 </div>
-
                 <div
                     className={`hamburger ${isActive ? 'active' : ''}`}
                     onClick={() => setIsActive(!isActive)}
@@ -121,7 +111,8 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
     
     // Auth Modal state
     const [showAuthModal, setShowAuthModal] = useState(false);
-    const [intendedJob, setIntendedJob] = useState(null);
+    const [intendedAction, setIntendedAction] = useState(null);
+    const [intendedData, setIntendedData] = useState(null);
     
     // Auto-hide toast after 3 seconds
     useEffect(() => {
@@ -148,17 +139,15 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
     };
 
     // Function to handle protected actions with modal
-    const requireAuthWithModal = (action, event, jobData = null) => {
+    const requireAuthWithModal = (action, event, data = null) => {
         if (!isAuthenticated()) {
             if (event) {
                 event.preventDefault();
                 event.stopPropagation();
             }
-            
-            // Store the intended job/action
-            setIntendedJob(jobData);
+            setIntendedAction(action);
+            setIntendedData(data);
             setShowAuthModal(true);
-            
             return false;
         }
         return true;
@@ -225,14 +214,14 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
         }, 500);
     };
 
-    // Handle apply button click - Navigate to easy apply page
+    // Handle apply button click
     const handleApplyClick = (job, event) => {
         if (requireAuthWithModal('apply_job', event, job)) {
             router.visit(`/easy-apply-job?job_id=${job.id}`);
         }
     };
 
-    // Handle view profile click - Navigate to talent profile
+    // Handle view profile click
     const handleViewProfile = (talent, event) => {
         if (requireAuthWithModal('view_profile', event, talent)) {
             router.visit(`/talent/${talent.id}`);
@@ -271,6 +260,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
 
     // Get initials for avatar fallback
     const getInitials = (name) => {
+        if (!name) return 'U';
         return name
             .split(' ')
             .map(word => word[0])
@@ -279,12 +269,58 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
             .slice(0, 2);
     };
 
+    // Get action display text
+    const getActionDisplayText = () => {
+        switch(intendedAction) {
+            case 'apply_job': return 'Apply for a job';
+            case 'save_job': return 'Save a job';
+            case 'view_profile': return 'View talent profile';
+            default: return 'Access this feature';
+        }
+    };
+
+    // Get action data display
+    const getActionDataDisplay = () => {
+        if (!intendedData) return null;
+        if (intendedAction === 'apply_job' || intendedAction === 'save_job') {
+            return intendedData.job_title || intendedData.title || intendedData.role;
+        }
+        if (intendedAction === 'view_profile') {
+            return intendedData.name;
+        }
+        return null;
+    };
+
+    // Safely get skills array from talent data
+    const getTalentSkills = (talent) => {
+        let skillsArray = [];
+        if (talent.skills && Array.isArray(talent.skills)) {
+            skillsArray = talent.skills;
+        } else if (talent.tech && Array.isArray(talent.tech)) {
+            skillsArray = talent.tech;
+        } else if (talent.skills && typeof talent.skills === 'string') {
+            try {
+                const parsed = JSON.parse(talent.skills);
+                if (Array.isArray(parsed)) skillsArray = parsed;
+            } catch(e) {
+                skillsArray = [talent.skills];
+            }
+        } else if (talent.tech && typeof talent.tech === 'string') {
+            try {
+                const parsed = JSON.parse(talent.tech);
+                if (Array.isArray(parsed)) skillsArray = parsed;
+            } catch(e) {
+                skillsArray = [talent.tech];
+            }
+        }
+        return skillsArray.slice(0, 3);
+    };
+
     return (
         <>
             <Head title="GiftedTalents" />
 
             <div className="home-screen">
-                {/* Henry */}
                 <Nav auth={auth} />
 
                 <Hero />
@@ -294,7 +330,6 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
                     <div className="search-box">
                         <div className="search-inputs">
                             <div className="input-with-icon">
-                                {/* magnifying glass / keyword */}
                                 <svg xmlns="http://www.w3.org/2000/svg" className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <circle cx="11" cy="11" r="8"></circle>
                                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -308,7 +343,6 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
                                 />
                             </div>
                             <div className="input-with-icon">
-                                {/* briefcase / skill */}
                                 <svg xmlns="http://www.w3.org/2000/svg" className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
                                     <path d="M16 3H8v4h8V3z"></path>
@@ -322,7 +356,6 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
                                 />
                             </div>
                             <div className="input-with-icon">
-                                {/* map pin / location */}
                                 <svg xmlns="http://www.w3.org/2000/svg" className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M21 10c0 6-9 13-9 13S3 16 3 10a9 9 0 1118 0z"></path>
                                     <circle cx="12" cy="10" r="3"></circle>
@@ -336,7 +369,6 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
                                 />
                             </div>
                         </div>
-
                         <button onClick={handleSearch} className="search-button">Search Jobs</button>
                     </div>
                 </div>
@@ -428,7 +460,6 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
                 {/* Featured Jobs Section */}
                 <div className="feature-jobs">
                     <div className="jobs-wrapper">
-                        {/* Header */}
                         <div className="jobs-header">
                             <h2 className="jobs-title">Featured Jobs</h2>
                             <p className="jobs-subtitle">Top opportunities from verified employers</p>
@@ -478,13 +509,13 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
                             )}
                         </div>
 
-                        {/* View All button */}
                         <div className="view-all-container">
                             <Link href="/jobs" className="view-all-btn">View All Jobs</Link>
                         </div>
                     </div>
                 </div>
 
+                {/* Featured Talents Section */}
                 <div className="featured-talents">
                     <div className="feature-talent-header">
                         <h3>Featured Talents</h3>
@@ -493,60 +524,78 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
 
                     <div className="feature-talent-content">
                         {featuredTalents.length > 0 ? (
-                            featuredTalents.map((talent) => (
-                                <div key={talent.id} className="feature-talent-card">
-                                    <div className="feature-talent-card-header">
-                                        {talent.avatar ? (
-                                            <img src={talent.avatar} alt={talent.name} />
-                                        ) : (
-                                            <div className="feature-talent-avatar-initials">
-                                                {getInitials(talent.name)}
+                            featuredTalents.map((talent) => {
+                                const displaySkills = getTalentSkills(talent);
+                                
+                                return (
+                                    <div key={talent.id} className="feature-talent-card">
+                                        <div className="feature-talent-card-header">
+                                            {talent.profile_image_base64 || talent.avatar_url || talent.avatar ? (
+                                                <img 
+                                                    src={talent.profile_image_base64 || talent.avatar_url || talent.avatar} 
+                                                    alt={talent.name}
+                                                    onError={(e) => {
+                                                        e.target.style.display = 'none';
+                                                        e.target.parentElement.innerHTML = `<div class="feature-talent-avatar-initials">${getInitials(talent.name)}</div>`;
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div className="feature-talent-avatar-initials">
+                                                    {getInitials(talent.name)}
+                                                </div>
+                                            )}
+                                            <div className="talent-rating-badge">
+                                                <i className="fas fa-star"></i>
+                                                <span>{talent.rating || 4.0}</span>
                                             </div>
-                                        )}
-                                    </div>
+                                        </div>
 
-                                    <div className="feature-talent-card-body">
-                                        <h3>{talent.name}</h3>
-                                        <p>{talent.role}</p>
-                                    </div>
+                                        <div className="feature-talent-card-body">
+                                            <h3>{talent.name}</h3>
+                                            <p>{talent.title || talent.role || 'Professional'}</p>
+                                        </div>
 
-                                    <div className="feature-talent-card-stars">
-                                        {[...Array(5)].map((_, starIndex) => {
-                                            const starValue = talent.stars || 0;
-                                            const hasHalfStar = talent.halfStar || false;
-                                            if (starIndex < starValue) {
-                                                return <img key={starIndex} src={starIcon} alt="star" />;
-                                            } else if (starIndex === starValue && hasHalfStar) {
-                                                return <img key={starIndex} src={halfStarIcon} alt="half star" />;
-                                            }
-                                            return null;
-                                        })}
-                                        <span>{`(${talent.rating || 0})`}</span>
-                                    </div>
-
-                                    <div className="feature-talent-card-roles">
-                                        {(talent.tech || []).map((tech, techIndex) => (
-                                            <span key={techIndex}>{tech}</span>
-                                        ))}
-                                    </div>
-
-                                    <div className="feature-talent-card-footer">
-                                        <Link 
-                                            href={`/talent/${talent.id}`}
-                                            onClick={(e) => {
-                                                if (!isAuthenticated()) {
-                                                    e.preventDefault();
-                                                    requireAuthWithModal('view_profile', e, talent);
+                                        <div className="feature-talent-card-stars">
+                                            {[...Array(5)].map((_, starIndex) => {
+                                                const rating = talent.rating || 4.0;
+                                                const fullStars = Math.floor(rating);
+                                                const hasHalfStar = (rating - fullStars) >= 0.5;
+                                                
+                                                if (starIndex < fullStars) {
+                                                    return <i key={starIndex} className="fas fa-star"></i>;
+                                                } else if (starIndex === fullStars && hasHalfStar) {
+                                                    return <i key={starIndex} className="fas fa-star-half-alt"></i>;
+                                                } else {
+                                                    return <i key={starIndex} className="far fa-star"></i>;
                                                 }
-                                            }}
-                                        >
-                                            View Profile
-                                        </Link>
+                                            })}
+                                            <span>({talent.rating || 4.0})</span>
+                                        </div>
+
+                                        <div className="feature-talent-card-roles">
+                                            {displaySkills.length > 0 ? (
+                                                displaySkills.map((skill, skillIndex) => (
+                                                    <span key={skillIndex}>{skill}</span>
+                                                ))
+                                            ) : (
+                                                <span>Available for work</span>
+                                            )}
+                                        </div>
+
+                                        <div className="feature-talent-card-footer">
+                                            <Link 
+                                                href={`/talent/${talent.id}`}
+                                                onClick={(e) => handleViewProfile(talent, e)}
+                                            >
+                                                View Profile
+                                            </Link>
+                                        </div>
                                     </div>
-                                </div>
-                            ))
+                                );
+                            })
                         ) : (
                             <div className="no-talents-message">
+                                <i className="fas fa-users"></i>
                                 <p>No featured talents yet. Check back soon!</p>
                             </div>
                         )}
@@ -577,10 +626,10 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
                                 <h2>Join GiftedTalent to Continue</h2>
                                 <p>You need to be a member to apply for jobs and view talent profiles. It only takes a minute!</p>
                                 
-                                {intendedJob && (
+                                {intendedData && (
                                     <div className="auth-modal-job">
-                                        <p>You were about to apply for:</p>
-                                        <strong>{intendedJob.job_title || intendedJob.title || intendedJob.role}</strong>
+                                        <p>You were about to {intendedAction === 'apply_job' ? 'apply for' : intendedAction === 'save_job' ? 'save' : 'view'}:</p>
+                                        <strong>{getActionDataDisplay()}</strong>
                                     </div>
                                 )}
                                 

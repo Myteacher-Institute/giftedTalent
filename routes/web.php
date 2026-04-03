@@ -37,13 +37,18 @@ Route::get('/', function () {
                                 elseif ($user->profile_completed >= 50) $rating = 4.0;
                                 
                                 $avatar = null;
-                                if ($user->profile && $user->profile->avatar_url) {
+                                if ($user->profile && $user->profile->profile_image_base64) {
+                                    $avatar = $user->profile->profile_image_base64;
+                                } elseif ($user->profile && $user->profile->avatar_url) {
                                     $avatar = $user->profile->avatar_url;
                                 }
                                 
                                 $title = $user->title;
                                 if (!$title && $user->profile && $user->profile->title) {
                                     $title = $user->profile->title;
+                                }
+                                if (!$title && $user->profile && $user->profile->position) {
+                                    $title = $user->profile->position;
                                 }
                                 
                                 return [
@@ -65,6 +70,7 @@ Route::get('/', function () {
         'laravelVersion' => Application::VERSION,
         'phpVersion'     => PHP_VERSION,
         'jobs'           => $jobs,
+        'featuredTalents' => $featuredTalents,
     ]);
 })->name('home');
 
@@ -75,7 +81,73 @@ Route::get('/jobs/{id}', function ($id) {
 
 // Navigation Pages
 Route::get('/jobs', [PageController::class, 'findJobs'])->name('pages.findJobs');
-Route::get('/find-talents', [PageController::class, 'findTalents'])->name('pages.findTalents');
+
+// ========== FIXED FIND TALENTS ROUTE ==========
+Route::get('/find-talents', function () {
+    $featuredTalents = User::where('profile_completed', '>=', 50)
+                            ->with('profile')
+                            ->orderBy('profile_completed', 'desc')
+                            ->take(12)
+                            ->get()
+                            ->map(function($user) {
+                                $skills = [];
+                                if ($user->skills) {
+                                    $skills = is_string($user->skills) ? json_decode($user->skills, true) : $user->skills;
+                                }
+                                if (empty($skills)) {
+                                    $skills = ['Available for work'];
+                                }
+                                
+                                $rating = 4.5;
+                                if ($user->profile_completed >= 90) $rating = 5.0;
+                                elseif ($user->profile_completed >= 80) $rating = 4.8;
+                                elseif ($user->profile_completed >= 70) $rating = 4.5;
+                                elseif ($user->profile_completed >= 60) $rating = 4.2;
+                                elseif ($user->profile_completed >= 50) $rating = 4.0;
+                                
+                                // Calculate stars for display
+                                $stars = floor($rating);
+                                $hasHalfStar = ($rating - $stars) >= 0.5;
+                                
+                                $avatar = null;
+                                if ($user->profile && $user->profile->profile_image_base64) {
+                                    $avatar = $user->profile->profile_image_base64;
+                                } elseif ($user->profile && $user->profile->avatar_url) {
+                                    $avatar = $user->profile->avatar_url;
+                                }
+                                
+                                $title = $user->title;
+                                if (!$title && $user->profile && $user->profile->title) {
+                                    $title = $user->profile->title;
+                                }
+                                if (!$title && $user->profile && $user->profile->position) {
+                                    $title = $user->profile->position;
+                                }
+                                
+                                return [
+                                    'id' => $user->id,
+                                    'name' => $user->name,
+                                    'title' => $title ?? 'Professional',
+                                    'role' => $title ?? 'Professional',
+                                    'avatar' => $avatar,
+                                    'avatar_url' => $avatar,
+                                    'profile_image_base64' => $avatar,
+                                    'skills' => $skills,
+                                    'tech' => $skills,
+                                    'rating' => $rating,
+                                    'stars' => $stars,
+                                    'halfStar' => $hasHalfStar,
+                                    'profile_completed' => $user->profile_completed,
+                                ];
+                            });
+    
+    return Inertia::render('FeatureTalents', [
+        'auth' => ['user' => auth()->user()],
+        'featuredTalents' => $featuredTalents,
+    ]);
+})->name('pages.findTalents');
+// =============================================
+
 Route::get('/how-it-works', [PageController::class, 'howItWorks'])->name('pages.howItWorks');
 Route::get('/about', [PageController::class, 'about'])->name('pages.about');
 Route::get('/user-profile', [ProfileController::class, 'show'])->middleware('auth')->name('pages.userProfile');

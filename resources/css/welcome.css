@@ -1049,3 +1049,237 @@ footer {
         font-size: 16px;
     }
 }
+
+
+
+/* ============================================
+   AUTH MODAL STYLES - Professional Popup
+   ============================================ */
+
+.auth-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: fadeIn 0.3s ease;
+}
+
+.auth-modal {
+    background: #ffffff;
+    border-radius: 24px;
+    width: 90%;
+    max-width: 450px;
+    position: relative;
+    animation: slideUp 0.3s ease;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+}
+
+.auth-modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: #f1f5f9;
+    border: none;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.auth-modal-close svg {
+    width: 18px;
+    height: 18px;
+    stroke: #64748b;
+    stroke-width: 2;
+}
+
+.auth-modal-close:hover {
+    background: #e2e8f0;
+    transform: scale(1.05);
+}
+
+.auth-modal-close:hover svg {
+    stroke: #1e293b;
+}
+
+.auth-modal-content {
+    padding: 40px 32px;
+    text-align: center;
+}
+
+.auth-modal-icon {
+    width: 72px;
+    height: 72px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+}
+
+.auth-modal-icon svg {
+    width: 36px;
+    height: 36px;
+    stroke: white;
+    stroke-width: 1.5;
+}
+
+.auth-modal-content h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 12px;
+    letter-spacing: -0.3px;
+}
+
+.auth-modal-content > p {
+    color: #64748b;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 24px;
+}
+
+.auth-modal-job {
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: 16px;
+    margin: 20px 0;
+    border: 1px solid #e2e8f0;
+}
+
+.auth-modal-job p {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.auth-modal-job strong {
+    font-size: 16px;
+    color: #0A2463;
+    font-weight: 700;
+    display: block;
+    word-break: break-word;
+}
+
+.auth-modal-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.auth-modal-btn {
+    flex: 1;
+    padding: 12px 20px;
+    border-radius: 40px;
+    font-weight: 600;
+    font-size: 14px;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.auth-modal-btn-primary {
+    background: #0A2463;
+    color: white;
+    border: none;
+}
+
+.auth-modal-btn-primary:hover {
+    background: #1e40af;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(10, 36, 99, 0.2);
+}
+
+.auth-modal-btn-secondary {
+    background: white;
+    color: #0A2463;
+    border: 1px solid #e2e8f0;
+}
+
+.auth-modal-btn-secondary:hover {
+    background: #f8fafc;
+    border-color: #0A2463;
+    transform: translateY(-2px);
+}
+
+.auth-modal-footer {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 24px;
+    margin-bottom: 0;
+    line-height: 1.4;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+    .auth-modal {
+        width: 95%;
+        max-width: 95%;
+    }
+    
+    .auth-modal-content {
+        padding: 30px 20px;
+    }
+    
+    .auth-modal-icon {
+        width: 56px;
+        height: 56px;
+    }
+    
+    .auth-modal-icon svg {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .auth-modal-content h2 {
+        font-size: 20px;
+    }
+    
+    .auth-modal-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .auth-modal-btn {
+        padding: 10px 16px;
+    }
+}
