@@ -398,6 +398,7 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
                         <div className="section-header">
                             <h3>Recent Job Posts ({filteredJobs.length})</h3>
                         </div>
+                        
 
                         <div className="jobs-list">
                             {filteredJobs.length > 0 ? (
