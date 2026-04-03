@@ -40,7 +40,7 @@ function JobCard({ job, onSave, onUnsave, isSaved = false }) {
                     <div className="match-score mt-2">
                         <div className="flex items-center">
                             <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
-                                <div 
+                                <div
                                     className="bg-green-500 h-2 rounded-full"
                                     style={{ width: `${job.match_score}%` }}
                                 ></div>
@@ -66,7 +66,7 @@ function JobCard({ job, onSave, onUnsave, isSaved = false }) {
                             <i className="fa-regular fa-paper-plane"></i> Apply Now
                         </button>
                         <button onClick={handleSaveClick}>
-                            <i className={`fa-regular fa-bookmark`} style={{ color: saved ? '#4F46E5' : '' }}></i> 
+                            <i className={`fa-regular fa-bookmark`} style={{ color: saved ? '#4F46E5' : '' }}></i>
                             {saved ? 'Saved' : 'Save Job'}
                         </button>
                     </div>
@@ -79,7 +79,7 @@ function JobCard({ job, onSave, onUnsave, isSaved = false }) {
 // Message Modal Component
 function MessageModal({ isOpen, onClose, messages, loading, onMarkAsRead }) {
     if (!isOpen) return null;
-    
+
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="message-modal" onClick={(e) => e.stopPropagation()}>
@@ -106,14 +106,14 @@ function MessageModal({ isOpen, onClose, messages, loading, onMarkAsRead }) {
     );
 }
 
-export default function Dashboard({ 
-    auth, 
-    profileComplete = 0, 
-    profileStatus = {}, 
-    stats = { applied: 0, review: 0, interview: 0, rejected: 0 }, 
-    jobs = [], 
-    jobTypes = [], 
-    searchParams = {}, 
+export default function Dashboard({
+    auth,
+    profileComplete = 0,
+    profileStatus = {},
+    stats = { applied: 0, review: 0, interview: 0, rejected: 0 },
+    jobs = [],
+    jobTypes = [],
+    searchParams = {},
     profile,
     flash,
     profileLevel = { message: 'Keep going!' }
@@ -135,6 +135,7 @@ export default function Dashboard({
     const [showSavedJobs, setShowSavedJobs] = useState(false);
     const [loadingSaved, setLoadingSaved] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [isHamburgerActive, setIsHamburgerActive] = useState(false);
 
     const currentUser = auth?.user;
 
@@ -152,93 +153,57 @@ export default function Dashboard({
     useEffect(() => {
         const profileUpdated = sessionStorage.getItem('profileUpdated');
         const profileUpdateTime = sessionStorage.getItem('profileUpdateTime');
-        
+
         if (profileUpdated === 'true') {
             const now = Date.now();
             const updateTime = parseInt(profileUpdateTime);
-            
+
             if (updateTime && (now - updateTime) < 10000) {
                 alertify.success('Profile updated successfully! Your changes have been saved.');
             }
-            
+
             sessionStorage.removeItem('profileUpdated');
             sessionStorage.removeItem('profileUpdateTime');
         }
     }, []);
 
-    // Debug: Log profile data to console
-    useEffect(() => {
-        console.log('=== DASHBOARD PROFILE DEBUG ===');
-        console.log('1. profile object:', profile);
-        console.log('2. profile_image_base64:', profile?.profile_image_base64);
-        console.log('3. currentUser?.profile:', currentUser?.profile);
-        console.log('4. currentUser?.profile?.profile_image_base64:', currentUser?.profile?.profile_image_base64);
-        console.log('5. Final image URL:', getProfileImageUrl());
-    }, [profile, currentUser]);
-
     const getProfileImageUrl = () => {
-        // FIRST: Check for base64 in the profile prop (most important)
         if (profile?.profile_image_base64) {
-            console.log('Using profile.profile_image_base64');
             return profile.profile_image_base64;
         }
-        
-        // SECOND: Check for base64 in user's profile
         if (currentUser?.profile?.profile_image_base64) {
-            console.log('Using currentUser.profile.profile_image_base64');
             return currentUser.profile.profile_image_base64;
         }
-        
-        // THIRD: Check for avatar_url
         if (currentUser?.profile?.avatar_url) {
-            console.log('Using currentUser.profile.avatar_url');
             return currentUser.profile.avatar_url;
         }
-        
-        // FOURTH: Check for avatar path
         if (currentUser?.profile?.avatar) {
             const avatarPath = currentUser.profile.avatar;
             if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
-                console.log('Using avatar URL from path');
                 return avatarPath;
             }
             if (avatarPath.startsWith('data:image')) {
-                console.log('Using base64 from avatar path');
                 return avatarPath;
             }
             const cleanPath = avatarPath.replace(/^\/+/, '');
-            console.log('Using storage path');
             return `/storage/${cleanPath}`;
         }
-        
-        // FIFTH: Check profile from props
         if (profile?.avatar_url) {
-            console.log('Using profile.avatar_url');
             return profile.avatar_url;
         }
-        
         if (profile?.avatar) {
             if (profile.avatar.startsWith('data:image')) {
-                console.log('Using base64 from profile.avatar');
                 return profile.avatar;
             }
-            console.log('Using profile.avatar storage path');
             return `/storage/${profile.avatar}`;
         }
-        
-        // SIXTH: Check user avatar
         if (currentUser?.avatar) {
             if (currentUser.avatar.startsWith('data:image')) {
-                console.log('Using base64 from user.avatar');
                 return currentUser.avatar;
             }
-            console.log('Using user.avatar');
             return currentUser.avatar;
         }
-        
-        // DEFAULT: Default avatar with user name
         const userName = currentUser?.name || 'User';
-        console.log('Using default avatar');
         return `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
     };
 
@@ -264,13 +229,16 @@ export default function Dashboard({
     };
 
     const toggleAdvanced = () => setShowAdvanced(!showAdvanced);
-    const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
+    
+    const toggleMobileMenu = () => {
+        setIsHamburgerActive(!isHamburgerActive);
+        setMobileMenuOpen(!mobileMenuOpen);
+    };
 
     const handleLogout = () => {
         router.post('/logout');
     };
 
-    // Mock data for applied jobs
     const fetchAppliedJobs = () => {
         setLoadingApplied(true);
         setTimeout(() => {
@@ -290,7 +258,6 @@ export default function Dashboard({
         setShowSavedJobs(false);
     };
 
-    // Mock data for saved jobs
     const fetchSavedJobs = () => {
         setLoadingSaved(true);
         setTimeout(() => {
@@ -305,7 +272,6 @@ export default function Dashboard({
         fetchSavedJobs();
     };
 
-    // Mock save/unsave functionality
     const handleSaveJob = (jobId) => {
         if (savedJobs.includes(jobId)) {
             const updated = savedJobs.filter(id => id !== jobId);
@@ -327,7 +293,6 @@ export default function Dashboard({
         alertify.success('Job removed from saved');
     };
 
-    // Mock messages functionality
     const fetchUnreadCount = () => {
         setUnreadCount(0);
     };
@@ -363,13 +328,11 @@ export default function Dashboard({
         }
     }, [profileComplete]);
 
-    // Helper function to check if a profile field is completed
     const isFieldCompleted = (fieldName) => {
         if (profileStatus.status && profileStatus.status[fieldName]) {
             return true;
         }
-        
-        switch(fieldName) {
+        switch (fieldName) {
             case 'first_name':
                 return !!(currentUser?.name?.split(' ')[0] || profile?.first_name);
             case 'last_name':
@@ -415,19 +378,26 @@ export default function Dashboard({
             {/* AppNavbar Component */}
             <AppNavbar user={currentUser} newJobsCount={newJobsCount} />
 
-            {/* Mobile Menu Toggle Button */}
-            <button className="mobile-menu-toggle" onClick={toggleMobileMenu}>
-                <i className={`fas ${mobileMenuOpen ? 'fa-times' : 'fa-sliders-h'}`}></i>
-            </button>
+            {/* Animated Hamburger Menu - Inside Navbar Area */}
+            <div className="hamburger-container">
+                <div 
+                    className={`hamburger ${isHamburgerActive ? 'active' : ''}`}
+                    onClick={toggleMobileMenu}
+                >
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
 
             <div className="container">
                 {/* Sidebar */}
                 <aside className={`sidebar ${mobileMenuOpen ? 'mobile-open' : ''}`}>
                     <div className="profile">
                         <div className="profile-image-wrapper">
-                            <img 
-                                src={getProfileImageUrl()} 
-                                alt={currentUser?.name || 'Profile'} 
+                            <img
+                                src={getProfileImageUrl()}
+                                alt={currentUser?.name || 'Profile'}
                                 className="profile-image"
                                 onError={(e) => {
                                     const userName = currentUser?.name || 'User';
@@ -470,7 +440,9 @@ export default function Dashboard({
                                 </span>
                             )}
                         </li>
-                        <li><i className="fa-solid fa-gear"></i> Settings</li>
+                        <li>
+                            <Link href="/settings"><i className="fa-solid fa-gear"></i> Settings</Link>
+                        </li>
                         <li className="logout-item">
                             <a href="/" onClick={(e) => { e.preventDefault(); handleLogout(); }}>
                                 <i className="fa-solid fa-right-from-bracket logout-icon"></i>
@@ -569,14 +541,14 @@ export default function Dashboard({
                             {/* Search Bar */}
                             <div className="search-bar">
                                 <form onSubmit={handleSearch}>
-                                    <input 
-                                        type="text" 
-                                        placeholder="Search for jobs..." 
+                                    <input
+                                        type="text"
+                                        placeholder="Search for jobs..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                     />
-                                    <select 
-                                        value={selectedJobType} 
+                                    <select
+                                        value={selectedJobType}
                                         onChange={(e) => setSelectedJobType(e.target.value)}
                                     >
                                         <option value="">All Types</option>
@@ -623,11 +595,11 @@ export default function Dashboard({
                                     </div>
                                     <div className="jobs">
                                         {recommendedJobs.map((job) => (
-                                            <JobCard 
-                                                key={job.id} 
-                                                job={job} 
-                                                onSave={handleSaveJob} 
-                                                onUnsave={handleUnsaveJob} 
+                                            <JobCard
+                                                key={job.id}
+                                                job={job}
+                                                onSave={handleSaveJob}
+                                                onUnsave={handleUnsaveJob}
                                                 isSaved={savedJobs.includes(job.id)}
                                             />
                                         ))}
@@ -641,11 +613,11 @@ export default function Dashboard({
                                     <h2>{searchQuery ? `Search Results for "${searchQuery}"` : 'Other Available Jobs'}</h2>
                                     <div className="jobs">
                                         {otherJobs.map((job) => (
-                                            <JobCard 
-                                                key={job.id} 
-                                                job={job} 
-                                                onSave={handleSaveJob} 
-                                                onUnsave={handleUnsaveJob} 
+                                            <JobCard
+                                                key={job.id}
+                                                job={job}
+                                                onSave={handleSaveJob}
+                                                onUnsave={handleUnsaveJob}
                                                 isSaved={savedJobs.includes(job.id)}
                                             />
                                         ))}
@@ -682,12 +654,12 @@ export default function Dashboard({
                                 <span>Complete</span>
                             </div>
                         </div>
-                        
+
                         <p className="text-center text-sm text-gray-600 mt-3 mb-4">
                             <i className="fas fa-info-circle mr-1 text-indigo-500"></i>
                             {profileLevel.message || 'Keep going!'}
                         </p>
-                        
+
                         <div className="progress-steps mt-4">
                             <div className="flex justify-between text-xs text-gray-500 mb-2">
                                 <span>Starter</span>
@@ -697,13 +669,13 @@ export default function Dashboard({
                                 <span>Expert</span>
                             </div>
                             <div className="progress-bar">
-                                <div 
+                                <div
                                     className="progress-fill"
                                     style={{ width: `${profileComplete}%` }}
                                 ></div>
                             </div>
                         </div>
-                        
+
                         <ul className="profile-checklist mt-6">
                             <li className={isFieldCompleted('first_name') && isFieldCompleted('last_name') ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
                                 <i className={`fas ${isFieldCompleted('first_name') && isFieldCompleted('last_name') ? 'fa-check-circle' : 'fa-plus-circle'}`}></i>

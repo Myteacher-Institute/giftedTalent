@@ -96,6 +96,11 @@ export default function Settings({ auth, user, profile, flash }) {
             <Head title="Settings - GiftedTalent" />
             <AppNavbar user={currentUser} onMenuToggle={toggleMobileMenu} />
 
+            {/* Mobile Hamburger Menu Button */}
+            <button className="settings-mobile-toggle" onClick={toggleMobileMenu}>
+                <i className={`fas ${isMobileMenuOpen ? 'fa-times' : 'fa-bars'}`}></i>
+            </button>
+
             {showSuccessToast && (
                 <div className="toast-notification success">
                     <div className="toast-content">

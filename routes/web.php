@@ -6,7 +6,7 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\PrivacySettingsController;
 use App\Http\Controllers\ProfileController;
 use App\Models\Job;
-use App\Models\User;  // <-- ADDED THIS LINE
+use App\Models\User;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -15,15 +15,12 @@ use Inertia\Inertia;
 Route::get('/', function () {
     $jobs = Job::latest()->take(6)->get();
 
-    
-    // Get featured talents - users with 50%+ profile completion
     $featuredTalents = User::where('profile_completed', '>=', 50)
-                            ->with('profile')  // IMPORTANT: Load the profile relationship
+                            ->with('profile')
                             ->orderBy('profile_completed', 'desc')
                             ->take(6)
                             ->get()
                             ->map(function($user) {
-                                // Parse skills if they exist
                                 $skills = [];
                                 if ($user->skills) {
                                     $skills = is_string($user->skills) ? json_decode($user->skills, true) : $user->skills;
@@ -32,7 +29,6 @@ Route::get('/', function () {
                                     $skills = ['Available for work'];
                                 }
                                 
-                                // Calculate rating based on profile completion
                                 $rating = 3.5;
                                 if ($user->profile_completed >= 90) $rating = 5.0;
                                 elseif ($user->profile_completed >= 80) $rating = 4.8;
@@ -40,13 +36,11 @@ Route::get('/', function () {
                                 elseif ($user->profile_completed >= 60) $rating = 4.2;
                                 elseif ($user->profile_completed >= 50) $rating = 4.0;
                                 
-                                // FIX: Get avatar from profile relationship
                                 $avatar = null;
                                 if ($user->profile && $user->profile->avatar_url) {
                                     $avatar = $user->profile->avatar_url;
                                 }
                                 
-                                // Also get title from profile if available
                                 $title = $user->title;
                                 if (!$title && $user->profile && $user->profile->title) {
                                     $title = $user->profile->title;
@@ -94,6 +88,16 @@ Route::get('/jobs', [PageController::class, 'jobs'])->name('jobs');
 Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->middleware(['auth', 'verified', 'not_admin'])->name('dashboard');
 
 Route::middleware(['auth', 'not_admin'])->group(function () {
+    // ========== SETTINGS ROUTE ==========
+    Route::get('/settings', function () {
+        return Inertia::render('Settings', [
+            'user' => auth()->user(),
+            'profile' => auth()->user()->profile,
+            'auth' => ['user' => auth()->user()],
+        ]);
+    })->name('settings');
+    // ====================================
+
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'read'])->name('notifications.read');
     Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'readAll'])->name('notifications.readAll');
@@ -101,11 +105,6 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     Route::get('/cv', [ProfileController::class, 'cv'])->name('cv');
     Route::post('/profile/resume', [ProfileController::class, 'storeResume'])->name('profile.resume.store');
     Route::delete('/profile/resume/{id}', [ProfileController::class, 'destroyResume'])->name('profile.resume.destroy');
-    // Basic Profile Routes
-    // Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
-    // Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
-    // Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    // Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Extended Profile Routes
     Route::get('/profile/edit', [ProfileController::class, 'editExtendedProfile'])->name('profile.editExtended');
@@ -140,10 +139,6 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar'])->name('profile.avatar.upload');
     Route::delete('/profile/avatar', [ProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
 
-    // Avatar Upload Route
-    Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar'])->middleware('auth')->name('profile.avatar.upload');
-    Route::delete('/profile/avatar', [ProfileController::class, 'removeAvatar'])->middleware('auth')->name('profile.avatar.remove');
-
     // Skills Routes
     Route::post('/profile/skills', [ProfileController::class, 'addSkill'])->name('profile.skills.add');
     Route::delete('/profile/skills/{skillId}', [ProfileController::class, 'removeSkill'])->name('profile.skills.remove');
@@ -172,15 +167,10 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
 // Admin Routes - Protected by IsAdmin middleware
 Route::middleware(['auth', 'admin'])->prefix('Admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
-
     Route::get('/jobs/create', [AdminController::class, 'createJob'])->name('jobs.create');
-
     Route::get('/users', [AdminController::class, 'users'])->name('users');
-
     Route::get('/jobs', [AdminController::class, 'jobs'])->name('jobs');
-
     Route::post('jobs', [AdminController::class, 'storeJob'])->name('admin.jobs.store');
-
     Route::get('/analytics', [AdminController::class, 'analytics'])->name('analytics');
 
     // CV Review Routes
