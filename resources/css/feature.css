@@ -148,6 +148,8 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    background-color: #EFF6FF;
+    padding: 5px;
 }
 
 /* Gradient backgrounds - keep as is */
@@ -280,25 +282,6 @@
     }
 }
 
-/* Tags */
-/* .job-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 1.25rem;
-}
-
-.job-tag {
-    font-family: 'Inter', sans-serif;
-    font-weight: 500;
-    font-size: 11px;
-    line-height: 15px;
-    letter-spacing: -0.5px;
-    color: #3B82F6;
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
-} */
-
 /* Job Tags */
 .job-tags {
     display: flex;
@@ -308,8 +291,7 @@
 }
 
 .job-tag {
-    padding: 4px 12px;
-    background-color: #EFF6FF;
+    padding: 4px 2px;
     color: #3B82F6;
     border-radius: 20px;
     font-size: 12px;

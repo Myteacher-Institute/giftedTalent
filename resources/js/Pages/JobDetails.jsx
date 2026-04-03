@@ -29,8 +29,23 @@ export default function JobDetails({ job }) {
 
                 <div className="job-details-card">
                     <div className="job-details-header">
-                        <div className="job-icon gradient-blue">
-                            <img src={`/assets/svg/code.svg`} alt="" className="job-icon-img" />
+                        <div className="job-icon">
+                            {/* <img src={`/assets/svg/code.svg`} alt="" className="job-icon-img" /> */}
+                            {job.company_logo_url ? (
+                                <img
+                                    src={job.company_logo_url}
+                                    alt={`${job.company_name} logo`}
+                                    className="company-logo"
+                                    onError={(e) => {
+                                        e.target.style.display = 'none';
+                                        e.target.nextSibling.style.display = 'flex';
+                                    }}
+                                />
+                            ) : (
+                                <div className="company-initial">
+                                    {job.company_name?.charAt(0) || 'C'}
+                                </div>
+                            )}
                         </div>
                         <span className="job-type" id={displayData.job_type === 'Contract' ? 'job-type-contract' : 'job-type-fulltime'}>
                             {displayData.job_type}

@@ -69,7 +69,7 @@ class AdminController extends Controller
 
         // Get recent jobs (with filters applied)
         $recentJobs = $query->latest()
-            ->take(10)
+            ->take(20)
             ->get()
             ->map(function ($job) {
                 return [
