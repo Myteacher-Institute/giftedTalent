@@ -83,7 +83,7 @@ export default function Contact() {
             icon: <i className="fas fa-phone-alt contact-icon-font"></i>,
             title: "Call Us",
             details: ["+234 801 234 5678"],
-            link: "tel:+23480*******",
+            link: "tel:+2348012345678",
             linkText: "Call Now"
         },
         {
@@ -92,6 +92,13 @@ export default function Contact() {
             details: ["Chat with us 24/7"],
             link: "https://wa.me/2348012345678?text=Hello%20GiftedTalents",
             linkText: "Chat Now"
+        },
+        {
+            icon: <i className="fas fa-globe contact-icon-font"></i>,
+            title: "Visit Our Website",
+            details: ["Myteacher.ng"],
+            link: "https://myteacher.ng",
+            linkText: "Visit Website"
         }
     ];
 

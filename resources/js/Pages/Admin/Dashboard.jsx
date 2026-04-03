@@ -139,6 +139,18 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
             <div className="dashboard-container">
                 {/* Sidebar */}
                 <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+                    {/* Close button for mobile */}
+                    <button
+                        className="sidebar-close-btn"
+                        onClick={() => setSidebarOpen(false)}
+                        aria-label="Close sidebar"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="red" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
+
                     <div className="logo">
                         <a href='#' onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
                             GiftedTalents<span>.online</span>
@@ -153,7 +165,7 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
                         </div>
                         <ul>
                             <li>
-                                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/Admin/dashboard'); }}>
+                                <a href="/Admin/dashboard" onClick={(e) => { e.preventDefault(); navigateTo('/Admin/dashboard'); }}>
                                     <img src="/assets/svg/column.svg" alt="" className="column-icon" />Dashboard
                                 </a>
                             </li>
@@ -163,17 +175,17 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
                                 </a>
                             </li>
                             <li>
-                                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/Admin/candidates'); }}>
+                                <a href="candidates" onClick={(e) => { e.preventDefault(); navigateTo('/Admin/candidates'); }}>
                                     <img src="/assets/svg/forward-out.svg" alt="" className="forward-out-icon" />Candidates
                                 </a>
                             </li>
                             <li>
-                                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/Admin/messages'); }}>
+                                <a href="/messages" onClick={(e) => { e.preventDefault(); navigateTo('/Admin/messages'); }}>
                                     <img src="/assets/svg/message.svg" alt="" className="message-icon" />Messages
                                 </a>
                             </li>
                             <li>
-                                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/Admin/settings'); }}>
+                                <a href="/setting" onClick={(e) => { e.preventDefault(); navigateTo('/Admin/settings'); }}>
                                     <img src="/assets/svg/setting.svg" alt="" className="setting-icon" />Settings
                                 </a>
                             </li>

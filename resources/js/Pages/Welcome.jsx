@@ -46,6 +46,7 @@ function Nav({ auth }) {
                 <li><Link href="/find-talents" className="nav-link">Find Talents</Link></li>
                 <li><Link href="/how-it-works" className="nav-link">How It Works</Link></li>
                 <li><Link href="/about" className="nav-link">About</Link></li>
+                <li><Link href="/contact" className="nav-link">Contact</Link></li>
             </ul>
             <div className="nav-right">
 
@@ -278,7 +279,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                             <div className="story-footer">
                                 <Link href="/how-it-works" className="story-btn">Learn How It Works</Link>
                                 <a
-                                    href="https://wa.me/2348012345678?text=Hello%20GiftedTalents"
+                                    href="https://wa.link/a7ft7n"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="whatsapp-icon-link"

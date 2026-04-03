@@ -795,13 +795,47 @@ footer {
 
 /* ========== MOBILE RESPONSIVE MEDIA QUERIES ========== */
 
+/* Sidebar close button - only visible on mobile */
+.sidebar-close-btn {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.sidebar-close-btn svg {
+    width: 18px;
+    height: 18px;
+    stroke: #0A2463;
+    stroke-width: 2;
+}
+
+.sidebar-close-btn:hover {
+    background: #E2E8F0;
+}
+
+/* Show close button on mobile when sidebar is open */
+@media (max-width: 1024px) {
+    .sidebar.open .sidebar-close-btn {
+        display: flex;
+    }
+}
+
 /* Tablet and smaller (max-width: 1024px) */
 @media (max-width: 1024px) {
     .main-content {
         margin-left: 0;
         padding: 16px;
     }
-    
+
     .sidebar {
         transform: translateX(-100%);
         position: fixed;
@@ -809,38 +843,38 @@ footer {
         transition: transform 0.3s ease;
         width: 280px;
     }
-    
+
     .sidebar.open {
         transform: translateX(0);
     }
-    
+
     .top-nav {
         flex-wrap: wrap;
         gap: 12px;
     }
-    
+
     .nav-left {
         flex: 1;
     }
-    
+
     .search-bar {
         order: 3;
         width: 100%;
         margin-top: 8px;
     }
-    
+
     .search-bar input {
         width: 100%;
     }
-    
+
     .filters-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
     .jobs-list {
         grid-template-columns: 1fr;
     }
-    
+
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -851,22 +885,22 @@ footer {
     .dashboard-container {
         flex-direction: column;
     }
-    
+
     .main-content {
         padding: 12px;
     }
-    
+
     .top-nav {
         flex-direction: column;
         align-items: stretch;
         padding: 12px;
     }
-    
+
     .nav-left {
         justify-content: space-between;
         width: 100%;
     }
-    
+
     .nav-links {
         display: none;
         position: absolute;
@@ -876,91 +910,94 @@ footer {
         background: white;
         flex-direction: column;
         padding: 16px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
-    
+
     .nav-links.active {
         display: flex;
     }
-    
+
     .nav-links a {
         padding: 12px 0;
     }
-    
+
     .top-nav-img {
         gap: 16px;
     }
-    
+
     .user-name {
         display: none;
     }
-    
+
     .stats-grid {
         grid-template-columns: 1fr;
         gap: 16px;
     }
-    
-    .stat-card, .stat-card-post-job {
+
+    .stat-card,
+    .stat-card-post-job {
         padding: 16px;
     }
-    
-    .stat-numbers, .tracker-numbers {
+
+    .stat-numbers,
+    .tracker-numbers {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
     .filters-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 12px;
     }
-    
+
     .filters-grid {
         grid-template-columns: 1fr;
         gap: 12px;
     }
-    
+
     .filter-actions {
         margin-top: 16px;
     }
-    
+
     .apply-filters {
         width: 100%;
     }
-    
+
     .section-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 12px;
     }
-    
+
     .job-card-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 12px;
     }
-    
+
     .jobs-info {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
     }
-    
+
     .job-details-container {
         flex-wrap: wrap;
         gap: 8px;
     }
-    
+
     .view-applicants {
         margin-left: 0;
     }
-    
-    .footer-left, .footer-right {
+
+    .footer-left,
+    .footer-right {
         flex-direction: column;
         align-items: center;
         text-align: center;
         gap: 12px;
     }
-    
+
     .footer-right a {
         margin: 0;
     }
@@ -971,28 +1008,28 @@ footer {
     .main-content {
         padding: 12px;
     }
-    
+
     .top-nav {
         padding: 10px;
     }
-    
+
     .logo h2 {
         font-size: 18px;
     }
-    
+
     .search-bar {
         width: 100%;
     }
-    
+
     .search-bar input {
         padding: 8px 12px;
         font-size: 14px;
     }
-    
+
     .search-btn {
         padding: 8px 12px;
     }
-    
+
     .notification-badge {
         font-size: 10px;
         padding: 2px 5px;
@@ -1000,55 +1037,55 @@ footer {
         top: -4px;
         right: -6px;
     }
-    
+
     .stat-card {
         min-width: 80px;
         padding: 10px;
     }
-    
+
     .stat-value {
         font-size: 20px;
     }
-    
+
     .stat-label {
         font-size: 11px;
     }
-    
+
     .filter-item select {
         padding: 10px;
         font-size: 14px;
     }
-    
+
     .job-card {
         padding: 12px;
     }
-    
+
     .job-title {
         font-size: 16px;
     }
-    
+
     .job-company {
         font-size: 13px;
     }
-    
+
     .job-description {
         font-size: 13px;
     }
-    
+
     .time {
         font-size: 11px;
     }
-    
+
     .view-applicants {
         padding: 6px 12px;
         font-size: 12px;
     }
-    
+
     .pagination a {
         padding: 6px 10px;
         font-size: 12px;
     }
-    
+
     .post-job-btn {
         width: 100%;
         padding: 12px;
@@ -1060,98 +1097,103 @@ footer {
     .main-content {
         padding: 8px;
     }
-    
+
     .top-nav {
         padding: 8px;
     }
-    
+
     .logo a {
         font-size: 16px;
     }
-    
+
     .menu-icon svg {
         width: 24px;
         height: 24px;
     }
-    
+
     .nav-links a {
         font-size: 14px;
         padding: 10px 0;
     }
-    
+
     .auth-links {
         gap: 8px;
     }
-    
+
     .auth-links a {
         padding: 6px 12px;
         font-size: 13px;
     }
-    
+
     .get-started {
         padding: 6px 12px;
     }
-    
-    .chats-icon, .notification-icon {
+
+    .chats-icon,
+    .notification-icon {
         width: 20px;
         height: 20px;
     }
-    
+
     .avatar {
         width: 32px;
         height: 32px;
     }
-    
-    .stat-numbers, .tracker-numbers {
+
+    .stat-numbers,
+    .tracker-numbers {
         grid-template-columns: 1fr;
         gap: 8px;
     }
-    
-    .stat-item, .tracker-item {
+
+    .stat-item,
+    .tracker-item {
         text-align: center;
     }
-    
-    .stat-value, .tracker-value {
+
+    .stat-value,
+    .tracker-value {
         font-size: 18px;
     }
-    
+
     .job-card-header .company-info {
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     .job-details-container {
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     .applicants {
         order: 1;
     }
-    
+
     .view-applicants {
         order: 2;
         width: 100%;
         text-align: center;
     }
-    
-    .footer-left, .footer-right {
+
+    .footer-left,
+    .footer-right {
         width: 100%;
     }
-    
+
     .footer-right {
         gap: 12px;
     }
-    
+
     .footer-right a {
         font-size: 12px;
     }
-    
+
     .clear-filters {
         font-size: 12px;
         padding: 4px 8px;
     }
-    
+
     .apply-filters {
         font-size: 14px;
         padding: 10px;
@@ -1163,53 +1205,53 @@ footer {
     .logo a {
         font-size: 14px;
     }
-    
+
     .auth-links a {
         font-size: 12px;
         padding: 4px 10px;
     }
-    
+
     .get-started {
         padding: 4px 10px;
     }
-    
+
     .stat-card {
         padding: 8px;
     }
-    
+
     .stat-value {
         font-size: 16px;
     }
-    
+
     .stat-label {
         font-size: 10px;
     }
-    
+
     .job-card {
         padding: 10px;
     }
-    
+
     .job-title {
         font-size: 15px;
     }
-    
+
     .job-company {
         font-size: 12px;
     }
-    
+
     .job-description {
         font-size: 12px;
     }
-    
+
     .time {
         font-size: 10px;
     }
-    
+
     .view-applicants {
         padding: 4px 10px;
         font-size: 11px;
     }
-    
+
     .pagination a {
         padding: 4px 8px;
         font-size: 11px;
@@ -1222,7 +1264,7 @@ footer {
         display: block;
         cursor: pointer;
     }
-    
+
     .nav-links {
         display: none;
         position: absolute;
@@ -1232,23 +1274,23 @@ footer {
         background: white;
         flex-direction: column;
         padding: 20px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         z-index: 100;
     }
-    
+
     .nav-links.active {
         display: flex;
     }
-    
+
     .nav-links a {
         padding: 12px 0;
         border-bottom: 1px solid #eee;
     }
-    
+
     .nav-links a:last-child {
         border-bottom: none;
     }
-    
+
     .nav-links div {
         display: flex;
         align-items: center;
@@ -1258,7 +1300,8 @@ footer {
 
 /* Ensure touch-friendly buttons */
 @media (max-width: 768px) {
-    button, 
+
+    button,
     .apply-filters,
     .clear-filters,
     .view-applicants,
@@ -1267,12 +1310,14 @@ footer {
     .save-btn {
         min-height: 44px;
     }
-    
+
     .filter-select {
         min-height: 44px;
     }
-    
-    input, select, textarea {
+
+    input,
+    select,
+    textarea {
         font-size: 16px !important;
     }
 }
@@ -1288,25 +1333,25 @@ footer {
         height: 100vh;
         z-index: 1000;
         background: white;
-        box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
     }
-    
+
     .sidebar.open {
         transform: translateX(0);
     }
-    
+
     .sidebar-overlay {
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(0,0,0,0.5);
+        background: rgba(0, 0, 0, 0.5);
         z-index: 999;
         display: none;
     }
-    
-    .sidebar.open + .sidebar-overlay {
+
+    .sidebar.open+.sidebar-overlay {
         display: block;
     }
 }
