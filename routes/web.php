@@ -6,6 +6,7 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\PrivacySettingsController;
 use App\Http\Controllers\ProfileController;
 use App\Models\Job;
+use App\Models\User;  // <-- ADDED THIS LINE
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;

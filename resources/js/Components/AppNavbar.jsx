@@ -1,34 +1,36 @@
 // resources/js/Components/AppNavbar.jsx
-import { Link, router } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import Notification from './Notification';
 
-const AppNavbar = ({ user, newJobsCount, onMenuToggle }) => {
+const AppNavbar = ({ user, newJobsCount }) => {
 
     const getProfileImageUrl = () => {
+        // FIRST: Check for base64 profile image
+        if (user?.profile?.profile_image_base64) {
+            return user.profile.profile_image_base64;
+        }
+        
+        // SECOND: Check for avatar_url
         if (user?.profile?.avatar_url) {
             return user.profile.avatar_url;
         }
         
+        // THIRD: Check for avatar path
         if (user?.profile?.avatar) {
             const avatarPath = user.profile.avatar;
             if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
                 return avatarPath;
             }
+            if (avatarPath.startsWith('data:image')) {
+                return avatarPath;
+            }
             const cleanPath = avatarPath.replace(/^\/+/, '');
-            const fullUrl = `/storage/${cleanPath}`;
-            return fullUrl;
+            return `/storage/${cleanPath}`;
         }
         
+        // FOURTH: Default avatar
         const userName = user?.name || 'User';
-        const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
-        return fallbackUrl;
-    };
-
-    const handleMenuToggle = () => {
-        // This will toggle the sidebar in Settings page
-        if (onMenuToggle) {
-            onMenuToggle();
-        }
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=40&bold=true`;
     };
 
     return (
@@ -37,18 +39,13 @@ const AppNavbar = ({ user, newJobsCount, onMenuToggle }) => {
                 <span className="blue">GiftedTalents</span>.Online
             </div>
 
-            {/* Desktop Navigation */}
+            {/* Desktop Navigation - using nav tag to match CSS */}
             <nav>
-                <Link href="/">Home</Link>
-                <Link href="/search-jobs">Jobs</Link>
-                <Link href="#">Explore</Link>
-                <Link href="#">Hire</Link>
+                <a onClick={() => router.visit('/dashboard')}>Home</a>
+                <a onClick={() => router.visit('/search-jobs')} className="active">Jobs</a>
+                <a onClick={() => router.visit('/explore')}>Explore</a>
+                <a onClick={() => router.visit('/hire')}>Hire</a>
             </nav>
-
-            {/* Hamburger Menu Button - Only for Settings page sidebar */}
-            <button className="mobile-menu-toggle" onClick={handleMenuToggle}>
-                <i className="fas fa-bars"></i>
-            </button>
 
             <div className="search">
                 <input type="text" placeholder="search for jobs..." />

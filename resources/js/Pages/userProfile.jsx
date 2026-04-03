@@ -1,13 +1,13 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm, router } from '@inertiajs/react';
-import React, { useState, useEffect } from 'react';
+import { Head, useForm, router, Link } from '@inertiajs/react';
+import React, { useState, useEffect, useRef } from 'react';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import '../../css/userProfile.css';
 
-export default function EditProfile({ user }) {
+export default function EditProfile({ user, profile }) {
     const { data, setData, patch, processing, errors, clearErrors, reset } = useForm({
         first_name: '',
         last_name: '',
@@ -22,92 +22,167 @@ export default function EditProfile({ user }) {
         linkedin_url: '',
         github_url: '',
         portfolio_url: '',
+        title: '',
+        company: '',
+        employment_type: '',
+        start_date: '',
+        profile_image: '', // This will store base64 image
     });
+
+    // State variables
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [hasChanges, setHasChanges] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [previewImage, setPreviewImage] = useState(null);
+    const initialData = useRef({});
+
+    // Employment types for dropdown
+    const employmentTypes = ['Full-time', 'Part-time', 'Contract', 'Remote', 'Internship', 'Freelance'];
 
     // Populate form with current values on mount
     useEffect(() => {
         if (user) {
-            setData({
+            // Get profile data from either profile or user.profile
+            const userProfile = profile || user.profile || {};
+            
+            const formData = {
                 first_name: user.name ? user.name.split(' ')[0] || '' : '',
                 last_name: user.name ? user.name.split(' ').slice(1).join(' ') || '' : '',
                 email: user.email || '',
-                phone: user.profile?.phone || '',
-                position: user.profile?.position || '',
-                education: user.profile?.education || '',
-                bio: user.profile?.bio || '',
-                city: user.profile?.city || '',
-                address: user.profile?.address || '',
-                country: user.profile?.country || '',
-                linkedin_url: user.profile?.linkedin_url || '',
-                github_url: user.profile?.github_url || '',
-                portfolio_url: user.profile?.portfolio_url || '',
-            });
+                phone: userProfile.phone || user.phone || '',
+                position: userProfile.position || '',
+                education: userProfile.education || '',
+                bio: userProfile.bio || '',
+                city: userProfile.city || '',
+                address: userProfile.address || '',
+                country: userProfile.country || '',
+                linkedin_url: userProfile.linkedin_url || '',
+                github_url: userProfile.github_url || '',
+                portfolio_url: userProfile.portfolio_url || '',
+                title: userProfile.title || userProfile.position || '',
+                company: userProfile.company || '',
+                employment_type: userProfile.employment_type || '',
+                start_date: userProfile.start_date || '',
+                profile_image: '',
+            };
+            setData(formData);
+            initialData.current = { ...formData };
+            
+            // Set preview image from existing avatar (check for base64 first)
+            if (userProfile.profile_image_base64) {
+                setPreviewImage(userProfile.profile_image_base64);
+            } else if (userProfile.avatar_url) {
+                setPreviewImage(userProfile.avatar_url);
+            } else if (userProfile.avatar) {
+                if (userProfile.avatar.startsWith('data:image')) {
+                    setPreviewImage(userProfile.avatar);
+                } else if (userProfile.avatar.startsWith('/storage/')) {
+                    setPreviewImage(userProfile.avatar);
+                } else {
+                    setPreviewImage(`/storage/${userProfile.avatar}`);
+                }
+            } else if (user.avatar) {
+                if (user.avatar.startsWith('data:image')) {
+                    setPreviewImage(user.avatar);
+                } else {
+                    setPreviewImage(user.avatar);
+                }
+            }
         }
-    }, [user, setData]);
+    }, [user, profile, setData]);
 
-    // Track changes with debug
+    // Track changes
     useEffect(() => {
         const hasAnyChanges = Object.keys(data).some(
             key => data[key] !== initialData.current[key]
         );
-        console.log('Checking changes...');
-        console.log('Has changes:', hasAnyChanges);
         setHasChanges(hasAnyChanges);
     }, [data]);
 
+    // Convert file to base64
+    const convertToBase64 = (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = (error) => reject(error);
+        });
+    };
+
     const submit = (e) => {
         e.preventDefault();
-        
-        console.log('Submit button clicked!');
-        console.log('isSubmitting:', isSubmitting);
-        console.log('hasChanges:', hasChanges);
-        console.log('processing:', processing);
         
         if (isSubmitting) return;
         
         // Find only the fields that have changed
         const changedFields = {};
         Object.keys(data).forEach(key => {
-            if (data[key] !== initialData.current[key]) {
+            if (data[key] !== initialData.current[key] && data[key] !== '') {
                 changedFields[key] = data[key];
             }
         });
         
-        console.log('Changed fields:', changedFields);
+        // Always include profile_image if it was changed
+        if (data.profile_image !== initialData.current.profile_image && data.profile_image !== '') {
+            changedFields.profile_image = data.profile_image;
+        }
         
         // Check if there are any changes
         if (Object.keys(changedFields).length === 0) {
-            alertify.message('No changes to update');
+            if (window.alertify) {
+                alertify.message('No changes to update');
+            } else {
+                alert('No changes to update');
+            }
             return;
         }
         
         clearErrors();
         setIsSubmitting(true);
         
-        // Send only the changed fields to the extended profile endpoint
+        // Show loading message
+        if (window.alertify) {
+            alertify.message('Saving your changes...');
+        }
+        
+        // Use PATCH method
         patch(route('profile.updateExtended'), changedFields, {
             preserveState: false,
             preserveScroll: true,
             onSuccess: (response) => {
-                console.log('Success response:', response);
-                alertify.success('Profile updated successfully!');
+                if (window.alertify) {
+                    alertify.success('Profile updated successfully!');
+                }
                 sessionStorage.setItem('profileUpdated', 'true');
                 sessionStorage.setItem('profileUpdateTime', Date.now().toString());
-                router.visit('/dashboard');
+                
+                // FORCE FULL PAGE RELOAD - This ensures navbar and dashboard get fresh data
+                window.location.href = '/dashboard';
             },
             onError: (errors) => {
                 console.error('Validation errors:', errors);
-                alertify.error('Please check the form for errors.');
+                if (window.alertify) {
+                    alertify.error('Please check the form for errors.');
+                }
+                setIsSubmitting(false);
             }
         });
-
     };
 
     // Reset form function
     const resetForm = () => {
         setData(initialData.current);
-        setPreviewImage(profile?.profile_image_base64 || profile?.avatar_url || null);
-        alertify.message('Changes discarded');
+        const userProfile = profile || user?.profile || {};
+        if (userProfile.profile_image_base64) {
+            setPreviewImage(userProfile.profile_image_base64);
+        } else if (userProfile.avatar_url) {
+            setPreviewImage(userProfile.avatar_url);
+        } else {
+            setPreviewImage(null);
+        }
+        if (window.alertify) {
+            alertify.message('Changes discarded');
+        }
         setHasChanges(false);
     };
 
@@ -118,36 +193,45 @@ export default function EditProfile({ user }) {
 
         const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
         if (!validTypes.includes(file.type)) {
-            alertify.error('Please upload a valid image file (JPEG, PNG, GIF, or WebP)');
+            if (window.alertify) {
+                alertify.error('Please upload a valid image file (JPEG, PNG, GIF, or WebP)');
+            }
             return;
         }
 
         if (file.size > 5 * 1024 * 1024) {
-            alertify.error('Image size should be less than 5MB');
+            if (window.alertify) {
+                alertify.error('Image size should be less than 5MB');
+            }
             return;
         }
 
         setUploading(true);
-        const formData = new FormData();
-        formData.append('avatar', file);
-
         try {
             const base64 = await convertToBase64(file);
             setData('profile_image', base64);
             setPreviewImage(base64);
-            alertify.success('Image ready. Click Save Changes to apply.');
+            if (window.alertify) {
+                alertify.success('Image ready. Click Save Changes to apply.');
+            }
         } catch (error) {
             console.error('Upload failed', error);
+            if (window.alertify) {
+                alertify.error('Failed to process image');
+            }
         } finally {
             setUploading(false);
         }
     };
 
-    const removeAvatar = async () => {
-        if (!confirm('Remove profile picture?')) return;
-        setData('profile_image', '');
-        setPreviewImage(null);
-        alertify.message('Image will be removed when you save changes');
+    const removeAvatar = () => {
+        if (window.confirm('Remove profile picture?')) {
+            setData('profile_image', '');
+            setPreviewImage(null);
+            if (window.alertify) {
+                alertify.message('Image will be removed when you save changes');
+            }
+        }
     };
 
     // Function to get profile image URL with proper fallback
@@ -155,21 +239,28 @@ export default function EditProfile({ user }) {
         if (previewImage) {
             return previewImage;
         }
-        if (profile?.profile_image_base64) {
-            return profile.profile_image_base64;
+        const userProfile = profile || user?.profile || {};
+        if (userProfile.profile_image_base64) {
+            return userProfile.profile_image_base64;
         }
-        if (profile?.avatar_url) {
-            return profile.avatar_url;
+        if (userProfile.avatar_url) {
+            return userProfile.avatar_url;
         }
-        if (profile?.avatar) {
-            const avatarPath = profile.avatar;
+        if (userProfile.avatar) {
+            const avatarPath = userProfile.avatar;
+            if (avatarPath.startsWith('data:image')) {
+                return avatarPath;
+            }
             if (avatarPath.startsWith('/storage/')) {
                 return avatarPath;
             }
             return `/storage/${avatarPath}`;
         }
-        if (user?.profile?.avatar_url) {
-            return user.profile.avatar_url;
+        if (user?.avatar) {
+            if (user.avatar.startsWith('data:image')) {
+                return user.avatar;
+            }
+            return user.avatar;
         }
         const userName = user?.name || 'User';
         return `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
@@ -194,6 +285,7 @@ export default function EditProfile({ user }) {
                                 <p className="card-subtitle">Update your personal and professional details</p>
                             </div>
 
+                            {/* Profile Image Section */}
                             <div className="profile-section">
                                 <div className="profile-left">
                                     <div className="profile-image-wrapper">
@@ -215,7 +307,7 @@ export default function EditProfile({ user }) {
                                     <div className="profile-info">
                                         <div className="profile-name">{user?.name || 'User'}</div>
                                         <div className="profile-experience">
-                                            {data.title || 'Add your title'} at {data.company || 'Add company'}
+                                            {data.title || data.position || 'Add your title'} at {data.company || 'Add company'}
                                         </div>
                                     </div>
                                     <div className="profile-actions">
@@ -249,6 +341,7 @@ export default function EditProfile({ user }) {
                             </div>
 
                             <form onSubmit={submit}>
+                                {/* Personal Information */}
                                 <div className="section-title">
                                     <i className="fas fa-user-circle"></i>
                                     Personal Information
@@ -297,12 +390,14 @@ export default function EditProfile({ user }) {
 
                                 <div className="form-row">
                                     <div className="form-group">
-                                        <label htmlFor="phone">Phone</label>
+                                        <label htmlFor="phone">Phone Number</label>
                                         <TextInput
                                             id="phone"
+                                            type="tel"
                                             value={data.phone}
                                             onChange={(e) => setData('phone', e.target.value)}
                                             className="mt-1 block w-full"
+                                            placeholder="e.g. 08012345678"
                                             disabled={isSubmitting}
                                         />
                                         <InputError message={errors.phone} />
@@ -314,7 +409,7 @@ export default function EditProfile({ user }) {
                                             id="employment_type"
                                             value={data.employment_type}
                                             onChange={(e) => setData('employment_type', e.target.value)}
-                                            className="mt-1 block w-full"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                             disabled={isSubmitting}
                                         >
                                             <option value="">Select employment type</option>
@@ -326,6 +421,7 @@ export default function EditProfile({ user }) {
                                     </div>
                                 </div>
 
+                                {/* Professional Details */}
                                 <div className="section-title">
                                     <i className="fas fa-briefcase"></i>
                                     Professional Details
@@ -346,7 +442,7 @@ export default function EditProfile({ user }) {
                                     </div>
 
                                     <div className="form-group">
-                                        <label htmlFor="company">Company</label>
+                                        <label htmlFor="company">Company Name</label>
                                         <TextInput
                                             id="company"
                                             placeholder="e.g. Tech Company Inc."
@@ -374,10 +470,25 @@ export default function EditProfile({ user }) {
                                     </div>
 
                                     <div className="form-group">
+                                        <label htmlFor="position">Position/Title (Alternative)</label>
+                                        <TextInput
+                                            id="position"
+                                            placeholder="e.g. Frontend Developer"
+                                            value={data.position}
+                                            onChange={(e) => setData('position', e.target.value)}
+                                            className="mt-1 block w-full"
+                                            disabled={isSubmitting}
+                                        />
+                                        <InputError message={errors.position} />
+                                    </div>
+                                </div>
+
+                                <div className="form-row">
+                                    <div className="form-group full-width">
                                         <label htmlFor="education">Education</label>
                                         <TextInput
                                             id="education"
-                                            placeholder="e.g. B.Sc Computer Science"
+                                            placeholder="e.g. B.Sc Computer Science, MIT"
                                             value={data.education}
                                             onChange={(e) => setData('education', e.target.value)}
                                             className="mt-1 block w-full"
@@ -389,13 +500,13 @@ export default function EditProfile({ user }) {
 
                                 <div className="form-row">
                                     <div className="form-group full-width">
-                                        <label htmlFor="bio">Bio</label>
+                                        <label htmlFor="bio">Professional Bio</label>
                                         <textarea
                                             id="bio"
                                             placeholder="Tell us about yourself, your experience, and what you're looking for..."
                                             value={data.bio}
                                             onChange={(e) => setData('bio', e.target.value)}
-                                            className="mt-1 block w-full"
+                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                             rows="4"
                                             disabled={isSubmitting}
                                         />
@@ -403,6 +514,7 @@ export default function EditProfile({ user }) {
                                     </div>
                                 </div>
 
+                                {/* Location */}
                                 <div className="section-title">
                                     <i className="fas fa-map-marker-alt"></i>
                                     Location
@@ -416,6 +528,7 @@ export default function EditProfile({ user }) {
                                             value={data.city}
                                             onChange={(e) => setData('city', e.target.value)}
                                             className="mt-1 block w-full"
+                                            placeholder="e.g. Lagos, Abuja"
                                             disabled={isSubmitting}
                                         />
                                         <InputError message={errors.city} />
@@ -428,6 +541,7 @@ export default function EditProfile({ user }) {
                                             value={data.country}
                                             onChange={(e) => setData('country', e.target.value)}
                                             className="mt-1 block w-full"
+                                            placeholder="e.g. Nigeria"
                                             disabled={isSubmitting}
                                         />
                                         <InputError message={errors.country} />
@@ -436,18 +550,20 @@ export default function EditProfile({ user }) {
 
                                 <div className="form-row">
                                     <div className="form-group full-width">
-                                        <label htmlFor="address">Address</label>
+                                        <label htmlFor="address">Street Address</label>
                                         <TextInput
                                             id="address"
                                             value={data.address}
                                             onChange={(e) => setData('address', e.target.value)}
                                             className="mt-1 block w-full"
+                                            placeholder="e.g. 12, Unity Road, Ikeja"
                                             disabled={isSubmitting}
                                         />
                                         <InputError message={errors.address} />
                                     </div>
                                 </div>
 
+                                {/* Social Links */}
                                 <div className="section-title">
                                     <i className="fas fa-link"></i>
                                     Social Links
@@ -455,7 +571,7 @@ export default function EditProfile({ user }) {
 
                                 <div className="form-row">
                                     <div className="form-group">
-                                        <label htmlFor="linkedin_url">LinkedIn</label>
+                                        <label htmlFor="linkedin_url">LinkedIn Profile</label>
                                         <TextInput
                                             id="linkedin_url"
                                             value={data.linkedin_url}
@@ -468,7 +584,7 @@ export default function EditProfile({ user }) {
                                     </div>
 
                                     <div className="form-group">
-                                        <label htmlFor="github_url">GitHub</label>
+                                        <label htmlFor="github_url">GitHub Profile</label>
                                         <TextInput
                                             id="github_url"
                                             value={data.github_url}
@@ -483,7 +599,7 @@ export default function EditProfile({ user }) {
 
                                 <div className="form-row">
                                     <div className="form-group full-width">
-                                        <label htmlFor="portfolio_url">Portfolio</label>
+                                        <label htmlFor="portfolio_url">Portfolio / Personal Website</label>
                                         <TextInput
                                             id="portfolio_url"
                                             value={data.portfolio_url}
@@ -496,6 +612,7 @@ export default function EditProfile({ user }) {
                                     </div>
                                 </div>
 
+                                {/* Form Actions */}
                                 <div className="card-actions">
                                     <button 
                                         type="button" 
@@ -503,267 +620,24 @@ export default function EditProfile({ user }) {
                                         onClick={resetForm}
                                         disabled={!hasChanges || processing || isSubmitting}
                                     >
-                                        Cancel
+                                        Cancel Changes
                                     </button>
                                     <button 
                                         type="submit" 
                                         className="btn-primary"
-                                        disabled={isSubmitting}
-                                        style={{
-                                            padding: '12px 24px',
-                                            background: '#4F46E5',
-                                            color: 'white',
-                                            border: 'none',
-                                            borderRadius: '8px',
-                                            cursor: 'pointer',
-                                            fontSize: '14px',
-                                            fontWeight: '600'
-                                        }}
+                                        disabled={isSubmitting || processing}
                                     >
-                                        {isSubmitting ? 'Saving...' : 'Save Changes'}
+                                        {isSubmitting || processing ? 'Saving...' : 'Save Changes'}
                                     </button>
+                                    <Link href="/dashboard" className="btn-secondary">
+                                        Back to Dashboard
+                                    </Link>
                                 </div>
                             </form>
                         </div>
-
-                        <div className="profile-section">
-                            <div className="profile-left">
-                                <div className="profile-image-wrapper">
-                                    {user.profile?.avatar_url ? (
-                                        <img 
-                                            src={user.profile.avatar_url} 
-                                            alt="Profile" 
-                                            className="profile-image"
-                                        />
-                                    ) : (
-                                        <div className="profile-initials">
-                                            {initials}
-                                        </div>
-                                    )}
-                                    <div className="verified-overlay">
-                                        <i className="fa-solid fa-check-circle"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="profile-right">
-                                <div className="profile-info">
-                                    <div className="profile-name">{user.name}</div>
-                                    <div className="profile-experience">
-                                        {recentExperience.company} - {recentExperience.job_title}
-                                    </div>
-                                </div>
-                                <div className="profile-actions">
-                                    <label htmlFor="avatar-upload" className="btn-upload">
-                                        <i className="fa-solid fa-camera"></i> Change Photo
-                                        <input 
-                                            id="avatar-upload"
-                                            type="file" 
-                                            onChange={uploadAvatar}
-                                            accept="image/*"
-                                            className="hidden"
-                                            disabled={uploading}
-                                        />
-                                    </label>
-                                    {user.profile?.avatar && (
-                                        <button onClick={removeAvatar} className="btn-remove" disabled={uploading}>
-                                            <i className="fa-solid fa-trash"></i> Remove
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        <form onSubmit={submit}>
-<div className="section-title">
-    <i className="fas fa-user-circle text-teal-500 mr-2"></i>
-    Personal Information
-</div>
-
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label htmlFor="first_name">First Name</label>
-                                    <TextInput
-                                        id="first_name"
-                                        value={data.first_name}
-                                        onChange={(e) => setData('first_name', e.target.value)}
-                                        className="mt-1 block w-full"
-                                    />
-                                    <InputError message={errors.first_name} />
-                                </div>
-
-                                <div className="form-group">
-                                    <label htmlFor="last_name">Last Name</label>
-                                    <TextInput
-                                        id="last_name"
-                                        value={data.last_name}
-                                        onChange={(e) => setData('last_name', e.target.value)}
-                                        className="mt-1 block w-full"
-                                    />
-                                    <InputError message={errors.last_name} />
-                                </div>
-                            </div>
-
-                            <div className="form-row">
-                                <div className="form-group full-width">
-                                    <label htmlFor="email">Email</label>
-                                    <TextInput
-                                        id="email"
-                                        type="email"
-                                        value={data.email}
-                                        onChange={(e) => setData('email', e.target.value)}
-                                        className="mt-1 block w-full"
-                                    />
-                                    <InputError message={errors.email} />
-                                </div>
-                            </div>
-
-                            <div className="form-row">
-                                <div className="form-group full-width">
-                                    <label htmlFor="phone">Phone</label>
-                                    <TextInput
-                                        id="phone"
-                                        value={data.phone}
-                                        onChange={(e) => setData('phone', e.target.value)}
-                                        className="mt-1 block w-full"
-                                    />
-                                    <InputError message={errors.phone} />
-                                </div>
-                            </div>
-
-<div className="section-title">
-    <i className="fas fa-briefcase text-blue-500 mr-2"></i>
-    Professional Details
-</div>
-
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label htmlFor="position">Position</label>
-                                    <TextInput
-                                        id="position"
-                                        placeholder="e.g. Frontend Developer"
-                                        value={data.position}
-                                        onChange={(e) => setData('position', e.target.value)}
-                                        className="mt-1 block w-full"
-                                    />
-                                    <InputError message={errors.position} />
-                                </div>
-
-                                <div className="form-group">
-                                    <label htmlFor="education">Education</label>
-                                    <TextInput
-                                        id="education"
-                                        placeholder="e.g. B.Sc Computer Science"
-                                        value={data.education}
-                                        onChange={(e) => setData('education', e.target.value)}
-                                        className="mt-1 block w-full"
-                                    />
-                                    <InputError message={errors.education} />
-                                </div>
-                            </div>
-
-                            <div className="form-row">
-                                <div className="form-group full-width">
-                                    <label htmlFor="bio">Bio</label>
-                                    <textarea
-                                        id="bio"
-                                        placeholder="Tell us about yourself..."
-                                        value={data.bio}
-                                        onChange={(e) => setData('bio', e.target.value)}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                        rows="4"
-                                    />
-                                    <InputError message={errors.bio} />
-                                </div>
-                            </div>
-
-<div className="section-title">
-    <i className="fas fa-map-marker-alt text-orange-500 mr-2"></i>
-    Location
-</div>
-
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label htmlFor="city">City</label>
-                                    <TextInput
-                                        id="city"
-                                        value={data.city}
-                                        onChange={(e) => setData('city', e.target.value)}
-                                        className="mt-1 block w-full"
-                                    />
-
-                                    <InputError message={errors.city} />
-
-                                </div>
-
-                                <div className="form-group">
-                                    <label htmlFor="country">Country</label>
-                                    <TextInput
-                                        id="country"
-                                        value={data.country}
-                                        onChange={(e) => setData('country', e.target.value)}
-                                        className="mt-1 block w-full"
-                                    />
-                                    <InputError message={errors.country} />
-                                </div>
-                            </div>
-
-                            <div className="form-row">
-                                <div className="form-group full-width">
-                                    <label htmlFor="address">Address</label>
-                                    <TextInput
-                                        id="address"
-                                        value={data.address}
-                                        onChange={(e) => setData('address', e.target.value)}
-                                        className="mt-1 block w-full"
-                                    />
-                                    <InputError message={errors.address} />
-                                </div>
-                            </div>
-
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label htmlFor="linkedin_url">LinkedIn</label>
-                                    <TextInput
-                                        id="linkedin_url"
-                                        value={data.linkedin_url}
-                                        onChange={(e) => setData('linkedin_url', e.target.value)}
-                                        className="mt-1 block w-full"
-                                    />
-                                    <InputError message={errors.linkedin_url} />
-                                </div>
-
-                                <div className="form-group">
-                                    <label htmlFor="github_url">GitHub</label>
-                                    <TextInput
-                                        id="github_url"
-                                        value={data.github_url}
-                                        onChange={(e) => setData('github_url', e.target.value)}
-                                        className="mt-1 block w-full"
-                                    />
-                                    <InputError message={errors.github_url} />
-                                </div>
-                            </div>
-
-                            <div className="card-actions">
-                                <button type="button" className="btn-secondary" onClick={() => window.history.back()}>
-                                    Cancel
-                                </button>
-                                <PrimaryButton className="btn-primary" disabled={processing}>
-                                    {processing ? 'Saving...' : 'Save Changes'}
-                                </PrimaryButton>
-                                {user && (
-                                    <a href="/dashboard" className="btn-secondary">
-                                        View Dashboard →
-                                    </a>
-                                )}
-
-                            </div>
-
-                        </form>
                     </div>
                 </div>
             </div>
         </AuthenticatedLayout>
     );
 }
-

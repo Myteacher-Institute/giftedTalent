@@ -48,6 +48,9 @@ class DashboardController extends Controller
             if ($profile->avatar) {
                 $profile->avatar_url = asset('storage/' . $profile->avatar);
             }
+            
+            // Log the base64 image status for debugging
+            Log::info('Profile base64 status: ' . ($profile->profile_image_base64 ? 'HAS BASE64 (length: ' . strlen($profile->profile_image_base64) . ')' : 'NO BASE64'));
         }
 
         // Debug: Log profile status
@@ -61,6 +64,7 @@ class DashboardController extends Controller
             'profile_bio' => $user->profile->bio ?? 'null',
             'avatar' => $user->profile->avatar ?? 'null',
             'avatar_url' => $user->profile->avatar_url ?? 'null',
+            'has_base64' => $user->profile->profile_image_base64 ? 'yes' : 'no',
             'skills_count' => $user->skills()->count(),
             'resumes_count' => $user->resumes()->count(),
         ]);
@@ -92,24 +96,13 @@ class DashboardController extends Controller
             $jobsQuery->where('company_location', 'like', '%' . $location . '%');
         }
 
-        // Recommended jobs (now filtered admin jobs, fallback to skill-matched if no results)
-        $userSkills = $user->skills->pluck('name');
+        // Recommended jobs (now filtered admin jobs)
         $adminJobs = $jobsQuery->limit(10)->get();
-
-        if ($adminJobs->isEmpty() && $userSkills->isNotEmpty()) {
-            $fallbackJobs = Job::where('status', 'open')
-                ->where(function($q) use ($userSkills) {
-                    foreach ($userSkills as $skill) {
-                        $q->orWhereJsonContains('skills_required ?? []', $skill)
-                          ->orWhereJsonContains('preferred_skills ?? []', $skill);
-                    }
-                })->limit(5)->get();
-        } else {
-            $fallbackJobs = collect();
-        }
+        
+        // No fallback jobs - skip skill matching for now
+        $fallbackJobs = collect();
 
         $jobs = $adminJobs->merge($fallbackJobs);
-
 
         // Profile completion status from user model
         $profileComplete = $user->profile_completed;
@@ -155,6 +148,7 @@ class DashboardController extends Controller
             'auth' => [
                 'user' => $user,
             ],
+            'profile' => $profile, // IMPORTANT: Pass profile directly to access profile_image_base64
             'profileComplete' => $profileComplete,
             'profileStatus' => $profileStatus,
             'stats' => [
@@ -173,6 +167,7 @@ class DashboardController extends Controller
                 'image' => $job->logo_url ?? 'https://i.pravatar.cc/40?img=' . $job->id,
                 'type' => $job->job_type,
                 'location' => $job->company_location,
+                'match_score' => $this->calculateMatchScore($user, $job),
             ]),
             'searchParams' => [
                 'q' => $query,
@@ -183,8 +178,6 @@ class DashboardController extends Controller
             'notifications' => $notificationsData,
         ]);
     }
-
-
 
     private function calculateMatchScore($user, $job)
     {
