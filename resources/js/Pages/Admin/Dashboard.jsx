@@ -2,6 +2,7 @@ import { Head } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 import '/resources/css/admindashboard.css';
+import ApplicationLogo from '@/Components/ApplicationLogo';
 
 export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filters: initialFilters, auth, unreadNotifications }) {
     console.log('Initial Jobs from server:', initialJobs);
@@ -151,11 +152,9 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
                         </svg>
                     </button>
 
-                    <div className="logo">
-                        <a href='#' onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
-                            GiftedTalents<span>.online</span>
-                        </a>
-                    </div>
+                    <a className="logo">
+                        <ApplicationLogo className="w-10 h-10 mr-2" />
+                    </a>
 
                     <nav className="sidebar-nav">
                         <div>
@@ -408,9 +407,26 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
                                             <div className="company-info">
                                                 <div className="user-profile">
                                                     <div className="avatar">
-                                                        <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
-                                                            <path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" />
-                                                        </svg>
+                                                        {job.company_logo_url ? (
+                                                            <img
+                                                                src={job.company_logo_url}
+                                                                alt={`${job.company_name} logo`}
+                                                                className="company-logo"
+                                                                onError={(e) => {
+                                                                    e.target.style.display = 'none';
+                                                                    const parent = e.target.parentElement;
+                                                                    if (parent) {
+                                                                        parent.innerHTML = `<div class="company-initial">${job.company_name?.charAt(0)?.toUpperCase() || 'C'}</div>`;
+                                                                    }
+                                                                }}
+                                                            />
+                                                        ) : (
+                                                            <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+                                                                <path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" />
+                                                            </svg>
+                                                        )}
+
+
                                                     </div>
                                                 </div>
                                                 <div className="company-info-header">
@@ -457,8 +473,8 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
                     {/* FOOTER */}
                     <footer>
                         <div className="footer-left">
-                            <a href="#" className="brand" onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
-                                GiftedTalents<span>.online</span>
+                            <a className="logo">
+                                <ApplicationLogo className="w-10 h-10 mr-2" />
                             </a>
                             <div>
                                 <p>©</p>

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import '../../css/contact.css';
 import '../../css/nav.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import ApplicationLogo from '@/Components/ApplicationLogo';
 
 // Nav Component
 function Nav() {
@@ -19,9 +20,9 @@ function Nav() {
 
     return (
         <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
-            <div className="logo">
-                GiftedTalent<span>.Online</span>
-            </div>
+            <a className="logo">
+                <ApplicationLogo className="w-10 h-10 mr-2" />
+            </a>
             <ul className={`nav-links ${isActive ? 'active' : ''}`}>
                 <li><Link href="/" className="nav-link">Home</Link></li>
                 <li><Link href="/jobs" className="nav-link">Find Jobs</Link></li>
@@ -233,7 +234,9 @@ export default function Contact() {
 
                 <footer>
                     <div className="footer-left">
-                        <a href="/" className="brand">GiftedTalents<span>.online</span></a>
+                        <a className="logo">
+                            <ApplicationLogo className="w-10 h-10 mr-2" />
+                        </a>
                         <div>
                             <p>©</p>
                             <span>2026</span>

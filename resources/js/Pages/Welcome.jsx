@@ -15,6 +15,7 @@ import sample2 from '../../assets/img/sample2.jpg';
 import sample3 from '../../assets/img/sample3.jpg';
 import sample4 from '../../assets/img/sample4.jpg';
 import heroImage from '../../assets/img/giftedtalentimage.png';
+import ApplicationLogo from '@/Components/ApplicationLogo';
 
 
 // Nav Component
@@ -37,9 +38,9 @@ function Nav({ auth }) {
 
     return (
         <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
-            <div className="logo">
-                GiftedTalent<span>.Online</span>
-            </div>
+            <a className="logo">
+                <ApplicationLogo className="w-10 h-10 mr-2" />
+            </a>
             <ul className={`nav-links ${isActive ? 'active' : ''}`}>
                 <li><Link href="/" className="nav-link">Home</Link></li>
                 <li><Link href="/jobs" className="nav-link">Find Jobs</Link></li>
@@ -505,7 +506,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                 <footer>
                     <div className="footer-left">
                         <a href="#" className="brand" onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
-                            GiftedTalents<span>.online</span>
+                            <ApplicationLogo className="w-10 h-10 mr-2" />
                         </a>
                         <div>
                             <p>©</p>
