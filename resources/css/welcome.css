@@ -689,3 +689,141 @@
         padding: 10px 16px !important;
     }
 }
+
+/* ============================================
+   TOAST NOTIFICATION STYLES
+   ============================================ */
+
+.toast-notification {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    z-index: 10000;
+    animation: slideInRight 0.3s ease;
+}
+
+.toast-content {
+    background: white;
+    border-radius: 12px;
+    padding: 14px 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 280px;
+    max-width: 400px;
+    border-left: 4px solid;
+}
+
+/* Toast Types */
+.toast-success {
+    border-left-color: #10b981;
+}
+
+.toast-error {
+    border-left-color: #ef4444;
+}
+
+.toast-info {
+    border-left-color: #3b82f6;
+}
+
+.toast-loading {
+    border-left-color: #f59e0b;
+}
+
+/* Toast Icons */
+.toast-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.toast-success .toast-icon {
+    stroke: #10b981;
+}
+
+.toast-error .toast-icon {
+    stroke: #ef4444;
+}
+
+.toast-info .toast-icon {
+    stroke: #3b82f6;
+}
+
+.toast-loading .toast-icon {
+    stroke: #f59e0b;
+    animation: spin 1s linear infinite;
+}
+
+/* Toast Message */
+.toast-message {
+    flex: 1;
+    font-size: 14px;
+    color: #1e293b;
+    font-weight: 500;
+}
+
+/* Toast Close Button */
+.toast-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.toast-close svg {
+    width: 16px;
+    height: 16px;
+    stroke: #94a3b8;
+    stroke-width: 2;
+}
+
+.toast-close:hover {
+    background: #f1f5f9;
+}
+
+.toast-close:hover svg {
+    stroke: #1e293b;
+}
+
+/* Animations */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+    .toast-notification {
+        top: 80px;
+        right: 10px;
+        left: 10px;
+    }
+    
+    .toast-content {
+        min-width: auto;
+        width: 100%;
+        max-width: none;
+    }
+}

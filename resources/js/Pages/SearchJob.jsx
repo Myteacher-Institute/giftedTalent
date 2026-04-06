@@ -3,10 +3,12 @@ import { useState, useEffect } from 'react';
 import { Head, router, Link } from '@inertiajs/react';
 import AppNavbar from '../Components/AppNavbar';
 
-export default function SearchJob({ auth, profile, initialJobs = [], savedJobs: initialSavedJobs = [] }) {
+export default function SearchJob({ auth, profile, recommendedJobs = [], exploreJobs = [], savedJobs: initialSavedJobs = [] }) {
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-    const [jobs, setJobs] = useState(initialJobs);
-    const [filteredJobs, setFilteredJobs] = useState(initialJobs);
+    // Combine all jobs for filtering
+    const allJobs = [...recommendedJobs, ...exploreJobs];
+    const [jobs, setJobs] = useState(allJobs);
+    const [filteredJobs, setFilteredJobs] = useState(allJobs);
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(false);
     const [savedJobs, setSavedJobs] = useState(initialSavedJobs);
@@ -77,7 +79,10 @@ export default function SearchJob({ auth, profile, initialJobs = [], savedJobs: 
         console.log('3. profile_image_base64:', profile?.profile_image_base64);
         console.log('4. position:', userProfile?.position);
         console.log('5. city:', userProfile?.city);
-    }, [profile, userProfile]);
+        console.log('6. recommendedJobs count:', recommendedJobs.length);
+        console.log('7. exploreJobs count:', exploreJobs.length);
+        console.log('8. savedJobs count:', initialSavedJobs.length);
+    }, [profile, userProfile, recommendedJobs, exploreJobs, initialSavedJobs]);
 
     // Get profile image URL with base64 support
     const getProfileImageUrl = () => {
@@ -189,7 +194,7 @@ export default function SearchJob({ auth, profile, initialJobs = [], savedJobs: 
                 const matchingSkills = jobSkills.filter(skill => userSkills.includes(skill));
                 const percentage = jobSkills.length > 0 
                     ? Math.round((matchingSkills.length / jobSkills.length) * 100)
-                    : 0;
+                    : job.match_score || 0;
                 percentages[job.id] = percentage;
             });
             
@@ -253,6 +258,8 @@ export default function SearchJob({ auth, profile, initialJobs = [], savedJobs: 
                 const salaryB = parseInt((b.salary_range || b.salary || '0').replace(/[^0-9]/g, ''));
                 return salaryB - salaryA;
             });
+        } else if (sortBy === 'relevance') {
+            filtered.sort((a, b) => (b.match_score || 0) - (a.match_score || 0));
         }
         
         setFilteredJobs(filtered);
@@ -357,8 +364,9 @@ export default function SearchJob({ auth, profile, initialJobs = [], savedJobs: 
         return '#ef4444';
     };
 
-    const topPicksJobs = filteredJobs.slice(0, visibleCounts.topPicks);
-    const exploreJobs = filteredJobs.slice(visibleCounts.topPicks, visibleCounts.topPicks + visibleCounts.explore);
+    // Use recommendedJobs as top picks and exploreJobs as explore section
+    const topPicksJobs = recommendedJobs.slice(0, visibleCounts.topPicks);
+    const exploreJobsList = exploreJobs.slice(0, visibleCounts.explore);
     const jobsCount = filteredJobs.length;
 
     const LoadingSkeleton = () => (
@@ -736,8 +744,8 @@ export default function SearchJob({ auth, profile, initialJobs = [], savedJobs: 
                         ) : topPicksJobs.length === 0 ? (
                             <div className="empty-state">
                                 <i className="fas fa-search"></i>
-                                <h4>No jobs found</h4>
-                                <p>We couldn't find any jobs matching your criteria</p>
+                                <h4>No recommended jobs found</h4>
+                                <p>We couldn't find any jobs matching your skills</p>
                                 <button className="clear-search-btn" onClick={handleClearSearch}>
                                     Clear All Filters
                                 </button>
@@ -753,7 +761,7 @@ export default function SearchJob({ auth, profile, initialJobs = [], savedJobs: 
                             </div>
                         ) : (
                             topPicksJobs.map((job) => {
-                                const matchPercentage = matchPercentages[job.id] || 0;
+                                const matchPercentage = job.match_score || matchPercentages[job.id] || 0;
                                 return (
                                     <div className="job" key={job.id}>
                                         <div className="job-company-icon">
@@ -815,7 +823,7 @@ export default function SearchJob({ auth, profile, initialJobs = [], savedJobs: 
                             })
                         )}
 
-                        {!loading && filteredJobs.length > visibleCounts.topPicks && (
+                        {!loading && recommendedJobs.length > visibleCounts.topPicks && (
                             <div className="show" onClick={() => handleShowMore('topPicks')}>
                                 <i className="fa-solid fa-arrow-down"></i> Show All
                             </div>
@@ -831,15 +839,15 @@ export default function SearchJob({ auth, profile, initialJobs = [], savedJobs: 
 
                         {loading ? (
                             <LoadingSkeleton />
-                        ) : exploreJobs.length === 0 ? (
+                        ) : exploreJobsList.length === 0 ? (
                             <div className="empty-state">
                                 <i className="fas fa-briefcase"></i>
                                 <h4>No more jobs to explore</h4>
                                 <p>Check back later for new opportunities</p>
                             </div>
                         ) : (
-                            exploreJobs.map((job) => {
-                                const matchPercentage = matchPercentages[job.id] || 0;
+                            exploreJobsList.map((job) => {
+                                const matchPercentage = job.match_score || matchPercentages[job.id] || 0;
                                 return (
                                     <div className="job" key={job.id}>
                                         <div className="job-company-icon">
@@ -885,7 +893,7 @@ export default function SearchJob({ auth, profile, initialJobs = [], savedJobs: 
                             })
                         )}
 
-                        {!loading && filteredJobs.length > visibleCounts.topPicks + visibleCounts.explore && (
+                        {!loading && exploreJobs.length > visibleCounts.explore && (
                             <div className="show" onClick={() => handleShowMore('explore')}>
                                 <i className="fa-solid fa-arrow-down"></i> Show All
                             </div>

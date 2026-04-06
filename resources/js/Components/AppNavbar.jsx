@@ -83,13 +83,15 @@ const AppNavbar = ({ user, newJobsCount, onMenuToggle, isMenuOpen }) => {
                 </div>
 
                 {/* Hamburger Menu Button - Controls sidebar on mobile */}
-                <div
-                    className={`hamburger ${isMenuOpen ? 'active' : ''}`}
-                    onClick={toggleMenu}
-                >
-                    <span></span>
-                    <span></span>
-                    <span></span>
+                <div className="hamburger-container">
+                    <div
+                        className={`hamburger ${isMenuOpen ? 'active' : ''}`}
+                        onClick={toggleMenu}
+                    >
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
                 </div>
             </nav>
         </>

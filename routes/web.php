@@ -7,7 +7,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PrivacySettingsController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\JobController;  // ADDED THIS LINE
+use App\Http\Controllers\JobsController;  // Changed from JobController to JobsController
 use App\Models\Job;
 use App\Models\User;
 use Illuminate\Foundation\Application;
@@ -84,7 +84,7 @@ Route::get('/jobs/{id}', function ($id) {
 })->name('jobs.show');
 
 // Navigation Pages
-Route::get('/find-jobs', [PageController::class, 'findJobs'])->name('pages.findJobs');
+Route::get('/find-jobs', [JobsController::class, 'index'])->name('pages.findJobs');  // Changed to JobsController
 Route::get('/find-talents', [PageController::class, 'findTalents'])->name('pages.findTalents');
 Route::get('/how-it-works', [PageController::class, 'howItWorks'])->name('pages.howItWorks');
 Route::get('/about', [PageController::class, 'about'])->name('pages.about');
@@ -93,7 +93,7 @@ Route::get('/jobs', [PageController::class, 'jobs'])->name('jobs');
 // User Profile Routes
 Route::get('/user-profile', [ProfileController::class, 'show'])->middleware('auth')->name('pages.userProfile');
 Route::get('/easy-apply-job', [PageController::class, 'easyApplyJob'])->middleware(['auth', 'verified'])->name('pages.easyApplyJob');
-Route::get('/search-jobs', [PageController::class, 'searchJobs'])->middleware(['auth', 'verified'])->name('pages.searchJobs');
+Route::get('/search-jobs', [JobsController::class, 'searchJobs'])->middleware(['auth', 'verified'])->name('search-jobs');
 
 // Contact Routes
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
@@ -112,10 +112,6 @@ Route::get('/guidelines', function () {
 Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'not_admin'])
     ->name('dashboard');
-
-// ========== JOB ROUTES ==========
-Route::get('/find-jobs', [JobController::class, 'index'])->name('jobs.index');
-// =================================
 
 // Authenticated User Routes
 Route::middleware(['auth', 'not_admin'])->group(function () {

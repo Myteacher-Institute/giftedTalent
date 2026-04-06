@@ -7,15 +7,103 @@ use Inertia\Inertia;
 use App\Models\Job;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
-class JobController extends Controller
+class JobsController extends Controller
 {
     /**
      * Display the search jobs page.
      */
     public function searchJobs(Request $request)
     {
-        // ... keep your existing code ...
+        $user = Auth::user();
+        
+        if (!$user) {
+            return redirect()->route('login');
+        }
+        
+        // Load user with profile
+        $user->load('profile');
+        $profile = $user->profile;
+        
+        // Get user's skills
+        $userSkills = [];
+        if ($user->skills) {
+            $userSkills = is_string($user->skills) ? json_decode($user->skills, true) : $user->skills;
+        }
+        
+        // Get user's job title
+        $userTitle = $profile->position ?? $profile->title ?? $user->title ?? '';
+        
+        // Get all active jobs
+        $allJobs = Job::where('status', 'active')->orderBy('created_at', 'desc')->get();
+        
+        // Separate jobs into recommended and regular
+        $recommendedJobs = [];
+        $regularJobs = [];
+        
+        foreach ($allJobs as $job) {
+            $matchScore = 0;
+            
+            // Calculate match score based on skills
+            $jobSkills = is_array($job->required_skills) ? $job->required_skills : [];
+            if (!empty($jobSkills) && !empty($userSkills)) {
+                $matchingSkills = array_intersect(
+                    array_map('strtolower', $userSkills),
+                    array_map('strtolower', $jobSkills)
+                );
+                if (count($jobSkills) > 0) {
+                    $matchScore = (count($matchingSkills) / count($jobSkills)) * 100;
+                }
+            }
+            
+            // Boost score if title matches
+            $jobTitle = strtolower($job->job_title ?? $job->title ?? '');
+            if (!empty($userTitle) && !empty($jobTitle) && str_contains($jobTitle, strtolower($userTitle))) {
+                $matchScore = min($matchScore + 20, 100);
+            }
+            
+            $jobData = [
+                'id' => $job->id,
+                'title' => $job->job_title ?? $job->title ?? 'Job Title',
+                'company' => $job->company_name ?? $job->company ?? 'Company',
+                'location' => $job->company_location ?? $job->location ?? 'Location',
+                'job_type' => $job->job_type ?? 'Full-time',
+                'salary_range' => $job->salary_range ?? $job->salary ?? null,
+                'description' => $job->description ?? '',
+                'tags' => is_array($job->required_skills) ? $job->required_skills : [],
+                'posted_at' => $job->created_at ? $job->created_at->diffForHumans() : 'Recently',
+                'easy_apply' => $job->easy_apply ?? false,
+                'match_score' => round($matchScore),
+                'image' => $job->logo_url ?? 'https://i.pravatar.cc/40?img=' . $job->id,
+                'created_at' => $job->created_at,
+            ];
+            
+            if ($matchScore >= 30) {
+                $recommendedJobs[] = $jobData;
+            } else {
+                $regularJobs[] = $jobData;
+            }
+        }
+        
+        // Sort recommended by match score
+        usort($recommendedJobs, function($a, $b) {
+            return $b['match_score'] - $a['match_score'];
+        });
+        
+        // Get saved jobs - using DB query directly (bypasses relationship issue)
+        $savedJobs = DB::table('saved_jobs')
+                        ->where('user_id', $user->id)
+                        ->pluck('job_id')
+                        ->toArray();
+        
+        return Inertia::render('SearchJob', [
+            'auth' => ['user' => $user],
+            'profile' => $profile,
+            'recommendedJobs' => $recommendedJobs,
+            'exploreJobs' => $regularJobs,
+            'savedJobs' => $savedJobs,
+        ]);
     }
     
     /**
@@ -23,7 +111,15 @@ class JobController extends Controller
      */
     public function show($id)
     {
-        // ... keep your existing code ...
+        $user = Auth::user();
+        $job = Job::findOrFail($id);
+        
+        return Inertia::render('JobDetails', [
+            'auth' => [
+                'user' => $user,
+            ],
+            'job' => $job,
+        ]);
     }
     
     /**
@@ -51,6 +147,7 @@ class JobController extends Controller
                             'easy_apply' => $job->easy_apply ?? false,
                             'is_featured' => $job->is_featured ?? false,
                             'company_logo' => $job->logo_url ?? null,
+                            'created_at' => $job->created_at,
                         ];
                     });
         
