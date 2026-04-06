@@ -7,6 +7,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PrivacySettingsController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\JobController;  // ADDED THIS LINE
 use App\Models\Job;
 use App\Models\User;
 use Illuminate\Foundation\Application;
@@ -111,6 +112,10 @@ Route::get('/guidelines', function () {
 Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'not_admin'])
     ->name('dashboard');
+
+// ========== JOB ROUTES ==========
+Route::get('/find-jobs', [JobController::class, 'index'])->name('jobs.index');
+// =================================
 
 // Authenticated User Routes
 Route::middleware(['auth', 'not_admin'])->group(function () {

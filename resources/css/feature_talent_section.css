@@ -253,7 +253,7 @@
     padding: 0 16px;
     margin-bottom: 16px;
     max-height: 70px;
-    overflow-y: auto;
+    /* overflow-y: auto; */
     flex-shrink: 0;
 }
 

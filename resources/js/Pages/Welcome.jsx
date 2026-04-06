@@ -5,7 +5,6 @@ import '../../css/hero.css';
 import '../../css/feature.css';
 import '../../css/welcome.css';
 import '../../css/feature_talent_section.css';
-import '../../css/auth-modal.css';
 
 import starIcon from '../../assets/svg/star.svg';
 import halfStarIcon from '../../assets/svg/half-star.svg';
@@ -14,8 +13,8 @@ import ApplicationLogo from '@/Components/ApplicationLogo';
 
 // Nav Component
 function Nav({ auth }) {
-    const [isActive, setIsActive] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -30,40 +29,84 @@ function Nav({ auth }) {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    const toggleMobileMenu = () => {
+        setMobileMenuOpen(!mobileMenuOpen);
+    };
+
+    const closeMobileMenu = () => {
+        setMobileMenuOpen(false);
+    };
+
     return (
-        <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
-            <a className="logo">
-                <ApplicationLogo className="w-10 h-10 mr-2" />
-            </a>
-            <ul className={`nav-links ${isActive ? 'active' : ''}`}>
-                <li><Link href="/" className="nav-link">Home</Link></li>
-                <li><Link href="/jobs" className="nav-link">Find Jobs</Link></li>
-                <li><Link href="/find-talents" className="nav-link">Find Talents</Link></li>
-                <li><Link href="/how-it-works" className="nav-link">How It Works</Link></li>
-                <li><Link href="/about" className="nav-link">About</Link></li>
-                <li><Link href="/contact" className="nav-link">Contact</Link></li>
-            </ul>
-            <div className="nav-right">
-                <div className="auth-links">
-                    {auth.user ? (
-                        <Link href='/dashboard' className="nav-auth-link">Dashboard</Link>
-                    ) : (
-                        <>
-                            <Link href={route('login')} className="nav-auth-link">Sign In</Link>
-                            <Link href={route('register')} className="get-started">Get Started</Link>
-                        </>
-                    )}
+        <>
+            <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
+                <Link href="/" className="logo">
+                    <ApplicationLogo className="w-10 h-10 mr-2" />
+                </Link>
+                
+                {/* Desktop Navigation */}
+                <ul className="nav-links">
+                    <li><Link href="/" className="nav-link">Home</Link></li>
+                    <li><Link href="/jobs" className="nav-link">Find Jobs</Link></li>
+                    <li><Link href="/find-talents" className="nav-link">Find Talents</Link></li>
+                    <li><Link href="/how-it-works" className="nav-link">How It Works</Link></li>
+                    <li><Link href="/about" className="nav-link">About</Link></li>
+                    <li><Link href="/contact" className="nav-link">Contact</Link></li>
+                </ul>
+                
+                <div className="nav-right">
+                    <div className="auth-links">
+                        {auth.user ? (
+                            <Link href='/dashboard' className="nav-auth-link">Dashboard</Link>
+                        ) : (
+                            <>
+                                <Link href={route('login')} className="nav-auth-link">Sign In</Link>
+                                <Link href={route('register')} className="get-started">Get Started</Link>
+                            </>
+                        )}
+                    </div>
+                    
+                    {/* Hamburger Menu Button */}
+                    <div
+                        className={`hamburger ${mobileMenuOpen ? 'active' : ''}`}
+                        onClick={toggleMobileMenu}
+                    >
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
                 </div>
-                <div
-                    className={`hamburger ${isActive ? 'active' : ''}`}
-                    onClick={() => setIsActive(!isActive)}
-                >
-                    <span></span>
-                    <span></span>
-                    <span></span>
+            </nav>
+            
+            {/* Mobile Menu Overlay */}
+            {mobileMenuOpen && (
+                <div className="mobile-menu-overlay" onClick={closeMobileMenu}>
+                    <div className="mobile-menu-container" onClick={(e) => e.stopPropagation()}>
+                        <div className="mobile-menu-header">
+                            <span className="mobile-menu-title">Menu</span>
+                            <button className="mobile-menu-close" onClick={closeMobileMenu}>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        <div className="mobile-menu-links">
+                            <Link href="/" onClick={closeMobileMenu}>Home</Link>
+                            <Link href="/jobs" onClick={closeMobileMenu}>Find Jobs</Link>
+                            <Link href="/find-talents" onClick={closeMobileMenu}>Find Talents</Link>
+                            <Link href="/how-it-works" onClick={closeMobileMenu}>How It Works</Link>
+                            <Link href="/about" onClick={closeMobileMenu}>About</Link>
+                            <Link href="/contact" onClick={closeMobileMenu}>Contact</Link>
+                           
+                            {auth.user && (
+                                <Link href='/dashboard' onClick={closeMobileMenu}>Dashboard</Link>
+                            )}
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </nav>
+            )}
+        </>
     );
 }
 
@@ -125,6 +168,50 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
             return () => clearTimeout(timer);
         }
     }, [toast.show]);
+
+    // Swiper functionality for mobile horizontal scroll
+    useEffect(() => {
+        const container = document.querySelector('.talent-swiper-container');
+        if (container) {
+            let isDown = false;
+            let startX;
+            let scrollLeft;
+
+            const handleMouseDown = (e) => {
+                isDown = true;
+                startX = e.pageX - container.offsetLeft;
+                scrollLeft = container.scrollLeft;
+            };
+
+            const handleMouseLeave = () => {
+                isDown = false;
+            };
+
+            const handleMouseUp = () => {
+                isDown = false;
+            };
+
+            const handleMouseMove = (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - container.offsetLeft;
+                const walk = (x - startX) * 2;
+                container.scrollLeft = scrollLeft - walk;
+            };
+
+            container.addEventListener('mousedown', handleMouseDown);
+            container.addEventListener('mouseleave', handleMouseLeave);
+            container.addEventListener('mouseup', handleMouseUp);
+            container.addEventListener('mousemove', handleMouseMove);
+
+            return () => {
+                container.removeEventListener('mousedown', handleMouseDown);
+                container.removeEventListener('mouseleave', handleMouseLeave);
+                container.removeEventListener('mouseup', handleMouseUp);
+                container.removeEventListener('mousemove', handleMouseMove);
+            };
+        }
+    }, [featuredTalents]);
 
     // Function to show toast messages
     const showToast = (message, type = 'info') => {
@@ -507,7 +594,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
                     </div>
                 </div>
 
-                {/* Featured Talents Section */}
+                {/* Featured Talents Section - UPDATED WITH SWIPER */}
                 <div className="featured-talents">
                     <div className="feature-talent-header">
                         <h3>Featured Talents</h3>
@@ -515,82 +602,98 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
                     </div>
 
                     <div className="feature-talent-content">
-                        {featuredTalents.length > 0 ? (
-                            featuredTalents.map((talent) => {
-                                const displaySkills = getTalentSkills(talent);
+                        <div className="talent-swiper-container">
+                            <div className="talent-swiper-wrapper">
+                                {featuredTalents.length > 0 ? (
+                                    featuredTalents.map((talent) => {
+                                        const displaySkills = getTalentSkills(talent);
 
-                                return (
-                                    <div key={talent.id} className="feature-talent-card">
-                                        <div className="feature-talent-card-header">
-                                            {talent.profile_image_base64 || talent.avatar_url || talent.avatar ? (
-                                                <img
-                                                    src={talent.profile_image_base64 || talent.avatar_url || talent.avatar}
-                                                    alt={talent.name}
-                                                    onError={(e) => {
-                                                        e.target.style.display = 'none';
-                                                        e.target.parentElement.innerHTML = `<div class="feature-talent-avatar-initials">${getInitials(talent.name)}</div>`;
-                                                    }}
-                                                />
-                                            ) : (
-                                                <div className="feature-talent-avatar-initials">
-                                                    {getInitials(talent.name)}
+                                        return (
+                                            <div key={talent.id} className="feature-talent-card">
+                                                <div className="feature-talent-card-header">
+                                                    {talent.profile_image_base64 || talent.avatar_url || talent.avatar ? (
+                                                        <img
+                                                            src={talent.profile_image_base64 || talent.avatar_url || talent.avatar}
+                                                            alt={talent.name}
+                                                            onError={(e) => {
+                                                                e.target.style.display = 'none';
+                                                                e.target.parentElement.innerHTML = `<div class="feature-talent-avatar-initials">${getInitials(talent.name)}</div>`;
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <div className="feature-talent-avatar-initials">
+                                                            {getInitials(talent.name)}
+                                                        </div>
+                                                    )}
+                                                    <div className="talent-rating-badge">
+                                                        <i className="fas fa-star"></i>
+                                                        <span>{talent.rating || 4.0}</span>
+                                                    </div>
                                                 </div>
-                                            )}
-                                            <div className="talent-rating-badge">
-                                                <i className="fas fa-star"></i>
-                                                <span>{talent.rating || 4.0}</span>
+
+                                                <div className="feature-talent-card-body">
+                                                    <h3>{talent.name}</h3>
+                                                    <p>{talent.title || talent.role || 'Professional'}</p>
+                                                </div>
+
+                                                <div className="feature-talent-card-stars">
+                                                    {[...Array(5)].map((_, starIndex) => {
+                                                        const rating = talent.rating || 4.0;
+                                                        const fullStars = Math.floor(rating);
+                                                        const hasHalfStar = (rating - fullStars) >= 0.5;
+
+                                                        if (starIndex < fullStars) {
+                                                            return <i key={starIndex} className="fas fa-star"></i>;
+                                                        } else if (starIndex === fullStars && hasHalfStar) {
+                                                            return <i key={starIndex} className="fas fa-star-half-alt"></i>;
+                                                        } else {
+                                                            return <i key={starIndex} className="far fa-star"></i>;
+                                                        }
+                                                    })}
+                                                    <span>({talent.rating || 4.0})</span>
+                                                </div>
+
+                                                <div className="feature-talent-card-roles">
+                                                    {displaySkills.length > 0 ? (
+                                                        displaySkills.map((skill, skillIndex) => (
+                                                            <span key={skillIndex}>{skill}</span>
+                                                        ))
+                                                    ) : (
+                                                        <span>Available for work</span>
+                                                    )}
+                                                </div>
+
+                                                <div className="feature-talent-card-footer">
+                                                    <Link
+                                                        href={`/talent/${talent.id}`}
+                                                        onClick={(e) => handleViewProfile(talent, e)}
+                                                    >
+                                                        View Profile
+                                                    </Link>
+                                                </div>
                                             </div>
-                                        </div>
-
-                                        <div className="feature-talent-card-body">
-                                            <h3>{talent.name}</h3>
-                                            <p>{talent.title || talent.role || 'Professional'}</p>
-                                        </div>
-
-                                        <div className="feature-talent-card-stars">
-                                            {[...Array(5)].map((_, starIndex) => {
-                                                const rating = talent.rating || 4.0;
-                                                const fullStars = Math.floor(rating);
-                                                const hasHalfStar = (rating - fullStars) >= 0.5;
-
-                                                if (starIndex < fullStars) {
-                                                    return <i key={starIndex} className="fas fa-star"></i>;
-                                                } else if (starIndex === fullStars && hasHalfStar) {
-                                                    return <i key={starIndex} className="fas fa-star-half-alt"></i>;
-                                                } else {
-                                                    return <i key={starIndex} className="far fa-star"></i>;
-                                                }
-                                            })}
-                                            <span>({talent.rating || 4.0})</span>
-                                        </div>
-
-                                        <div className="feature-talent-card-roles">
-                                            {displaySkills.length > 0 ? (
-                                                displaySkills.map((skill, skillIndex) => (
-                                                    <span key={skillIndex}>{skill}</span>
-                                                ))
-                                            ) : (
-                                                <span>Available for work</span>
-                                            )}
-                                        </div>
-
-                                        <div className="feature-talent-card-footer">
-                                            <Link
-                                                href={`/talent/${talent.id}`}
-                                                onClick={(e) => handleViewProfile(talent, e)}
-                                            >
-                                                View Profile
-                                            </Link>
-                                        </div>
+                                        );
+                                    })
+                                ) : (
+                                    <div className="no-talents-message">
+                                        <i className="fas fa-users"></i>
+                                        <p>No featured talents yet. Check back soon!</p>
                                     </div>
-                                );
-                            })
-                        ) : (
-                            <div className="no-talents-message">
-                                <i className="fas fa-users"></i>
-                                <p>No featured talents yet. Check back soon!</p>
+                                )}
                             </div>
-                        )}
+                            
+                            {/* Navigation Arrows for Desktop */}
+                            <button className="talent-swiper-prev" aria-label="Previous">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <polyline points="15 18 9 12 15 6"></polyline>
+                                </svg>
+                            </button>
+                            <button className="talent-swiper-next" aria-label="Next">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
 
                     <Link href="/find-talents" className='browse-all-btn'>Browse All Talents</Link>

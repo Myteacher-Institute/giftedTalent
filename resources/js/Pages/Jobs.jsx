@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { Head, Link, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import '../../css/jobs.css';
@@ -17,15 +16,6 @@ export default function Jobs({ jobs = [], auth }) {
         datePosted: '',
         status: ''
     });
-=======
-import React, { useState } from 'react';
-import { Link, router } from '@inertiajs/react';
-import AppNavbar from '../Components/AppNavbar';
-import '../../css/Dashboard.css';
-
-export default function DashboardLayout({ children, user, newJobsCount = 0, profile, profileComplete, profileStatus, stats }) {
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
->>>>>>> a71b3eb (just finished my privacy page and integrated it to backend and database)
 
     // Get unique values for dropdowns
     const uniqueTypes = [...new Set(jobs.map(job => job.job_type).filter(Boolean))];
