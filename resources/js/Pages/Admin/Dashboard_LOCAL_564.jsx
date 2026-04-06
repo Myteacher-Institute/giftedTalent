@@ -1,7 +1,8 @@
 import { Head } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
-import '../../../css/admindashboard.css';
+import '/resources/css/admindashboard.css';
+import ApplicationLogo from '@/Components/ApplicationLogo';
 
 export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filters: initialFilters, auth, unreadNotifications }) {
     console.log('Initial Jobs from server:', initialJobs);
