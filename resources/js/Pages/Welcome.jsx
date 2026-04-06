@@ -1,15 +1,12 @@
 import { Head, Link } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react'; // Added useRef
 import '../../css/nav.css';
 import '../../css/hero.css';
-
 import '../../css/feature.css';
 import '../../css/welcome.css';
 import '../../css/feature_talent_section.css';
-
 import starIcon from '../../assets/svg/star.svg';
 import halfStarIcon from '../../assets/svg/half-star.svg';
-
 import sample1 from '../../assets/img/sample1.jpg';
 import sample2 from '../../assets/img/sample2.jpg';
 import sample3 from '../../assets/img/sample3.jpg';
@@ -17,6 +14,69 @@ import sample4 from '../../assets/img/sample4.jpg';
 import heroImage from '../../assets/img/giftedtalentimage.png';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 
+// Counter Component
+// Counter Component
+// Counter Component
+function Counter({ target, suffix = "", duration = 2000 }) {
+    const [count, setCount] = useState(0);
+    const containerRef = useRef(null);
+    const [hasAnimated, setHasAnimated] = useState(false);
+
+    // Parse target number (remove +, %, etc)
+    const targetNumber = parseInt(target.toString().replace(/[^0-9]/g, ''));
+    const isPercentage = target.toString().includes('%');
+    const isPlus = target.toString().includes('+');
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && !hasAnimated) {
+                    setHasAnimated(true);
+                    let start = 0;
+                    const increment = targetNumber / (duration / 16);
+
+                    const timer = setInterval(() => {
+                        start += increment;
+                        if (start >= targetNumber) {
+                            setCount(targetNumber);
+                            clearInterval(timer);
+                        } else {
+                            setCount(Math.floor(start));
+                        }
+                    }, 16);
+
+                    return () => clearInterval(timer);
+                } else if (!entries[0].isIntersecting && hasAnimated) {
+                    // Reset when leaving view
+                    setHasAnimated(false);
+                    setCount(0);
+                }
+            },
+            { threshold: 0.3 }
+        );
+
+        if (containerRef.current) {
+            observer.observe(containerRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, [targetNumber, duration, hasAnimated]);
+
+    let displayValue = count;
+    if (isPercentage) {
+        displayValue = count + '%';
+    } else if (isPlus) {
+        displayValue = count + '+';
+    } else {
+        displayValue = count;
+    }
+
+    return (
+        <div ref={containerRef} className="counter-container">
+            <span className="stat-number">{displayValue}{suffix}</span>
+        </div>
+    );
+}
 
 // Nav Component
 function Nav({ auth }) {
@@ -39,7 +99,7 @@ function Nav({ auth }) {
     return (
         <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
             <a className="logo">
-                <ApplicationLogo className="w-10 h-10 mr-2" />
+                <ApplicationLogo className="w-20 h-10 mr-2" />
             </a>
             <ul className={`nav-links ${isActive ? 'active' : ''}`}>
                 <li><Link href="/" className="nav-link">Home</Link></li>
@@ -48,6 +108,8 @@ function Nav({ auth }) {
                 <li><Link href="/how-it-works" className="nav-link">How It Works</Link></li>
                 <li><Link href="/about" className="nav-link">About</Link></li>
                 <li><Link href="/contact" className="nav-link">Contact</Link></li>
+                <li><Link href="/privacy" className="nav-link">Privacy</Link></li>
+                <li><Link href="/guidelines" className="nav-link">Guidelines</Link></li>
             </ul>
             <div className="nav-right">
 
@@ -212,6 +274,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
             answer: "Yes! We take data security seriously. Your personal information is encrypted and protected. We never share your data without your consent. Read our Privacy Policy for more details."
         }
     ];
+
     // Stats data for mission section
     const stats = [
         { number: "100+", label: "Active Users" },
@@ -219,6 +282,10 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
         { number: "30+", label: "Jobs Posted" },
         { number: "98%", label: "Success Rate" }
     ];
+
+    const navigateTo = (path) => {
+        window.location.href = path;
+    };
 
     return (
         <>
@@ -235,7 +302,6 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                     <div className="search-box">
                         <div className="search-inputs">
                             <div className="input-with-icon">
-                                {/* magnifying glass / keyword */}
                                 <svg xmlns="http://www.w3.org/2000/svg" className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <circle cx="11" cy="11" r="8"></circle>
                                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -243,7 +309,6 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                                 <input type="text" placeholder="Job title or Keyword" />
                             </div>
                             <div className="input-with-icon">
-                                {/* briefcase / skill */}
                                 <svg xmlns="http://www.w3.org/2000/svg" className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
                                     <path d="M16 3H8v4h8V3z"></path>
@@ -251,7 +316,6 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                                 <input type="text" placeholder="Skill" />
                             </div>
                             <div className="input-with-icon">
-                                {/* map pin / location */}
                                 <svg xmlns="http://www.w3.org/2000/svg" className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M21 10c0 6-9 13-9 13S3 16 3 10a9 9 0 1118 0z"></path>
                                     <circle cx="12" cy="10" r="3"></circle>
@@ -295,8 +359,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                     </div>
                 </section>
 
-
-                {/* Mission Section - ADD THIS */}
+                {/* Mission Section with Counter */}
                 <section className="about-mission">
                     <div className="mission-container">
                         <div className="mission-text">
@@ -305,7 +368,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                             <div className="mission-stats">
                                 {stats.map((stat, index) => (
                                     <div key={index} className="stat-item">
-                                        <span className="stat-number">{stat.number}</span>
+                                        <Counter target={stat.number} duration={2000} />
                                         <span className="stat-label">{stat.label}</span>
                                     </div>
                                 ))}
@@ -478,48 +541,69 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                 </div>
 
                 {/* FAQ Section */}
-                <section className="about-faq">
+                <section className="faq-section">
                     <div className="faq-container">
                         <div className="faq-header">
+                            <span className="faq-badge">FAQ</span>
                             <h2>Frequently Asked Questions</h2>
-                            <p>Got questions? We've got answers. Here are some of the most common questions we receive.</p>
+                            <p>Everything you need to know about GiftedTalents</p>
                         </div>
+
                         <div className="faq-grid">
                             {faqs.map((faq, index) => (
-                                <div className={`faq-item ${openFaq === index ? 'open' : ''}`} key={index}>
-                                    <div className="faq-question" onClick={() => toggleFaq(index)}>
-                                        <h3>{faq.question}</h3>
-                                        <svg className="faq-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <polyline points="6 9 12 15 18 9"></polyline>
-                                        </svg>
-                                    </div>
-                                    <div className="faq-answer">
-                                        <p>{faq.answer}</p>
+                                <div
+                                    key={index}
+                                    className={`faq-card ${openFaq === index ? 'active' : ''}`}
+                                >
+                                    <button
+                                        className="faq-card-header"
+                                        onClick={() => toggleFaq(index)}
+                                    >
+                                        <div className="faq-card-left">
+                                            <span className="faq-title">{faq.question}</span>
+                                        </div>
+                                        <span className="faq-toggle">
+                                            {openFaq === index ? '−' : '+'}
+                                        </span>
+                                    </button>
+                                    <div className="faq-card-content">
+                                        <div className="faq-card-inner">
+                                            <p>{faq.answer}</p>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     </div>
                 </section>
-
                 {/* FOOTER */}
                 <footer>
-                    <div className="footer-left">
-                        <a href="#" className="brand" onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
-                            <ApplicationLogo className="w-10 h-10 mr-2" />
-                        </a>
-                        <div>
-                            <p>©</p>
-                            <span>2026</span>
+                    <div className="footer-top">
+                        <div className="footer-left">
+                            <a href="#" className="brand" onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
+                                <ApplicationLogo className="logo" />
+                            </a>
+                        </div>
+
+                        <div className="footer-right">
+                            <a href="/about">About</a>
+                            <a href="/contact">Contact</a>
+                            <a href="/privacy">Privacy Policy</a>
+                            <a href="/guidelines">Community Guideline</a>
                         </div>
                     </div>
 
-                    <div className="footer-right">
-                        <a href="/about">About</a>
-                        <a href="/contact">Contact</a>
-                        <a href="/privacy">Privacy Policy</a>
-                        <a href="/guidelines">Community Guideline</a>
+                    <div className="footer-bottom">
+                        <div className='copyright'>
+                            <p>©</p>
+                            <span>2026</span>
+                        </div>
+
+                        <p>
+                            <span>Powered by:</span> MyTeacher Institute. All rights reserved.
+                        </p>
                     </div>
+
                 </footer>
 
             </div>

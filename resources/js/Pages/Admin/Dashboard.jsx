@@ -153,7 +153,7 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
                     </button>
 
                     <a className="logo">
-                        <ApplicationLogo className="w-10 h-10 mr-2" />
+                        <ApplicationLogo className="w-20 h-10 mr-2" />
                     </a>
 
                     <nav className="sidebar-nav">
@@ -472,22 +472,32 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
 
                     {/* FOOTER */}
                     <footer>
-                        <div className="footer-left">
-                            <a className="logo">
-                                <ApplicationLogo className="w-10 h-10 mr-2" />
-                            </a>
-                            <div>
-                                <p>©</p>
-                                <span>2026</span>
+                        <div className="footer-top">
+                            <div className="footer-left">
+                                <a href="#" className="brand" onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
+                                    <ApplicationLogo className="logo" />
+                                </a>
+                            </div>
+
+                            <div className="footer-right">
+                                <a href="/about">About</a>
+                                <a href="/contact">Contact</a>
+                                <a href="/privacy">Privacy Policy</a>
+                                <a href="/guidelines">Community Guideline</a>
                             </div>
                         </div>
 
-                        <div className="footer-right">
-                            <a href="/about" onClick={(e) => { e.preventDefault(); navigateTo('/about'); }}>About</a>
-                            <a href="contact" onClick={(e) => { e.preventDefault(); navigateTo('/contact'); }}>Contact</a>
-                            <a href="privacy" onClick={(e) => { e.preventDefault(); navigateTo('/privacy'); }}>Privacy Policy</a>
-                            <a href="guidelines" onClick={(e) => { e.preventDefault(); navigateTo('/guidelines'); }}>Community Guideline</a>
+                        <div className="footer-bottom">
+                            <div className='copyright'>
+                                <p>©</p>
+                                <span>2026</span>
+                            </div>
+
+                            <p>
+                                <span>Powered by:</span> MyTeacher Institute. All rights reserved.
+                            </p>
                         </div>
+
                     </footer>
                 </main>
             </div>

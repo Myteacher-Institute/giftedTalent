@@ -193,8 +193,8 @@ export default function Jobs({ jobs = [], auth }) {
                         <div className='logo-search'>
                             <div className="logo">
                                 <a className="logo">
-                                                <ApplicationLogo className="w-10 h-10 mr-2" />
-                                            </a>
+                                    <ApplicationLogo className="w-20 h-10 mt-6 mr-2" />
+                                </a>
                             </div>
 
                             <div className="search-bar">
@@ -239,7 +239,13 @@ export default function Jobs({ jobs = [], auth }) {
                 <section className="filters-section">
                     <div className="filters-header">
                         <h3>Filter Jobs</h3>
-                        <button onClick={clearFilters} className="clear-filters-btn">Clear All</button>
+                        <div>
+                            <button onClick={clearFilters} className="clear-filters-btn">Clear All</button>
+
+                            <div className="filter-actions">
+                                <button onClick={applyFilters} className="apply-filters-btn">Apply Filters</button>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="filters-grid">
@@ -326,9 +332,6 @@ export default function Jobs({ jobs = [], auth }) {
                         </div>
                     </div>
 
-                    <div className="filter-actions">
-                        <button onClick={applyFilters} className="apply-filters-btn">Apply Filters</button>
-                    </div>
                 </section>
 
                 {/* Job Results Count */}
@@ -410,7 +413,7 @@ export default function Jobs({ jobs = [], auth }) {
                                         </div>
                                         <h3>{job.job_title}</h3>
                                         <p className='job-description'>{job.description}</p>
-                                        
+
                                         {/* Tags Section */}
                                         {job.tags && job.tags.length > 0 && (
                                             <div className="job-tags">
@@ -457,17 +460,32 @@ export default function Jobs({ jobs = [], auth }) {
 
                 {/* FOOTER */}
                 <footer>
-                    <div className="footer-left">
-                        <a href="/" className="brand">GiftedTalents<span>.online</span></a>
-                        <span>© 2026</span>
+                    <div className="footer-top">
+                        <div className="footer-left">
+                            <a href="#" className="brand" onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
+                                <ApplicationLogo className="logo" />
+                            </a>
+                        </div>
+
+                        <div className="footer-right">
+                            <a href="/about">About</a>
+                            <a href="/contact">Contact</a>
+                            <a href="/privacy">Privacy Policy</a>
+                            <a href="/guidelines">Community Guideline</a>
+                        </div>
                     </div>
 
-                    <div className="footer-right">
-                        <a href="/about">About</a>
-                        <a href="/contact">Contact</a>
-                        <a href="/privacy">Privacy Policy</a>
-                        <a href="/guidelines">Community Guideline</a>
+                    <div className="footer-bottom">
+                        <div className='copyright'>
+                            <p>©</p>
+                            <span>2026</span>
+                        </div>
+
+                        <p>
+                            <span>Powered by:</span> MyTeacher Institute. All rights reserved.
+                        </p>
                     </div>
+
                 </footer>
             </div>
         </>
