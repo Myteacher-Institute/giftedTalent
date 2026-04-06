@@ -10,6 +10,7 @@ import '../../css/auth-modal.css';
 import starIcon from '../../assets/svg/star.svg';
 import halfStarIcon from '../../assets/svg/half-star.svg';
 import heroImage from '../../assets/img/giftedtalentimage.png';
+import ApplicationLogo from '@/Components/ApplicationLogo';
 
 // Nav Component
 function Nav({ auth }) {
@@ -31,15 +32,16 @@ function Nav({ auth }) {
 
     return (
         <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
-            <div className="logo">
-                GiftedTalent<span>.Online</span>
-            </div>
+            <a className="logo">
+                <ApplicationLogo className="w-10 h-10 mr-2" />
+            </a>
             <ul className={`nav-links ${isActive ? 'active' : ''}`}>
                 <li><Link href="/" className="nav-link">Home</Link></li>
                 <li><Link href="/jobs" className="nav-link">Find Jobs</Link></li>
                 <li><Link href="/find-talents" className="nav-link">Find Talents</Link></li>
                 <li><Link href="/how-it-works" className="nav-link">How It Works</Link></li>
                 <li><Link href="/about" className="nav-link">About</Link></li>
+                <li><Link href="/contact" className="nav-link">Contact</Link></li>
             </ul>
             <div className="nav-right">
                 <div className="auth-links">
@@ -641,11 +643,20 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
                                         Create Account
                                     </Link>
                                 </div>
-                                
-                                <p className="auth-modal-footer">
-                                    By continuing, you agree to our Terms of Service and Privacy Policy
-                                </p>
-                            </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* FOOTER */}
+                <footer>
+                    <div className="footer-left">
+                        <a href="#" className="brand" onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
+                            <ApplicationLogo className="w-10 h-10 mr-2" />
+                        </a>
+                        <div>
+                            <p>©</p>
+                            <span>2026</span>
                         </div>
                     </div>
                 )}

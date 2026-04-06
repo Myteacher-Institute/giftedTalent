@@ -2,6 +2,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import '../../css/jobs.css';
+import ApplicationLogo from '@/Components/ApplicationLogo';
 
 export default function Jobs({ jobs = [], auth }) {
     const [searchQuery, setSearchQuery] = useState('');
@@ -201,7 +202,9 @@ export default function DashboardLayout({ children, user, newJobsCount = 0, prof
                     <nav>
                         <div className='logo-search'>
                             <div className="logo">
-                                <Link href="/" className="brand">GiftedTalents<span>.online</span></Link>
+                                <a className="logo">
+                                                <ApplicationLogo className="w-10 h-10 mr-2" />
+                                            </a>
                             </div>
 
                             <div className="search-bar">
@@ -447,6 +450,7 @@ export default function DashboardLayout({ children, user, newJobsCount = 0, prof
                                                 >
                                                     Apply now
                                                 </button>
+                                                {console.log(job)}
                                             </div>
                                         </div>
                                     </div>
