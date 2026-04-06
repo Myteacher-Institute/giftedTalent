@@ -95,27 +95,27 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
         skill: '',
         location: ''
     });
-    
+
     // State for search results
     const [searchResults, setSearchResults] = useState([]);
-    
+
     // State for loading and error
     const [isSearching, setIsSearching] = useState(false);
     const [searchError, setSearchError] = useState('');
     const [submitting, setSubmitting] = useState(false);
-    
+
     // Toast notification state
     const [toast, setToast] = useState({
         show: false,
         message: '',
         type: 'info'
     });
-    
+
     // Auth Modal state
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [intendedAction, setIntendedAction] = useState(null);
     const [intendedData, setIntendedData] = useState(null);
-    
+
     // Auto-hide toast after 3 seconds
     useEffect(() => {
         if (toast.show) {
@@ -125,7 +125,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
             return () => clearTimeout(timer);
         }
     }, [toast.show]);
-    
+
     // Function to show toast messages
     const showToast = (message, type = 'info') => {
         setToast({
@@ -167,46 +167,46 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
     // Handle search
     const handleSearch = () => {
         const hasSearchCriteria = searchInputs.keyword || searchInputs.skill || searchInputs.location;
-        
+
         if (!hasSearchCriteria) {
             showToast('Please enter at least one search criteria', 'error');
             return;
         }
-        
+
         setIsSearching(true);
         setSearchError('');
         showToast('Searching for jobs...', 'loading');
-        
+
         setTimeout(() => {
             try {
                 const filtered = jobs.filter(job => {
                     const keyword = searchInputs.keyword.toLowerCase().trim();
                     const skill = searchInputs.skill.toLowerCase().trim();
                     const location = searchInputs.location.toLowerCase().trim();
-                    
+
                     const jobTitle = (job.job_title || job.title || '').toLowerCase();
                     const jobSkills = (job.skills_required || job.skills || '').toLowerCase();
                     const jobLocation = (job.company_location || job.location || '').toLowerCase();
-                    
+
                     let matchesKeyword = true;
                     let matchesSkill = true;
                     let matchesLocation = true;
-                    
+
                     if (keyword) matchesKeyword = jobTitle.includes(keyword);
                     if (skill) matchesSkill = jobSkills.includes(skill);
                     if (location) matchesLocation = jobLocation.includes(location);
-                    
+
                     return matchesKeyword && matchesSkill && matchesLocation;
                 });
-                
+
                 setSearchResults(filtered);
-                
+
                 if (filtered.length > 0) {
                     showToast(`Found ${filtered.length} job${filtered.length !== 1 ? 's' : ''} matching your criteria`, 'success');
                 } else {
                     showToast('No jobs found matching your criteria. Try different keywords!', 'error');
                 }
-                
+
             } catch (err) {
                 showToast('An error occurred while searching. Please try again.', 'error');
                 console.error('Search error:', err);
@@ -235,7 +235,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
         if (requireAuthWithModal('save_job', event, job)) {
             event.preventDefault();
             event.stopPropagation();
-            
+
             try {
                 const response = await fetch(`/saved-jobs/${job.id}`, {
                     method: 'POST',
@@ -245,9 +245,9 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
                         'Accept': 'application/json'
                     }
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (response.ok) {
                     showToast(data.message || 'Job saved successfully!', 'success');
                 } else {
@@ -269,16 +269,6 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
             .join('')
             .toUpperCase()
             .slice(0, 2);
-    };
-
-    // Get action display text
-    const getActionDisplayText = () => {
-        switch(intendedAction) {
-            case 'apply_job': return 'Apply for a job';
-            case 'save_job': return 'Save a job';
-            case 'view_profile': return 'View talent profile';
-            default: return 'Access this feature';
-        }
     };
 
     // Get action data display
@@ -304,14 +294,14 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
             try {
                 const parsed = JSON.parse(talent.skills);
                 if (Array.isArray(parsed)) skillsArray = parsed;
-            } catch(e) {
+            } catch (e) {
                 skillsArray = [talent.skills];
             }
         } else if (talent.tech && typeof talent.tech === 'string') {
             try {
                 const parsed = JSON.parse(talent.tech);
                 if (Array.isArray(parsed)) skillsArray = parsed;
-            } catch(e) {
+            } catch (e) {
                 skillsArray = [talent.tech];
             }
         }
@@ -336,10 +326,10 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
                                     <circle cx="11" cy="11" r="8"></circle>
                                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                                 </svg>
-                                <input 
-                                    type="text" 
+                                <input
+                                    type="text"
                                     name="keyword"
-                                    placeholder="Job title or Keyword" 
+                                    placeholder="Job title or Keyword"
                                     value={searchInputs.keyword}
                                     onChange={handleInputChange}
                                 />
@@ -349,10 +339,10 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
                                     <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
                                     <path d="M16 3H8v4h8V3z"></path>
                                 </svg>
-                                <input 
-                                    type="text" 
+                                <input
+                                    type="text"
                                     name="skill"
-                                    placeholder="Skill" 
+                                    placeholder="Skill"
                                     value={searchInputs.skill}
                                     onChange={handleInputChange}
                                 />
@@ -362,10 +352,10 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
                                     <path d="M21 10c0 6-9 13-9 13S3 16 3 10a9 9 0 1118 0z"></path>
                                     <circle cx="12" cy="10" r="3"></circle>
                                 </svg>
-                                <input 
-                                    type="text" 
+                                <input
+                                    type="text"
                                     name="location"
-                                    placeholder="Location" 
+                                    placeholder="Location"
                                     value={searchInputs.location}
                                     onChange={handleInputChange}
                                 />
@@ -440,14 +430,14 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
                                         <span className="job-salary">{job.salary_range || job.salary || 'Salary'}</span>
                                     </div>
                                     <div className="job-buttons">
-                                        <button 
-                                            className="apply-btn" 
+                                        <button
+                                            className="apply-btn"
                                             onClick={(e) => handleApplyClick(job, e)}
                                         >
                                             Apply Now
                                         </button>
-                                        <button 
-                                            className="save-btn" 
+                                        <button
+                                            className="save-btn"
                                             onClick={(e) => handleSaveJob(job, e)}
                                         >
                                             Save Job
@@ -489,14 +479,14 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
                                             <span className="job-salary">{job.salary_range || job.salary || 'Salary'}</span>
                                         </div>
                                         <div className="job-buttons">
-                                            <button 
-                                                className="apply-btn" 
+                                            <button
+                                                className="apply-btn"
                                                 onClick={(e) => handleApplyClick(job, e)}
                                             >
                                                 Apply Now
                                             </button>
-                                            <button 
-                                                className="save-btn" 
+                                            <button
+                                                className="save-btn"
                                                 onClick={(e) => handleSaveJob(job, e)}
                                             >
                                                 Save Job
@@ -528,13 +518,13 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
                         {featuredTalents.length > 0 ? (
                             featuredTalents.map((talent) => {
                                 const displaySkills = getTalentSkills(talent);
-                                
+
                                 return (
                                     <div key={talent.id} className="feature-talent-card">
                                         <div className="feature-talent-card-header">
                                             {talent.profile_image_base64 || talent.avatar_url || talent.avatar ? (
-                                                <img 
-                                                    src={talent.profile_image_base64 || talent.avatar_url || talent.avatar} 
+                                                <img
+                                                    src={talent.profile_image_base64 || talent.avatar_url || talent.avatar}
                                                     alt={talent.name}
                                                     onError={(e) => {
                                                         e.target.style.display = 'none';
@@ -562,7 +552,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
                                                 const rating = talent.rating || 4.0;
                                                 const fullStars = Math.floor(rating);
                                                 const hasHalfStar = (rating - fullStars) >= 0.5;
-                                                
+
                                                 if (starIndex < fullStars) {
                                                     return <i key={starIndex} className="fas fa-star"></i>;
                                                 } else if (starIndex === fullStars && hasHalfStar) {
@@ -585,7 +575,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
                                         </div>
 
                                         <div className="feature-talent-card-footer">
-                                            <Link 
+                                            <Link
                                                 href={`/talent/${talent.id}`}
                                                 onClick={(e) => handleViewProfile(talent, e)}
                                             >
@@ -616,25 +606,25 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
                                     <line x1="6" y1="6" x2="18" y2="18"></line>
                                 </svg>
                             </button>
-                            
+
                             <div className="auth-modal-content">
                                 <div className="auth-modal-icon">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-                                        <circle cx="12" cy="12" r="4"/>
+                                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                                        <circle cx="12" cy="12" r="4" />
                                     </svg>
                                 </div>
-                                
+
                                 <h2>Join GiftedTalent to Continue</h2>
                                 <p>You need to be a member to apply for jobs and view talent profiles. It only takes a minute!</p>
-                                
+
                                 {intendedData && (
                                     <div className="auth-modal-job">
                                         <p>You were about to {intendedAction === 'apply_job' ? 'apply for' : intendedAction === 'save_job' ? 'save' : 'view'}:</p>
                                         <strong>{getActionDataDisplay()}</strong>
                                     </div>
                                 )}
-                                
+
                                 <div className="auth-modal-buttons">
                                     <Link href={route('login')} className="auth-modal-btn auth-modal-btn-primary">
                                         Sign In
@@ -643,24 +633,12 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
                                         Create Account
                                     </Link>
                                 </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* FOOTER */}
-                <footer>
-                    <div className="footer-left">
-                        <a href="#" className="brand" onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
-                            <ApplicationLogo className="w-10 h-10 mr-2" />
-                        </a>
-                        <div>
-                            <p>©</p>
-                            <span>2026</span>
+                            </div>
                         </div>
                     </div>
                 )}
 
+                {/* Footer */}
                 <footer className="footer">
                     <div className="footer-right">
                         <a href="/about">About</a>
