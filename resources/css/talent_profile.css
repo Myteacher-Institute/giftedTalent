@@ -1,0 +1,845 @@
+/* Talent Profile Page Styles */
+.talent-profile-page {
+    min-height: 100vh;
+    background: #f3f4f6;
+    padding: 40px 20px;
+}
+
+.talent-profile-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.talent-profile-card-full {
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.talent-cover-image-full {
+    height: 200px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.talent-profile-image-full {
+    margin-top: -75px;
+    margin-left: 40px;
+    margin-bottom: 20px;
+}
+
+.talent-profile-image-full img,
+.talent-avatar-initials-full {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 5px solid white;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.talent-avatar-initials-full {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 64px;
+    font-weight: bold;
+    color: white;
+}
+
+.talent-profile-info-full {
+    padding: 0 40px 20px 40px;
+}
+
+.talent-name-full {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 8px;
+}
+
+.talent-title-full {
+    font-size: 18px;
+    color: #6b7280;
+    margin-bottom: 20px;
+}
+
+.talent-stats-row {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.talent-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.talent-stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #4f46e5;
+}
+
+.talent-stat-label {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 4px;
+}
+
+.talent-company-full {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #6b7280;
+    font-size: 14px;
+    flex-wrap: wrap;
+}
+
+.company-icon {
+    width: 18px;
+    height: 18px;
+    color: #4f46e5;
+}
+
+.current-badge-full {
+    background: #eef2ff;
+    color: #4f46e5;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+}
+
+.talent-divider-full {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 20px 40px;
+}
+
+.talent-bio-section,
+.talent-availability-section-full,
+.talent-contact-section-full,
+.talent-social-section,
+.talent-location-section,
+.talent-skills-section-full {
+    padding: 0 40px;
+    margin-bottom: 24px;
+}
+
+.talent-section-title-full {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 16px;
+}
+
+.talent-bio-text {
+    color: #4b5563;
+    line-height: 1.6;
+}
+
+.talent-status-badge-full {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+}
+
+.talent-contact-item-full {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: #f9fafb;
+    border-radius: 12px;
+}
+
+.talent-contact-icon-full {
+    width: 40px;
+    height: 40px;
+    background: #eef2ff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.talent-contact-icon-full svg {
+    width: 20px;
+    height: 20px;
+    color: #4f46e5;
+}
+
+.talent-contact-text-full {
+    flex: 1;
+    color: #374151;
+}
+
+.talent-message-btn-full {
+    background: #4f46e5;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+}
+
+.talent-social-links {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.talent-social-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    background: #f3f4f6;
+    border-radius: 25px;
+    text-decoration: none;
+    color: #374151;
+}
+
+.talent-location-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #4b5563;
+}
+
+.talent-skills-container-full {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.talent-skill-tag-full {
+    background: #eef2ff;
+    color: #4f46e5;
+    padding: 8px 18px;
+    border-radius: 25px;
+    font-size: 14px;
+}
+
+.talent-resume-section-full {
+    padding: 0 40px 20px 40px;
+}
+
+.talent-view-resume-btn-full {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: #4f46e5;
+    color: white;
+    padding: 12px 30px;
+    border-radius: 30px;
+    text-decoration: none;
+}
+
+.talent-back-btn-container {
+    padding: 20px 40px 40px 40px;
+}
+
+.talent-back-btn {
+    background: transparent;
+    border: 2px solid #e5e7eb;
+    padding: 10px 24px;
+    border-radius: 30px;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .talent-profile-image-full {
+        margin-left: 20px;
+    }
+    
+    .talent-profile-image-full img,
+    .talent-avatar-initials-full {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .talent-avatar-initials-full {
+        font-size: 40px;
+    }
+    
+    .talent-profile-info-full {
+        padding: 0 20px 15px 20px;
+    }
+    
+    .talent-name-full {
+        font-size: 24px;
+    }
+    
+    .talent-divider-full {
+        margin: 15px 20px;
+    }
+    
+    .talent-bio-section,
+    .talent-availability-section-full,
+    .talent-contact-section-full,
+    .talent-social-section,
+    .talent-location-section,
+    .talent-skills-section-full {
+        padding: 0 20px;
+    }
+    
+    .talent-resume-section-full {
+        padding: 0 20px 15px 20px;
+    }
+    
+    .talent-back-btn-container {
+        padding: 15px 20px 30px 20px;
+    }
+}
+
+
+
+
+.talent-profile-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    padding: 40px 20px;
+}
+
+.talent-profile-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.talent-profile-card-full {
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    position: relative;
+}
+
+/* Cover Image */
+.talent-cover-image-full {
+    height: 100px;
+    background: #ffff;
+    position: relative;
+}
+
+/* Profile Image */
+.talent-profile-image-full {
+    display: flex;
+    align-items: center;
+    position: relative;
+    margin-top: -75px;
+    margin-left: 40px;
+    margin-bottom: 20px;
+    justify-content: center;
+}
+
+.talent-profile-image-full img,
+.talent-avatar-initials-full {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 5px solid white;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.talent-avatar-initials-full {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 64px;
+    font-weight: bold;
+    color: white;
+}
+
+/* Profile Info */
+.talent-profile-info-full {
+    padding: 0 40px 20px 40px;
+}
+
+.talent-name-full {
+    display: flex;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 8px;
+}
+
+.talent-title-full {
+     display: flex;
+    justify-content: center;
+    font-size: 18px;
+    color: #6b7280;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+/* Stats Row */
+.talent-stats-row {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.talent-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.talent-stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #4f46e5;
+}
+
+.talent-stat-label {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 4px;
+}
+
+.talent-company-full {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #6b7280;
+    font-size: 14px;
+    flex-wrap: wrap;
+}
+
+.company-icon {
+    width: 18px;
+    height: 18px;
+    color: #4f46e5;
+}
+
+.current-badge-full {
+    background: #eef2ff;
+    color: #4f46e5;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Divider */
+.talent-divider-full {
+    height: 1px;
+    background: linear-gradient(to right, #e5e7eb, transparent);
+    margin: 20px 40px;
+}
+
+/* Sections */
+.talent-bio-section,
+.talent-availability-section-full,
+.talent-contact-section-full,
+.talent-social-section,
+.talent-location-section,
+.talent-skills-section-full,
+.talent-experience-section,
+.talent-education-section {
+    padding: 0 40px;
+    margin-bottom: 24px;
+}
+
+.talent-section-title-full {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 16px;
+    display: inline-block;
+}
+
+.talent-section-title-full::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 40px;
+    height: 3px;
+    background: linear-gradient(90deg, #4f46e5, #8b5cf6);
+    border-radius: 2px;
+}
+
+.talent-bio-text {
+    color: #4b5563;
+    line-height: 1.6;
+    font-size: 15px;
+}
+
+/* Availability */
+.talent-availability-status-full {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.talent-status-badge-full {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+    width: fit-content;
+}
+
+.talent-availability-text-full {
+    color: #4b5563;
+    font-size: 14px;
+}
+
+.talent-start-date-full {
+    color: #6b7280;
+    font-size: 13px;
+}
+
+/* Contact Info */
+.talent-contact-item-full {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: #f9fafb;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.talent-contact-item-full:hover {
+    background: #f3f4f6;
+    transform: translateX(5px);
+}
+
+.talent-contact-icon-full {
+    width: 40px;
+    height: 40px;
+    background: #eef2ff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.talent-contact-icon-full svg {
+    width: 20px;
+    height: 20px;
+    color: #4f46e5;
+}
+
+.talent-contact-text-full {
+    flex: 1;
+    color: #374151;
+    font-size: 14px;
+}
+
+.talent-message-btn-full {
+    background: linear-gradient(135deg, #4f46e5, #6366f1);
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.talent-message-btn-full:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+}
+
+/* Social Links */
+.talent-social-links {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.talent-social-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    background: #f3f4f6;
+    border-radius: 25px;
+    text-decoration: none;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.talent-social-link svg {
+    width: 18px;
+    height: 18px;
+}
+
+.talent-social-link:hover {
+    background: #eef2ff;
+    transform: translateY(-2px);
+    color: #4f46e5;
+}
+
+/* Location */
+.talent-location-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #4b5563;
+    font-size: 14px;
+}
+
+.talent-location-text svg {
+    width: 18px;
+    height: 18px;
+    color: #4f46e5;
+}
+
+/* Skills */
+.talent-skills-container-full {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.talent-skill-tag-full {
+    background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+    color: #4f46e5;
+    padding: 8px 18px;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.talent-skill-tag-full:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+}
+
+/* Experience & Education Items */
+.talent-experience-item,
+.talent-education-item {
+    margin-bottom: 24px;
+    padding: 16px;
+    background: #f9fafb;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.talent-experience-item:hover,
+.talent-education-item:hover {
+    background: #f3f4f6;
+    transform: translateX(5px);
+}
+
+.talent-experience-item h4,
+.talent-education-item h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 6px;
+}
+
+.talent-company-name,
+.talent-institution-name {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+.talent-date-range,
+.talent-year {
+    font-size: 12px;
+    color: #9ca3af;
+    margin-bottom: 8px;
+}
+
+.talent-experience-desc,
+.talent-education-desc {
+    font-size: 14px;
+    color: #4b5563;
+    line-height: 1.5;
+    margin-top: 8px;
+}
+
+/* Resume Button */
+.talent-resume-section-full {
+    padding: 0 40px 20px 40px;
+}
+
+.talent-view-resume-btn-full {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #4f46e5, #6366f1);
+    color: white;
+    padding: 12px 30px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.talent-view-resume-btn-full svg {
+    width: 18px;
+    height: 18px;
+    color: white;
+}
+
+.talent-view-resume-btn-full:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3);
+}
+
+.talent-view-resume-btn-full.disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.talent-view-resume-btn-full.disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* Back Button */
+.talent-back-btn-container {
+    padding: 20px 40px 40px 40px;
+}
+
+.talent-back-btn {
+    background: transparent;
+    border: 2px solid #e5e7eb;
+    padding: 10px 24px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #6b7280;
+    transition: all 0.3s ease;
+}
+
+.talent-back-btn:hover {
+    border-color: #4f46e5;
+    color: #4f46e5;
+    transform: translateX(-5px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .talent-profile-page {
+        padding: 20px;
+    }
+    
+    .talent-profile-image-full {
+        margin-left: 20px;
+    }
+    
+    .talent-profile-image-full img,
+    .talent-avatar-initials-full {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .talent-avatar-initials-full {
+        font-size: 40px;
+    }
+    
+    .talent-profile-info-full {
+        padding: 0 20px 15px 20px;
+    }
+    
+    .talent-name-full {
+        font-size: 24px;
+    }
+    
+    .talent-title-full {
+        font-size: 16px;
+    }
+    
+    .talent-stats-row {
+        gap: 20px;
+    }
+    
+    .talent-divider-full {
+        margin: 15px 20px;
+    }
+    
+    .talent-bio-section,
+    .talent-availability-section-full,
+    .talent-contact-section-full,
+    .talent-social-section,
+    .talent-location-section,
+    .talent-skills-section-full,
+    .talent-experience-section,
+    .talent-education-section {
+        padding: 0 20px;
+        margin-bottom: 20px;
+    }
+    
+    .talent-section-title-full {
+        font-size: 18px;
+    }
+    
+    .talent-contact-item-full {
+        flex-wrap: wrap;
+    }
+    
+    .talent-message-btn-full {
+        width: 100%;
+        margin-top: 8px;
+    }
+    
+    .talent-social-links {
+        justify-content: center;
+    }
+    
+    .talent-resume-section-full {
+        padding: 0 20px 15px 20px;
+    }
+    
+    .talent-back-btn-container {
+        padding: 15px 20px 30px 20px;
+    }
+    
+    .talent-view-resume-btn-full {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .talent-stats-row {
+        justify-content: space-between;
+    }
+    
+    .talent-stat-value {
+        font-size: 16px;
+    }
+    
+    .talent-company-full {
+        font-size: 12px;
+    }
+    
+    .talent-skill-tag-full {
+        font-size: 12px;
+        padding: 6px 14px;
+    }
+}

@@ -199,4 +199,7 @@ Route::middleware(['auth', 'admin'])->prefix('Admin')->name('admin.')->group(fun
 Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('google.redirect');
 Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('google.callback');
 
+// Talent Profile Route
+Route::get('/talent/{id}', [App\Http\Controllers\TalentController::class, 'show'])->name('talent.show');
+
 require __DIR__ . '/auth.php';

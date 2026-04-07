@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->json('privacy_settings')->nullable()->after('notification_preferences');
+            $table->json('privacy_settings')->nullable();
         });
     }
 
