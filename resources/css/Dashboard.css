@@ -147,41 +147,79 @@ body {
 }
 
 /* ============================================
-   MOBILE MENU TOGGLE BUTTON - ONLY SHOWS ON MOBILE
+   HAMBURGER MENU - MOBILE ONLY
    ============================================ */
+
+/* Hamburger Container - Hidden on desktop */
+.hamburger-container {
+    display: none;
+}
+
+/* Hamburger Menu Button */
+.hamburger {
+    width: 30px;
+    height: 24px;
+    position: relative;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+.hamburger span {
+    display: block;
+    position: absolute;
+    height: 3px;
+    width: 100%;
+    background: #0a66c2;
+    border-radius: 3px;
+    opacity: 1;
+    left: 0;
+    transform: rotate(0deg);
+    transition: all 0.25s ease-in-out;
+}
+
+.hamburger span:nth-child(1) {
+    top: 0px;
+}
+
+.hamburger span:nth-child(2) {
+    top: 10px;
+}
+
+.hamburger span:nth-child(3) {
+    top: 20px;
+}
+
+/* Active state - transforms into X */
+.hamburger.active span:nth-child(1) {
+    top: 10px;
+    transform: rotate(135deg);
+    background: #0a66c2;
+}
+
+.hamburger.active span:nth-child(2) {
+    opacity: 0;
+    left: -30px;
+}
+
+.hamburger.active span:nth-child(3) {
+    top: 10px;
+    transform: rotate(-135deg);
+    background: #0a66c2;
+}
+
+/* Hover effect */
+.hamburger:hover span {
+    background: #1e40af;
+}
+
+/* Mobile Menu Toggle Button (Floating Action Button) - Hidden on desktop */
 .mobile-menu-toggle {
     display: none;
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #0a66c2, #1e40af);
-    color: white;
-    border: none;
-    cursor: pointer;
-    z-index: 1001;
-    box-shadow: 0 4px 15px rgba(10, 102, 194, 0.4);
-    transition: all 0.3s ease;
-    align-items: center;
-    justify-content: center;
 }
 
-.mobile-menu-toggle:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 20px rgba(10, 102, 194, 0.5);
-}
-
-.mobile-menu-toggle:active {
-    transform: scale(0.95);
-}
-
-.mobile-menu-toggle i {
-    font-size: 24px;
-}
-
-/* Mobile Overlay - appears when sidebar is open */
+/* Mobile Overlay - Hidden on desktop */
 .mobile-overlay {
     position: fixed;
     top: 0;
@@ -386,7 +424,7 @@ body {
 }
 
 /* ============================================
-   MAIN CONTENT STYLES (Keep your existing styles)
+   MAIN CONTENT STYLES
    ============================================ */
 .main {
     min-width: 0;
@@ -981,67 +1019,140 @@ body {
 }
 
 /* ============================================
-   RESPONSIVE DESIGN - MOBILE FIRST
+   RESPONSIVE DESIGN
    ============================================ */
 
-/* Tablet Landscape (1024px - 1200px) */
-@media (max-width: 1200px) {
+/* DESKTOP (1200px and above) - Sidebar always visible, no hamburger */
+@media (min-width: 1200px) {
+    .container {
+        grid-template-columns: 280px 1fr 320px;
+        gap: 24px;
+        padding: 24px 40px;
+    }
+    
+    .sidebar {
+        display: block !important;
+        position: sticky;
+        left: auto !important;
+    }
+    
+    .hamburger-container {
+        display: none !important;
+    }
+    
+    .mobile-menu-toggle {
+        display: none !important;
+    }
+    
+    .mobile-overlay {
+        display: none !important;
+    }
+    
+    .navbar nav {
+        display: flex !important;
+    }
+}
+
+/* TABLET LANDSCAPE (1024px - 1199px) - Sidebar always visible */
+@media (min-width: 1025px) and (max-width: 1199px) {
+    .container {
+        grid-template-columns: 260px 1fr;
+        gap: 20px;
+        padding: 20px;
+    }
+    
+    .right-panel {
+        display: none;
+    }
+    
+    .sidebar {
+        display: block !important;
+        position: sticky;
+        left: auto !important;
+    }
+    
+    .hamburger-container {
+        display: none !important;
+    }
+    
+    .mobile-menu-toggle {
+        display: none !important;
+    }
+    
+    .mobile-overlay {
+        display: none !important;
+    }
+    
+    .navbar nav {
+        display: flex !important;
+    }
+}
+
+/* TABLET PORTRAIT (768px - 1024px) - Sidebar hidden, show hamburger */
+@media (max-width: 1024px) and (min-width: 769px) {
     .container {
         grid-template-columns: 1fr;
         gap: 20px;
         padding: 20px;
     }
-
+    
     .right-panel {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 20px;
     }
-
+    
+    /* Hide desktop navigation */
     .navbar nav {
-        display: none;
+        display: none !important;
     }
     
-    /* Show hamburger button on tablet */
-    .mobile-menu-toggle {
-        display: flex;
+    /* Show hamburger */
+    .hamburger-container {
+        display: block !important;
     }
     
-    /* Sidebar hidden by default on tablet */
+    /* Sidebar hidden by default, becomes slide-out menu */
     .sidebar {
-        position: fixed;
-        top: 0;
-        left: -100%;
-        width: 85%;
-        max-width: 320px;
-        height: 100vh;
-        z-index: 1002;
-        overflow-y: auto;
-        border-radius: 0;
-        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-        display: block;
+        position: fixed !important;
+        top: 0 !important;
+        left: -100% !important;
+        width: 85% !important;
+        max-width: 320px !important;
+        height: 100vh !important;
+        z-index: 1002 !important;
+        overflow-y: auto !important;
+        border-radius: 0 !important;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1) !important;
+        transition: left 0.3s ease !important;
     }
     
     .sidebar.mobile-open {
-        left: 0;
-    }
-}
-
-/* Tablet Portrait (768px - 1024px) */
-@media (max-width: 1024px) and (min-width: 769px) {
-    .container {
-        padding: 20px;
+        left: 0 !important;
     }
     
-    .right-panel {
-        grid-template-columns: 1fr 1fr;
+    .mobile-overlay {
+        display: none;
+    }
+    
+    .mobile-overlay.active {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1001;
     }
 }
 
-/* Mobile (up to 768px) */
+/* MOBILE (up to 768px) - Sidebar hidden, show hamburger */
 @media (max-width: 768px) {
     .container {
+        grid-template-columns: 1fr;
         padding: 16px;
+        gap: 16px;
     }
 
     .main h1 {
@@ -1054,6 +1165,7 @@ body {
 
     .right-panel {
         grid-template-columns: 1fr;
+        gap: 16px;
     }
 
     .progress-card {
@@ -1116,32 +1228,52 @@ body {
         gap: 8px;
     }
     
-    /* Show hamburger button on mobile */
-    .mobile-menu-toggle {
-        display: flex;
+    /* Hide desktop navigation */
+    .navbar nav {
+        display: none !important;
     }
     
-    /* Sidebar hidden by default on mobile */
+    /* Show hamburger container */
+    .hamburger-container {
+        display: block !important;
+    }
+    
+    /* Sidebar hidden by default, becomes slide-out menu */
     .sidebar {
-        position: fixed;
-        top: 0;
-        left: -100%;
-        width: 85%;
-        max-width: 320px;
-        height: 100vh;
-        z-index: 1002;
-        overflow-y: auto;
-        border-radius: 0;
-        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-        display: block;
+        position: fixed !important;
+        top: 0 !important;
+        left: -100% !important;
+        width: 85% !important;
+        max-width: 320px !important;
+        height: 100vh !important;
+        z-index: 1002 !important;
+        overflow-y: auto !important;
+        border-radius: 0 !important;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1) !important;
+        transition: left 0.3s ease !important;
     }
     
     .sidebar.mobile-open {
+        left: 0 !important;
+    }
+    
+    .mobile-overlay {
+        display: none;
+    }
+    
+    .mobile-overlay.active {
+        display: block;
+        position: fixed;
+        top: 0;
         left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1001;
     }
 }
 
-/* Small Mobile (up to 480px) */
+/* SMALL MOBILE (up to 480px) */
 @media (max-width: 480px) {
     .navbar {
         padding: 10px 16px;
@@ -1204,20 +1336,9 @@ body {
     .empty-state h3 {
         font-size: 18px;
     }
-    
-    .mobile-menu-toggle {
-        width: 48px;
-        height: 48px;
-        bottom: 15px;
-        right: 15px;
-    }
-    
-    .mobile-menu-toggle i {
-        font-size: 20px;
-    }
 }
 
-/* Extra Small Mobile (up to 380px) */
+/* EXTRA SMALL MOBILE (up to 380px) */
 @media (max-width: 380px) {
     .tracker-grid {
         grid-template-columns: 1fr;
@@ -1326,144 +1447,4 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
     background: #a8a8a8;
-}
-
-
-/* FORCE HAMBURGER MENU TO SHOW ON MOBILE - IMPORTANT! */
-@media (max-width: 768px) {
-    .mobile-menu-toggle {
-        display: flex !important;
-        position: fixed !important;
-        bottom: 20px !important;
-        right: 20px !important;
-        width: 56px !important;
-        height: 56px !important;
-        border-radius: 50% !important;
-        background: linear-gradient(135deg, #0a66c2, #1e40af) !important;
-        color: white !important;
-        border: none !important;
-        cursor: pointer !important;
-        z-index: 9999 !important;
-        box-shadow: 0 4px 15px rgba(10, 102, 194, 0.4) !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-    
-    .mobile-menu-toggle i {
-        font-size: 24px !important;
-    }
-    
-    /* Sidebar styles */
-    .sidebar {
-        position: fixed !important;
-        top: 0 !important;
-        left: -100% !important;
-        width: 85% !important;
-        max-width: 320px !important;
-        height: 100vh !important;
-        z-index: 9998 !important;
-        overflow-y: auto !important;
-        border-radius: 0 !important;
-        transition: left 0.3s ease !important;
-        display: block !important;
-    }
-    
-    .sidebar.mobile-open {
-        left: 0 !important;
-    }
-    
-    .mobile-overlay {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        background: rgba(0, 0, 0, 0.5) !important;
-        z-index: 9997 !important;
-    }
-}
-
-
-
-/* ============================================
-   ANIMATED HAMBURGER MENU - ALONE IN NAVBAR
-   ============================================ */
-
-/* Hamburger Container - Positioned in navbar area */
-.hamburger-container {
-    display: none;
-}
-
-/* Hamburger Menu Button */
-.hamburger {
-    width: 30px;
-    height: 24px;
-    position: relative;
-    cursor: pointer;
-    background: transparent;
-    border: none;
-    padding: 0;
-}
-
-.hamburger span {
-    display: block;
-    position: absolute;
-    height: 3px;
-    width: 100%;
-    background: #0a66c2;
-    border-radius: 3px;
-    opacity: 1;
-    left: 0;
-    transform: rotate(0deg);
-    transition: all 0.25s ease-in-out;
-}
-
-.hamburger span:nth-child(1) {
-    top: 0px;
-}
-
-.hamburger span:nth-child(2) {
-    top: 10px;
-}
-
-.hamburger span:nth-child(3) {
-    top: 20px;
-}
-
-/* Active state - transforms into X */
-.hamburger.active span:nth-child(1) {
-    top: 10px;
-    transform: rotate(135deg);
-    background: #0a66c2;
-}
-
-.hamburger.active span:nth-child(2) {
-    opacity: 0;
-    left: -30px;
-}
-
-.hamburger.active span:nth-child(3) {
-    top: 10px;
-    transform: rotate(-135deg);
-    background: #0a66c2;
-}
-
-/* Hover effect */
-.hamburger:hover span {
-    background: #1e40af;
-}
-
-/* Show hamburger only on mobile */
-@media (max-width: 768px) {
-    .hamburger-container {
-        display: block;
-        position: absolute;
-        top: 15px;
-        right: 20px;
-        z-index: 1002;
-    }
-    
-    .navbar {
-        position: relative;
-    }
 }

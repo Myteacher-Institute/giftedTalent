@@ -116,7 +116,8 @@ export default function Dashboard({
     searchParams = {},
     profile,
     flash,
-    profileLevel = { message: 'Keep going!' }
+    profileLevel = { message: 'Keep going!' },
+    recommendedJobs = []  // ADDED: Jobs recommended based on user profile
 }) {
     const [searchQuery, setSearchQuery] = useState(searchParams.q || '');
     const [selectedJobType, setSelectedJobType] = useState(searchParams.job_type || '');
@@ -134,10 +135,16 @@ export default function Dashboard({
     const [savedJobsCount, setSavedJobsCount] = useState(0);
     const [showSavedJobs, setShowSavedJobs] = useState(false);
     const [loadingSaved, setLoadingSaved] = useState(false);
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const [isHamburgerActive, setIsHamburgerActive] = useState(false);
+    
+    // State for sidebar toggle
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const currentUser = auth?.user;
+
+    // Function to toggle sidebar
+    const toggleSidebar = () => {
+        setSidebarOpen(!sidebarOpen);
+    };
 
     // Flash message effect
     useEffect(() => {
@@ -229,11 +236,6 @@ export default function Dashboard({
     };
 
     const toggleAdvanced = () => setShowAdvanced(!showAdvanced);
-    
-    const toggleMobileMenu = () => {
-        setIsHamburgerActive(!isHamburgerActive);
-        setMobileMenuOpen(!mobileMenuOpen);
-    };
 
     const handleLogout = () => {
         router.post('/logout');
@@ -323,7 +325,7 @@ export default function Dashboard({
     useEffect(() => {
         const hasShown = localStorage.getItem('profileCompleteShown');
         if (profileComplete === 100 && !hasShown) {
-            alertify.success('Congratulations! Your profile is 100% complete! 🎉', 3);
+            alertify.success('Congratulations! Your profile is 100% complete!', 3);
             localStorage.setItem('profileCompleteShown', 'true');
         }
     }, [profileComplete]);
@@ -366,7 +368,7 @@ export default function Dashboard({
         }
     };
 
-    const recommendedJobs = jobs.filter(job => job.match_score && job.match_score >= 60);
+    // Other jobs (regular jobs from the jobs array)
     const otherJobs = jobs.filter(job => !job.match_score || job.match_score < 60);
     const hasCV = currentUser?.resumes?.length > 0;
     const cvCount = currentUser?.resumes?.length || 0;
@@ -375,24 +377,20 @@ export default function Dashboard({
         <>
             <Head title="Dashboard" />
 
-            {/* AppNavbar Component */}
-            <AppNavbar user={currentUser} newJobsCount={newJobsCount} />
+            {/* AppNavbar Component - With sidebar toggle props */}
+            <AppNavbar 
+                user={currentUser} 
+                newJobsCount={newJobsCount}
+                onMenuToggle={toggleSidebar}
+                isMenuOpen={sidebarOpen}
+            />
 
-            {/* Animated Hamburger Menu - Inside Navbar Area */}
-            <div className="hamburger-container">
-                <div 
-                    className={`hamburger ${isHamburgerActive ? 'active' : ''}`}
-                    onClick={toggleMobileMenu}
-                >
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-            </div>
+            {/* Mobile Overlay - Shows when sidebar is open on mobile */}
+            {sidebarOpen && <div className="mobile-overlay" onClick={toggleSidebar}></div>}
 
             <div className="container">
-                {/* Sidebar */}
-                <aside className={`sidebar ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+                {/* Sidebar - Add mobile-open class for mobile toggle */}
+                <aside className={`sidebar ${sidebarOpen ? 'mobile-open' : ''}`}>
                     <div className="profile">
                         <div className="profile-image-wrapper">
                             <img
@@ -527,7 +525,7 @@ export default function Dashboard({
                             {profileComplete === 100 ? (
                                 <div className="alert-success">
                                     <i className="fa-solid fa-check-circle"></i>
-                                    <p>Your profile is 100% complete! 🎉</p>
+                                    <p>Your profile is 100% complete! <i className="fa-solid fa-party-horn"></i></p>
                                 </div>
                             ) : profileComplete > 0 && profileComplete < 100 ? (
                                 <div className="alert-warning">
@@ -586,11 +584,11 @@ export default function Dashboard({
                                 </div>
                             )}
 
-                            {/* Recommended Jobs Section */}
-                            {recommendedJobs.length > 0 && (
+                            {/* Recommended Jobs Section - Based on User Profile from Controller */}
+                            {recommendedJobs && recommendedJobs.length > 0 && (
                                 <div className="jobs-section">
                                     <div className="section-header">
-                                        <h2>🎯 Recommended for You</h2>
+                                        <h2><i className="fa-solid fa-bullseye"></i> Recommended for You</h2>
                                         <span>Based on your profile and skills</span>
                                     </div>
                                     <div className="jobs">
@@ -755,9 +753,6 @@ export default function Dashboard({
                     </div>
                 </aside>
             </div>
-
-            {/* Mobile Overlay */}
-            {mobileMenuOpen && <div className="mobile-overlay" onClick={toggleMobileMenu}></div>}
 
             {/* Message Modal */}
             <MessageModal

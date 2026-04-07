@@ -267,7 +267,7 @@ export default function EditProfile({ user, profile }) {
     };
 
     return (
-        <AuthenticatedLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Edit Profile</h2>}>
+        <>
             <Head title="Edit Profile" />
             <div className="profile-edit-page">
                 {/* Back to Dashboard Button */}
@@ -638,6 +638,6 @@ export default function EditProfile({ user, profile }) {
                     </div>
                 </div>
             </div>
-        </AuthenticatedLayout>
+        </>
     );
 }

@@ -144,7 +144,7 @@ class ProfileController extends Controller
                 }
             }
 
-            // Update user basic info
+            // Update user basic info (name only, no title/company)
             $userUpdated = false;
             if (isset($validated['first_name']) || isset($validated['last_name'])) {
                 $currentFirstName = explode(' ', $user->name)[0] ?? '';
@@ -160,25 +160,17 @@ class ProfileController extends Controller
                 }
             }
             
-            // Update title in users table
-            if (isset($validated['title'])) {
-                $user->title = $validated['title'];
-                $userUpdated = true;
-            }
-            
-            // Update company in users table
-            if (isset($validated['company'])) {
-                $user->company = $validated['company'];
-                $userUpdated = true;
-            }
+            // NOTE: title and company are NOT saved to users table anymore
+            // They are only saved to the profiles table below
             
             if ($userUpdated) {
                 $user->save();
-                Log::info('User updated with title/company/name');
+                Log::info('User name updated');
             }
 
-            // Prepare profile data - remove user fields and profile_image
-            $profileData = Arr::except($validated, ['first_name', 'last_name', 'email', 'profile_image', 'title', 'company']);
+            // Prepare profile data - keep title and company for profile table
+            // Remove only the fields that belong to user table
+            $profileData = Arr::except($validated, ['first_name', 'last_name', 'email', 'profile_image']);
             
             // Filter out empty values to preserve existing data
             $filteredProfileData = [];
@@ -186,11 +178,11 @@ class ProfileController extends Controller
                 // Only update if the value is not null and not empty string
                 if ($value !== null && $value !== '') {
                     $filteredProfileData[$key] = $value;
-                    Log::info("Will update {$key}: '{$value}'");
+                    Log::info("Will update profile {$key}: '{$value}'");
                 }
             }
             
-            // Update the existing profile
+            // Update the existing profile (this includes title and company)
             if (!empty($filteredProfileData)) {
                 foreach ($filteredProfileData as $key => $value) {
                     $profile->$key = $value;
@@ -208,7 +200,8 @@ class ProfileController extends Controller
             $user->load('profile');
             
             Log::info('=== PROFILE UPDATE COMPLETED ===');
-            Log::info('Final avatar base64: ' . ($profile->profile_image_base64 ? 'Yes' : 'No'));
+            Log::info('Final title from profile: ' . ($profile->title ?? 'not set'));
+            Log::info('Final company from profile: ' . ($profile->company ?? 'not set'));
 
             // Update profile completion percentage
             if (method_exists($user, 'updateProfileCompletion')) {

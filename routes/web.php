@@ -7,6 +7,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PrivacySettingsController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\JobsController;  // Changed from JobController to JobsController
 use App\Models\Job;
 use App\Models\User;
 use Illuminate\Foundation\Application;
@@ -39,13 +40,18 @@ Route::get('/', function () {
                                 elseif ($user->profile_completed >= 50) $rating = 4.0;
                                 
                                 $avatar = null;
-                                if ($user->profile && $user->profile->avatar_url) {
+                                if ($user->profile && $user->profile->profile_image_base64) {
+                                    $avatar = $user->profile->profile_image_base64;
+                                } elseif ($user->profile && $user->profile->avatar_url) {
                                     $avatar = $user->profile->avatar_url;
                                 }
                                 
                                 $title = $user->title;
                                 if (!$title && $user->profile && $user->profile->title) {
                                     $title = $user->profile->title;
+                                }
+                                if (!$title && $user->profile && $user->profile->position) {
+                                    $title = $user->profile->position;
                                 }
                                 
                                 return [
@@ -67,6 +73,7 @@ Route::get('/', function () {
         'laravelVersion' => Application::VERSION,
         'phpVersion'     => PHP_VERSION,
         'jobs'           => $jobs,
+        'featuredTalents' => $featuredTalents,
     ]);
 })->name('home');
 
@@ -77,7 +84,7 @@ Route::get('/jobs/{id}', function ($id) {
 })->name('jobs.show');
 
 // Navigation Pages
-Route::get('/find-jobs', [PageController::class, 'findJobs'])->name('pages.findJobs');
+Route::get('/find-jobs', [JobsController::class, 'index'])->name('pages.findJobs');  // Changed to JobsController
 Route::get('/find-talents', [PageController::class, 'findTalents'])->name('pages.findTalents');
 Route::get('/how-it-works', [PageController::class, 'howItWorks'])->name('pages.howItWorks');
 Route::get('/about', [PageController::class, 'about'])->name('pages.about');
@@ -86,7 +93,7 @@ Route::get('/jobs', [PageController::class, 'jobs'])->name('jobs');
 // User Profile Routes
 Route::get('/user-profile', [ProfileController::class, 'show'])->middleware('auth')->name('pages.userProfile');
 Route::get('/easy-apply-job', [PageController::class, 'easyApplyJob'])->middleware(['auth', 'verified'])->name('pages.easyApplyJob');
-Route::get('/search-jobs', [PageController::class, 'searchJobs'])->middleware(['auth', 'verified'])->name('pages.searchJobs');
+Route::get('/search-jobs', [JobsController::class, 'searchJobs'])->middleware(['auth', 'verified'])->name('search-jobs');
 
 // Contact Routes
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
@@ -191,5 +198,8 @@ Route::middleware(['auth', 'admin'])->prefix('Admin')->name('admin.')->group(fun
 // Google Authentication Routes
 Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('google.redirect');
 Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('google.callback');
+
+// Talent Profile Route
+Route::get('/talent/{id}', [App\Http\Controllers\TalentController::class, 'show'])->name('talent.show');
 
 require __DIR__ . '/auth.php';
