@@ -370,29 +370,42 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
         return null;
     };
 
-    // Safely get skills array from talent data
+    // Safely get skills array from talent data - FIXED VERSION
     const getTalentSkills = (talent) => {
         let skillsArray = [];
-        if (talent.skills && Array.isArray(talent.skills)) {
+        
+        // Check if skills exists
+        if (!talent.skills) {
+            return skillsArray;
+        }
+        
+        // If it's already an array
+        if (Array.isArray(talent.skills)) {
             skillsArray = talent.skills;
-        } else if (talent.tech && Array.isArray(talent.tech)) {
-            skillsArray = talent.tech;
-        } else if (talent.skills && typeof talent.skills === 'string') {
+        } 
+        // If it's a string
+        else if (typeof talent.skills === 'string') {
             try {
+                // Try to parse as JSON
                 const parsed = JSON.parse(talent.skills);
-                if (Array.isArray(parsed)) skillsArray = parsed;
+                if (Array.isArray(parsed)) {
+                    skillsArray = parsed;
+                } else {
+                    // If not JSON array, split by comma
+                    skillsArray = talent.skills.split(',').map(s => s.trim());
+                }
             } catch (e) {
-                skillsArray = [talent.skills];
-            }
-        } else if (talent.tech && typeof talent.tech === 'string') {
-            try {
-                const parsed = JSON.parse(talent.tech);
-                if (Array.isArray(parsed)) skillsArray = parsed;
-            } catch (e) {
-                skillsArray = [talent.tech];
+                // If JSON parsing fails, split by comma
+                skillsArray = talent.skills.split(',').map(s => s.trim());
             }
         }
-        return skillsArray.slice(0, 3);
+        // If it's something else (like object)
+        else if (typeof talent.skills === 'object') {
+            skillsArray = Object.values(talent.skills);
+        }
+        
+        // Filter out any non-string values and limit to 3
+        return skillsArray.filter(skill => typeof skill === 'string' && skill.length > 0).slice(0, 3);
     };
 
     return (

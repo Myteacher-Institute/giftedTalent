@@ -1,3 +1,4 @@
+import '../../css/Dashboard.css';
 import '../../css/search-job.css';
 import { useState, useEffect } from 'react';
 import { Head, router, Link } from '@inertiajs/react';

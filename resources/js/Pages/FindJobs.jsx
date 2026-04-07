@@ -1,5 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
+import '../../css/Dashboard.css';
 import AppNavbar from '../Components/AppNavbar';
 
 export default function FindJobs({ auth, jobs: initialJobs, jobTypes: initialJobTypes }) {

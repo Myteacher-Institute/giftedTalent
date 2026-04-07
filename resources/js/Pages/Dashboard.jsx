@@ -325,7 +325,7 @@ export default function Dashboard({
     useEffect(() => {
         const hasShown = localStorage.getItem('profileCompleteShown');
         if (profileComplete === 100 && !hasShown) {
-            alertify.success('Congratulations! Your profile is 100% complete! 🎉', 3);
+            alertify.success('Congratulations! Your profile is 100% complete!', 3);
             localStorage.setItem('profileCompleteShown', 'true');
         }
     }, [profileComplete]);
@@ -525,7 +525,7 @@ export default function Dashboard({
                             {profileComplete === 100 ? (
                                 <div className="alert-success">
                                     <i className="fa-solid fa-check-circle"></i>
-                                    <p>Your profile is 100% complete! 🎉</p>
+                                    <p>Your profile is 100% complete! <i className="fa-solid fa-party-horn"></i></p>
                                 </div>
                             ) : profileComplete > 0 && profileComplete < 100 ? (
                                 <div className="alert-warning">
@@ -588,7 +588,7 @@ export default function Dashboard({
                             {recommendedJobs && recommendedJobs.length > 0 && (
                                 <div className="jobs-section">
                                     <div className="section-header">
-                                        <h2>🎯 Recommended for You</h2>
+                                        <h2><i className="fa-solid fa-bullseye"></i> Recommended for You</h2>
                                         <span>Based on your profile and skills</span>
                                     </div>
                                     <div className="jobs">
