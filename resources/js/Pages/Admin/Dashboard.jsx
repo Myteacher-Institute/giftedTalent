@@ -1,7 +1,12 @@
 import { Head } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
+<<<<<<< HEAD
 import '../../../css/admindashboard.css';
+=======
+import '/resources/css/admindashboard.css';
+import ApplicationLogo from '@/Components/ApplicationLogo';
+>>>>>>> dad5ab62fe631bcbf0c6912d86c0e4101eb72057
 
 export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filters: initialFilters, auth, unreadNotifications }) {
     console.log('Initial Jobs from server:', initialJobs);
@@ -397,6 +402,7 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
                         <div className="section-header">
                             <h3>Recent Job Posts ({filteredJobs.length})</h3>
                         </div>
+                        
 
                         <div className="jobs-list">
                             {filteredJobs.length > 0 ? (

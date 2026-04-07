@@ -83,8 +83,6 @@ class User extends Authenticatable
         return $this->hasMany(Experience::class);
     }
 
-
-
     /**
      * Get the user's resumes.
      */

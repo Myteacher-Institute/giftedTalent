@@ -15,7 +15,42 @@ class PageController extends Controller
      */
     public function findJobs(): Response
     {
-        return Inertia::render('FindJobs');
+        $user = Auth::user();
+        
+        // Get all active jobs from job_posts table
+        $jobs = Job::where('status', 'open')
+                    ->orderBy('created_at', 'desc')
+                    ->get()
+                    ->map(function($job) {
+                        return [
+                            'id' => $job->id,
+                            'title' => $job->job_title ?? $job->title ?? 'Job Title',
+                            'company' => $job->company_name ?? $job->company ?? 'Company',
+                            'location' => $job->company_location ?? $job->location ?? 'Location',
+                            'job_type' => $job->job_type ?? 'Full-time',
+                            'salary_range' => $job->salary_range ?? $job->salary ?? null,
+                            'description' => $job->description ?? '',
+                            'tags' => is_array($job->required_skills) ? $job->required_skills : [],
+                            'posted_at' => $job->created_at ? $job->created_at->diffForHumans() : 'Recently',
+                            'easy_apply' => $job->easy_apply ?? false,
+                            'is_featured' => $job->is_featured ?? false,
+                            'company_logo' => $job->logo_url ?? null,
+                        ];
+                    });
+        
+        // Get job types for filter
+        $jobTypes = Job::where('status', 'open')
+                        ->distinct()
+                        ->pluck('job_type')
+                        ->filter()
+                        ->values()
+                        ->toArray();
+        
+        return Inertia::render('FindJobs', [
+            'auth' => ['user' => $user],
+            'jobs' => $jobs,
+            'jobTypes' => $jobTypes,
+        ]);
     }
 
     /**
