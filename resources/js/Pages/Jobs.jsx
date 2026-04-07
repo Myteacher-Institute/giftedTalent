@@ -192,7 +192,7 @@ export default function Jobs({ jobs = [], auth }) {
                     <nav>
                         <div className='logo-search'>
                             <div className="logo">
-                                <a className="logo">
+                                <a>
                                     <ApplicationLogo className="w-20 h-10 mt-6 mr-2" />
                                 </a>
                             </div>

@@ -43,7 +43,7 @@ nav {
 }
 
 .logo {
-    margin: 0;
+    margin: 0 0 4px 0;
     padding: 0;
 }
 
@@ -57,6 +57,8 @@ nav {
 }
 
 .logo a {
+    display: flex;
+    justify-content: flex-start;
     color: #4B5563;
     font-size: 16px;
     text-align: center;
@@ -64,23 +66,29 @@ nav {
     margin-right: 0;
 }
 
+@media (min-width: 353px) and (max-width: 480px) {
+    .logo {
+        font-size: 18px;
+        margin-bottom: 1.4rem;
+    }
+}
+
 @media (min-width: 768px) {
-    .logo a {
+    .logo {
         font-size: 18px;
         margin-right: 5rem;
+        margin-bottom: 1rem;
     }
 }
 
-@media (min-width: 1024px) {
-    .logo a {
+@media (min-width: 1024px) and (max-width: 1600px) {
+    .logo {
         font-size: 20px;
-        margin-right: 10rem;
+        margin-right: 12rem;
+        margin-bottom: 1.4rem;
     }
 }
 
-/* .logo a span {
-    color: #3B82F6;
-} */
 
 .logo-search {
     display: flex;
@@ -141,6 +149,7 @@ nav {
 @media (min-width: 1024px) {
     .nav-buttons {
         width: auto;
+        margin-left: 2.2rem;
     }
 }
 
@@ -932,15 +941,19 @@ footer {
     color: #000;
 }
 
-
-@media (max-width: 480px) {
+@media (max-width: 480px){
     .home-screen {
         padding-top: 0;
     }
-
+    
     .feature-jobs,
     .featured-talents {
         padding: 40px 12px;
+    }
+
+    .job-card {
+        padding: 0 1.5rem;
+        margin: 0 auto;
     }
 
     .footer-right {
