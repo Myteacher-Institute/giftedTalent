@@ -147,7 +147,7 @@ function Hero() {
             <div className="circle2"></div>
             <div className="hero-left">
                 <h1>Discover opportunities. <span>Showcase Your Talent.</span></h1>
-                <p>Connect with top employers and talented professionals. Your dream job or ideal candidate is just a click away.</p>
+                <p>Connect with top employers and talented professionals. <br></br> Your dream job or ideal candidate is just a click away.</p>
                 <div className="hero-buttons">
                     <button className="btn-primary">Find Jobs</button>
                     <button className="btn-secondary">Hire Talent</button>
@@ -580,7 +580,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [] })
                 <footer>
                     <div className="footer-top">
                         <div className="footer-left">
-                            <a href="#" className="brand" onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
+                            <a href="/" className="brand" onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
                                 <ApplicationLogo className="logo" />
                             </a>
                         </div>

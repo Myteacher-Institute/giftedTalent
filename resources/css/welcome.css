@@ -18,6 +18,13 @@ body {
     width: 100%;
 }
 
+.hero-left p {
+    color: #4B5563;
+    line-height: 1.4;
+    margin-top: 20px;
+    padding: 0 auto;
+}
+
 /* Story Section */
 .about-hero-content {
     padding: 10px 0 80px 0;
@@ -1063,6 +1070,10 @@ footer {
     gap: 1rem;
     align-items: center;
     font-size: 14px;
+    /* padding: 0 1.5rem; */
+}
+
+.footer-top .footer-left {
     padding: 0 1.5rem;
 }
 
@@ -1097,6 +1108,7 @@ footer {
 }
 
 @media (min-width: 1024px) {
+
     .footer-top {
         display: flex;
         flex-direction: column;
@@ -1138,8 +1150,6 @@ footer {
     color: #000;
     font-weight: 600;
     font-size: 14px;
-    /* margin-top: 6rem; */
-    margin-left: 0;
     white-space: nowrap;
 }
 
@@ -1197,7 +1207,7 @@ footer {
     .footer-right {
         display: flex;
         flex-direction: row;
-        gap: 1.2rem !important;
+        gap: 1rem !important;
         margin-top: 2.2rem;
     }
 
@@ -1212,6 +1222,25 @@ footer {
     }
 }
 
+@media (max-width: 353px) {
+    .footer-top {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        align-items: center;
+        font-size: 14px;
+        padding: 0 1.5rem;
+    }
+
+    .footer-right {
+        display: flex;
+        flex-direction: row;
+        gap: 1rem !important;
+        margin-top: 2.2rem;
+        padding: 0 1.7;
+    }
+}
+
 /* Ensure touch-friendly buttons >=44px height */
 @media (max-width: 768px) {
 
@@ -1223,5 +1252,12 @@ footer {
         min-height: 48px;
         padding: 12px 20px;
         font-size: 16px;
+    }
+}
+
+@media (max-width: 820px) {
+    .hero-left h1 {
+        display: flex;
+        flex-direction: column;
     }
 }

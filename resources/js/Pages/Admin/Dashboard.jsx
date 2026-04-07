@@ -474,7 +474,7 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
                     <footer>
                         <div className="footer-top">
                             <div className="footer-left">
-                                <a href="#" className="brand" onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
+                                <a href="/" className="brand" onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
                                     <ApplicationLogo className="logo" />
                                 </a>
                             </div>
