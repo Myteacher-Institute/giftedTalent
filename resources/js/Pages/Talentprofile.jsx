@@ -98,7 +98,7 @@ export default function TalentProfile({ auth, talent }) {
                                     </div>
                                 )}
                                 <div className="talent-stat-item">
-                                    <span className="talent-stat-value">⭐ {talent.rating || '4.5'}</span>
+                                    <span className="talent-stat-value"><i className="fa-solid fa-star"></i> {talent.rating || 'N/A'}</span>
                                     <span className="talent-stat-label">Rating</span>
                                 </div>
                             </div>
