@@ -1,17 +1,8 @@
-<<<<<<< HEAD
-import { Head } from '@inertiajs/react';
-import { useState } from 'react';
-import '../../css/EasyApplyJob.css';
-// import '@/css/EasyApplyJob.css';
-// import AuthenticatedLayout from '@/js/Layouts/AuthenticatedLayout';
-import AuthenticatedLayout from '../Layouts/AuthenticatedLayout';
-=======
 import { Head, Link, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import '../../css/EasyApplyJob.css';
 import '../../css/nav.css';
 import AppNavbar from '../Components/AppNavbar';
->>>>>>> dad5ab62fe631bcbf0c6912d86c0e4101eb72057
 
 export default function EasyApplyJob({ auth, profile }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
