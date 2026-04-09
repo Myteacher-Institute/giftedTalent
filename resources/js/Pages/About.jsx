@@ -29,14 +29,17 @@ function Nav({ auth }) {
     return (
         <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
             <a className="logo">
-                <ApplicationLogo className="w-10 h-10 mr-2" />
+                <ApplicationLogo className="w-20 h-10 mr-2" />
             </a>
             <ul className={`nav-links ${isActive ? 'active' : ''}`}>
                 <li><Link href="/" className="nav-link">Home</Link></li>
                 <li><Link href="/jobs" className="nav-link">Find Jobs</Link></li>
                 <li><Link href="/find-talents" className="nav-link">Find Talents</Link></li>
                 <li><Link href="/how-it-works" className="nav-link">How It Works</Link></li>
-                <li><Link href="/about" className="nav-link active">About</Link></li>
+                <li><Link href="/about" className="nav-link">About</Link></li>
+                <li><Link href="/contact" className="nav-link">Contact</Link></li>
+                <li><Link href="/privacy" className="nav-link">Privacy</Link></li>
+                <li><Link href="/guidelines" className="nav-link">Guidelines</Link></li>
             </ul>
             <div className="nav-right">
                 <div className="auth-links">
@@ -229,22 +232,32 @@ export default function About() {
 
                 {/* FOOTER */}
                 <footer>
-                    <div className="footer-left">
-                        <a className="logo">
-                            <ApplicationLogo className="w-10 h-10 mr-2" />
-                        </a>
-                        <div>
-                            <p>©</p>
-                            <span>2026</span>
+                    <div className="footer-top">
+                        <div className="footer-left">
+                            <a href="#" className="brand" onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
+                                <ApplicationLogo className="logo" />
+                            </a>
+                        </div>
+
+                        <div className="footer-right">
+                            <a href="/about">About</a>
+                            <a href="/contact">Contact</a>
+                            <a href="/privacy">Privacy Policy</a>
+                            <a href="/guidelines">Community Guideline</a>
                         </div>
                     </div>
 
-                    <div className="footer-right">
-                        <a href="/about">About</a>
-                        <a href="/contact">Contact</a>
-                        <a href="/privacy">Privacy Policy</a>
-                        <a href="/guidelines">Community Guideline</a>
+                    <div className="footer-bottom">
+                        <div className='copyright'>
+                            <p>©</p>
+                            <span>2026</span>
+                        </div>
+
+                        <p>
+                            <span>Powered by:</span> MyTeacher Institute. All rights reserved.
+                        </p>
                     </div>
+
                 </footer>
             </div>
         </>

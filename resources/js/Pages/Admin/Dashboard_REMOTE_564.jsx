@@ -1,8 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
-import '/resources/css/admindashboard.css';
-import ApplicationLogo from '@/Components/ApplicationLogo';
+import '../../../css/admindashboard.css';
 
 export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filters: initialFilters, auth, unreadNotifications }) {
     console.log('Initial Jobs from server:', initialJobs);
@@ -140,21 +139,11 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
             <div className="dashboard-container">
                 {/* Sidebar */}
                 <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-                    {/* Close button for mobile */}
-                    <button
-                        className="sidebar-close-btn"
-                        onClick={() => setSidebarOpen(false)}
-                        aria-label="Close sidebar"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="red" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="18" y1="6" x2="6" y2="18" />
-                            <line x1="6" y1="6" x2="18" y2="18" />
-                        </svg>
-                    </button>
-
-                    <a className="logo">
-                        <ApplicationLogo className="w-20 h-10 mr-2" />
-                    </a>
+                    <div className="logo">
+                        <a href='#' onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
+                            GiftedTalents<span>.online</span>
+                        </a>
+                    </div>
 
                     <nav className="sidebar-nav">
                         <div>
@@ -164,7 +153,7 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
                         </div>
                         <ul>
                             <li>
-                                <a href="/Admin/dashboard" onClick={(e) => { e.preventDefault(); navigateTo('/Admin/dashboard'); }}>
+                                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/Admin/dashboard'); }}>
                                     <img src="/assets/svg/column.svg" alt="" className="column-icon" />Dashboard
                                 </a>
                             </li>
@@ -174,17 +163,17 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
                                 </a>
                             </li>
                             <li>
-                                <a href="candidates" onClick={(e) => { e.preventDefault(); navigateTo('/Admin/candidates'); }}>
+                                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/Admin/candidates'); }}>
                                     <img src="/assets/svg/forward-out.svg" alt="" className="forward-out-icon" />Candidates
                                 </a>
                             </li>
                             <li>
-                                <a href="/messages" onClick={(e) => { e.preventDefault(); navigateTo('/Admin/messages'); }}>
+                                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/Admin/messages'); }}>
                                     <img src="/assets/svg/message.svg" alt="" className="message-icon" />Messages
                                 </a>
                             </li>
                             <li>
-                                <a href="/setting" onClick={(e) => { e.preventDefault(); navigateTo('/Admin/settings'); }}>
+                                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/Admin/settings'); }}>
                                     <img src="/assets/svg/setting.svg" alt="" className="setting-icon" />Settings
                                 </a>
                             </li>
@@ -398,7 +387,6 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
                         <div className="section-header">
                             <h3>Recent Job Posts ({filteredJobs.length})</h3>
                         </div>
-                        
 
                         <div className="jobs-list">
                             {filteredJobs.length > 0 ? (
@@ -408,26 +396,9 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
                                             <div className="company-info">
                                                 <div className="user-profile">
                                                     <div className="avatar">
-                                                        {job.company_logo_url ? (
-                                                            <img
-                                                                src={job.company_logo_url}
-                                                                alt={`${job.company_name} logo`}
-                                                                className="company-logo"
-                                                                onError={(e) => {
-                                                                    e.target.style.display = 'none';
-                                                                    const parent = e.target.parentElement;
-                                                                    if (parent) {
-                                                                        parent.innerHTML = `<div class="company-initial">${job.company_name?.charAt(0)?.toUpperCase() || 'C'}</div>`;
-                                                                    }
-                                                                }}
-                                                            />
-                                                        ) : (
-                                                            <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
-                                                                <path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" />
-                                                            </svg>
-                                                        )}
-
-
+                                                        <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+                                                            <path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" />
+                                                        </svg>
                                                     </div>
                                                 </div>
                                                 <div className="company-info-header">
@@ -473,32 +444,22 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
 
                     {/* FOOTER */}
                     <footer>
-                        <div className="footer-top">
-                            <div className="footer-left">
-                                <a href="#" className="brand" onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
-                                    <ApplicationLogo className="logo" />
-                                </a>
-                            </div>
-
-                            <div className="footer-right">
-                                <a href="/about">About</a>
-                                <a href="/contact">Contact</a>
-                                <a href="/privacy">Privacy Policy</a>
-                                <a href="/guidelines">Community Guideline</a>
-                            </div>
-                        </div>
-
-                        <div className="footer-bottom">
-                            <div className='copyright'>
+                        <div className="footer-left">
+                            <a href="#" className="brand" onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
+                                GiftedTalents<span>.online</span>
+                            </a>
+                            <div>
                                 <p>©</p>
                                 <span>2026</span>
                             </div>
-
-                            <p>
-                                <span>Powered by:</span> MyTeacher Institute. All rights reserved.
-                            </p>
                         </div>
 
+                        <div className="footer-right">
+                            <a href="/about" onClick={(e) => { e.preventDefault(); navigateTo('/about'); }}>About</a>
+                            <a href="contact" onClick={(e) => { e.preventDefault(); navigateTo('/contact'); }}>Contact</a>
+                            <a href="privacy" onClick={(e) => { e.preventDefault(); navigateTo('/privacy'); }}>Privacy Policy</a>
+                            <a href="guidelines" onClick={(e) => { e.preventDefault(); navigateTo('/guidelines'); }}>Community Guideline</a>
+                        </div>
                     </footer>
                 </main>
             </div>
