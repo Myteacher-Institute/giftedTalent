@@ -1,6 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
-import '../../css/Dashboard.css';
 import '../../css/jobs.css';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 
