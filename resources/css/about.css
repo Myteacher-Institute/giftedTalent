@@ -689,71 +689,154 @@ footer {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 1.5rem;
-    margin-top: 0;
+    /* padding: 1.5rem 1.5rem; */
+    margin-top: 1rem;
     gap: 2rem;
     align-items: center;
-    background: #FFFFFF;
-    border-top: 1px solid #EDF2F7;
 }
 
-@media (min-width: 768px) {
+/* Desktop footer */
+@media (min-width: 1024px) {
     footer {
-        flex-direction: row;
-        justify-content: space-between;
+        padding: 1.5rem 0;
+        gap: 3rem;
+        align-items: center;
     }
 }
 
-.footer-left {
-    width: 18%;
+.footer-top {
     display: flex;
-    gap: 2.5rem;
+    flex-direction: column;
+    gap: 1rem;
     align-items: center;
     font-size: 14px;
-    justify-content: space-between;
-    margin-left: 1rem;
+    padding: 0 1.5rem;
 }
 
-.footer-left .brand {
+@media (min-width: 768px) {
+    .footer-top {
+        flex-direction: row;
+        gap: 2rem;
+    }
+}
+
+.footer-top .brand {
     text-decoration: none;
     font-weight: 600;
+    margin-left: 0;
     color: #222;
 }
 
-.footer-left .brand span {
+.footer-top .brand span {
     color: #3B82F6;
 }
 
-.footer-left div {
+.footer-top div {
     display: flex;
-    gap: 1rem;
+    gap: 10px;
 }
 
 .footer-right {
-    width: 82%;
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 7rem;
+    flex-direction: column;
+    gap: 15rem !important;
+    margin: 0;
+}
+
+@media (min-width: 1024px) {
+    .footer-top {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        align-items: center;
+        font-size: 14px;
+        padding: 0 1.5rem;
+    }
+
+    .footer-right {
+        display: flex;
+        flex-direction: row;
+        gap: 5rem;
+        flex-wrap: nowrap;
+    }
 }
 
 .footer-right a {
+    display: flex;
+    justify-content: space-around;
     text-decoration: none;
-    color: #4B5563;
+    color: #000;
+    font-weight: 600;
     font-size: 14px;
-    transition: color 0.2s ease;
+    margin-top: 6rem;
+    margin-left: 0;
+    white-space: nowrap;
 }
 
 .footer-right a:hover {
     color: #0A2463;
 }
 
+@media (max-width: 768px) {
+
+    .feature-jobs,
+    .featured-talents {
+        padding: 60px 16px;
+    }
+}
+
 @media (max-width: 480px) {
-    .footer-right {
-        gap: 1rem;
+    .home-screen {
+        padding-top: 0;
     }
 
-    .footer-right a {
-        font-size: 12px;
+    .feature-jobs,
+    .featured-talents {
+        padding: 40px 12px;
     }
+
+    /* Prevent any overflow */
+    * {
+        max-width: 100%;
+    }
+
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+}
+
+/* Ensure touch-friendly buttons >=44px height */
+@media (max-width: 768px) {
+
+    button,
+    .btn-primary,
+    .btn-secondary,
+    .search-button,
+    .apply-btn {
+        min-height: 48px;
+        padding: 12px 20px;
+        font-size: 16px;
+    }
+}
+
+.footer-bottom {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6B7280;
+}
+
+.footer-bottom .copyright {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    margin-bottom: 0.5rem;
+}
+
+.footer-bottom p span {
+    font-weight: 600;
+    color: #000;
 }
