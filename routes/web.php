@@ -11,6 +11,7 @@ use App\Http\Controllers\JobsController;
 use App\Models\Job;
 use App\Models\User;
 use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -118,9 +119,9 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     // ========== SETTINGS ROUTE ==========
     Route::get('/settings', function () {
         return Inertia::render('Settings', [
-            'user' => auth()->user(),
-            'profile' => auth()->user()->profile,
-            'auth' => ['user' => auth()->user()],
+            'user' => Auth::user(),
+            'profile' => Auth::user()->profile,
+            'auth' => ['user' => Auth::user()],
         ]);
     })->name('settings');
     // ====================================

@@ -10,17 +10,15 @@ return new class extends Migration
     {
         Schema::table('notifications', function (Blueprint $table) {
             // Add missing columns if they don't exist
-            if (!Schema::hasColumn('notifications', 'type')) {
-                $table->string('type')->nullable()->after('id');
-            }
+            // Note: 'type' already exists in Laravel's notifications table
             if (!Schema::hasColumn('notifications', 'title')) {
-                $table->string('title')->nullable()->after('type');
+                $table->string('title')->nullable();
             }
             if (!Schema::hasColumn('notifications', 'message')) {
-                $table->text('message')->nullable()->after('title');
+                $table->text('message')->nullable();
             }
             if (!Schema::hasColumn('notifications', 'link')) {
-                $table->string('link')->nullable()->after('message');
+                $table->string('link')->nullable();
             }
         });
     }

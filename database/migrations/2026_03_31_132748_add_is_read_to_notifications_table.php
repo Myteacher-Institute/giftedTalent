@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('notifications', function (Blueprint $table) {
             if (! Schema::hasColumn('notifications', 'is_read')) {
-                $table->boolean('is_read')->default(false)->after('message');
+                $table->boolean('is_read')->default(false);
             }
         });
     }
