@@ -55,10 +55,81 @@ class PageController extends Controller
 
     /**
      * Display the Find Talents page.
+     * Fetches all registered users with profile_completed >= 50
      */
     public function findTalents(): Response
     {
-        return Inertia::render('FindTalents');
+        $user = Auth::user();
+        
+        // Fetch all registered users with profiles (similar to featured talents)
+        $talents = User::where('profile_completed', '>=', 50)
+            ->with('profile')
+            ->orderBy('profile_completed', 'desc')
+            ->get()
+            ->map(function($user) {
+                // Get skills
+                $skills = [];
+                if ($user->skills) {
+                    $skills = is_string($user->skills) ? json_decode($user->skills, true) : $user->skills;
+                }
+                if (empty($skills) && $user->profile && $user->profile->skills) {
+                    $skills = is_string($user->profile->skills) ? json_decode($user->profile->skills, true) : $user->profile->skills;
+                }
+                if (empty($skills)) {
+                    $skills = ['Available for work'];
+                }
+                
+                // Calculate rating based on profile completion
+                $rating = 3.5;
+                if ($user->profile_completed >= 90) $rating = 5.0;
+                elseif ($user->profile_completed >= 80) $rating = 4.8;
+                elseif ($user->profile_completed >= 70) $rating = 4.5;
+                elseif ($user->profile_completed >= 60) $rating = 4.2;
+                elseif ($user->profile_completed >= 50) $rating = 4.0;
+                
+                // Get avatar
+                $avatar = null;
+                if ($user->profile && $user->profile->profile_image_base64) {
+                    $avatar = $user->profile->profile_image_base64;
+                } elseif ($user->profile && $user->profile->avatar_url) {
+                    $avatar = $user->profile->avatar_url;
+                }
+                
+                // Get title
+                $title = $user->title;
+                if (!$title && $user->profile && $user->profile->title) {
+                    $title = $user->profile->title;
+                }
+                if (!$title && $user->profile && $user->profile->position) {
+                    $title = $user->profile->position;
+                }
+                
+                // Get location
+                $location = null;
+                if ($user->profile && $user->profile->city) {
+                    $location = $user->profile->city;
+                } elseif ($user->location) {
+                    $location = $user->location;
+                }
+                
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'title' => $title ?? 'Professional',
+                    'location' => $location ?? 'Location not set',
+                    'avatar' => $avatar,
+                    'avatar_url' => $avatar,
+                    'profile_image_base64' => $avatar,
+                    'skills' => $skills,
+                    'rating' => $rating,
+                    'profile_completed' => $user->profile_completed,
+                ];
+            });
+        
+        return Inertia::render('FindTalents', [
+            'auth' => ['user' => Auth::user()],
+            'talents' => $talents,
+        ]);
     }
 
     /**
