@@ -80,6 +80,7 @@ class AdminController extends Controller
                 return [
                     'id'               => $job->id,
                     'company_name'     => $job->company_name,
+                    'company_logo_url' => $job->company_logo_url,
                     'location'         => $job->company_location,
                     'job_type'         => $job->job_type,
                     'salary'           => $job->salary_range,
@@ -207,7 +208,7 @@ class AdminController extends Controller
             'applicants_count' => 0,
         ]);
 
-        return redirect()->route('admin.jobs')->with('success', 'Job created successfully!');
+        return redirect()->route('admin.dashboard')->with('success', 'Job created successfully!');
     }
 
     public function editJob($id)
@@ -233,7 +234,7 @@ class AdminController extends Controller
 
         $job->update($request->all());
 
-        return redirect()->route('admin.jobs')->with('success', 'Job updated successfully!');
+        return redirect()->route('admin.dashboard')->with('success', 'Job updated successfully!');
     }
 
     public function deleteJob($id)
@@ -241,7 +242,7 @@ class AdminController extends Controller
         $job = Job::findOrFail($id);
         $job->delete();
 
-        return redirect()->route('admin.jobs')->with('success', 'Job deleted successfully!');
+        return redirect()->route('admin.dashboard')->with('success', 'Job deleted successfully!');
     }
 
     /**

@@ -10,7 +10,7 @@ class Job extends Model
 {
     use HasFactory;
 
-    protected $table = 'jobs';
+    protected $table = 'job_posts';
 
     protected $fillable = [
         'user_id',
@@ -23,13 +23,13 @@ class Job extends Model
         'description',
         'status',
         'applicants_count',
-        'posted_at'
+        'posted_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'posted_at' => 'datetime',
+            'posted_at'        => 'datetime',
             'applicants_count' => 'integer',
         ];
     }
@@ -42,5 +42,24 @@ class Job extends Model
     public function applications(): HasMany
     {
         return $this->hasMany(JobApplication::class);
+    }
+
+    public function getTagsAttribute($value)
+    {
+        if (empty($value)) {
+            return [];
+        }
+
+        $tags = json_decode($value, true);
+        if (is_array($tags)) {
+            return $tags;
+        }
+
+        // If it's already a string like '["React","PHP"]'
+        if (is_string($value) && str_starts_with($value, '[')) {
+            return json_decode($value, true) ?? [];
+        }
+
+        return [];
     }
 }

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import '../../css/contact.css';
 import '../../css/nav.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import ApplicationLogo from '@/Components/ApplicationLogo';
 
 // Nav Component
 function Nav() {
@@ -19,16 +20,18 @@ function Nav() {
 
     return (
         <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
-            <div className="logo">
-                GiftedTalent<span>.Online</span>
-            </div>
+            <a className="logo">
+                <ApplicationLogo className="w-20 h-10 mr-2" />
+            </a>
             <ul className={`nav-links ${isActive ? 'active' : ''}`}>
                 <li><Link href="/" className="nav-link">Home</Link></li>
                 <li><Link href="/jobs" className="nav-link">Find Jobs</Link></li>
                 <li><Link href="/find-talents" className="nav-link">Find Talents</Link></li>
                 <li><Link href="/how-it-works" className="nav-link">How It Works</Link></li>
                 <li><Link href="/about" className="nav-link">About</Link></li>
-                <li><Link href="/contact" className="nav-link active">Contact</Link></li>
+                <li><Link href="/contact" className="nav-link">Contact</Link></li>
+                <li><Link href="/privacy" className="nav-link">Privacy</Link></li>
+                <li><Link href="/guidelines" className="nav-link">Guidelines</Link></li>
             </ul>
             <div className="nav-right">
                 <div className="auth-links">
@@ -83,7 +86,7 @@ export default function Contact() {
             icon: <i className="fas fa-phone-alt contact-icon-font"></i>,
             title: "Call Us",
             details: ["+234 801 234 5678"],
-            link: "tel:+23480*******",
+            link: "tel:+2348012345678",
             linkText: "Call Now"
         },
         {
@@ -92,6 +95,13 @@ export default function Contact() {
             details: ["Chat with us 24/7"],
             link: "https://wa.me/2348012345678?text=Hello%20GiftedTalents",
             linkText: "Chat Now"
+        },
+        {
+            icon: <i className="fas fa-globe contact-icon-font"></i>,
+            title: "Visit Our Website",
+            details: ["Myteacher.ng"],
+            link: "https://myteacher.ng",
+            linkText: "Visit Website"
         }
     ];
 
@@ -224,20 +234,34 @@ export default function Contact() {
                     </div>
                 </section>
 
+                {/* FOOTER */}
                 <footer>
-                    <div className="footer-left">
-                        <a href="/" className="brand">GiftedTalents<span>.online</span></a>
-                        <div>
+                    <div className="footer-top">
+                        <div className="footer-left">
+                            <a href="#" className="brand" onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
+                                <ApplicationLogo className="logo" />
+                            </a>
+                        </div>
+
+                        <div className="footer-right">
+                            <a href="/about">About</a>
+                            <a href="/contact">Contact</a>
+                            <a href="/privacy">Privacy Policy</a>
+                            <a href="/guidelines">Community Guideline</a>
+                        </div>
+                    </div>
+
+                    <div className="footer-bottom">
+                        <div className='copyright'>
                             <p>©</p>
                             <span>2026</span>
                         </div>
+
+                        <p>
+                            <span>Powered by:</span> MyTeacher Institute. All rights reserved.
+                        </p>
                     </div>
-                    <div className="footer-right">
-                        <a href="/about">About</a>
-                        <a href="/contact">Contact</a>
-                        <a href="/privacy">Privacy Policy</a>
-                        <a href="/guidelines">Community Guideline</a>
-                    </div>
+
                 </footer>
             </div>
         </>

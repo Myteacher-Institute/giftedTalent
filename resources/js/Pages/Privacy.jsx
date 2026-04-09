@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import '../../css/privacy.css';
 import '../../css/nav.css';
+import ApplicationLogo from '@/Components/ApplicationLogo';
 
 // Nav Component
 function Nav() {
@@ -18,9 +19,9 @@ function Nav() {
 
     return (
         <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
-            <div className="logo">
-                GiftedTalent<span>.Online</span>
-            </div>
+            <a className="logo">
+                <ApplicationLogo className="w-20 h-10 mr-2" />
+            </a>
             <ul className={`nav-links ${isActive ? 'active' : ''}`}>
                 <li><Link href="/" className="nav-link">Home</Link></li>
                 <li><Link href="/jobs" className="nav-link">Find Jobs</Link></li>
@@ -28,7 +29,8 @@ function Nav() {
                 <li><Link href="/how-it-works" className="nav-link">How It Works</Link></li>
                 <li><Link href="/about" className="nav-link">About</Link></li>
                 <li><Link href="/contact" className="nav-link">Contact</Link></li>
-                <li><Link href="/privacy" className="nav-link active">Privacy</Link></li>
+                <li><Link href="/privacy" className="nav-link">Privacy</Link></li>
+                <li><Link href="/guidelines" className="nav-link">Guidelines</Link></li>
             </ul>
             <div className="nav-right">
                 <div className="auth-links">
@@ -170,19 +172,32 @@ export default function Privacy() {
 
                 {/* FOOTER */}
                 <footer>
-                    <div className="footer-left">
-                        <a href="/" className="brand">GiftedTalents<span>.online</span></a>
-                        <div>
+                    <div className="footer-top">
+                        <div className="footer-left">
+                            <a href="#" className="brand" onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
+                                <ApplicationLogo className="logo" />
+                            </a>
+                        </div>
+
+                        <div className="footer-right">
+                            <a href="/about">About</a>
+                            <a href="/contact">Contact</a>
+                            <a href="/privacy">Privacy Policy</a>
+                            <a href="/guidelines">Community Guideline</a>
+                        </div>
+                    </div>
+
+                    <div className="footer-bottom">
+                        <div className='copyright'>
                             <p>©</p>
                             <span>2026</span>
                         </div>
+
+                        <p>
+                            <span>Powered by:</span> MyTeacher Institute. All rights reserved.
+                        </p>
                     </div>
-                    <div className="footer-right">
-                        <a href="/about">About</a>
-                        <a href="/contact">Contact</a>
-                        <a href="/privacy">Privacy Policy</a>
-                        <a href="/guidelines">Community Guideline</a>
-                    </div>
+
                 </footer>
             </div>
         </>

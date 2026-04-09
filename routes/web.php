@@ -7,7 +7,9 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PrivacySettingsController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\JobsController;  // Changed from JobController to JobsController
 use App\Models\Job;
+use App\Models\User;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -16,15 +18,12 @@ use Inertia\Inertia;
 Route::get('/', function () {
     $jobs = Job::latest()->take(10)->get();
 
-    
-    // Get featured talents - users with 50%+ profile completion
     $featuredTalents = User::where('profile_completed', '>=', 50)
-                            ->with('profile')  // IMPORTANT: Load the profile relationship
+                            ->with('profile')
                             ->orderBy('profile_completed', 'desc')
                             ->take(6)
                             ->get()
                             ->map(function($user) {
-                                // Parse skills if they exist
                                 $skills = [];
                                 if ($user->skills) {
                                     $skills = is_string($user->skills) ? json_decode($user->skills, true) : $user->skills;
@@ -33,7 +32,6 @@ Route::get('/', function () {
                                     $skills = ['Available for work'];
                                 }
                                 
-                                // Calculate rating based on profile completion
                                 $rating = 3.5;
                                 if ($user->profile_completed >= 90) $rating = 5.0;
                                 elseif ($user->profile_completed >= 80) $rating = 4.8;
@@ -41,16 +39,19 @@ Route::get('/', function () {
                                 elseif ($user->profile_completed >= 60) $rating = 4.2;
                                 elseif ($user->profile_completed >= 50) $rating = 4.0;
                                 
-                                // FIX: Get avatar from profile relationship
                                 $avatar = null;
-                                if ($user->profile && $user->profile->avatar_url) {
+                                if ($user->profile && $user->profile->profile_image_base64) {
+                                    $avatar = $user->profile->profile_image_base64;
+                                } elseif ($user->profile && $user->profile->avatar_url) {
                                     $avatar = $user->profile->avatar_url;
                                 }
                                 
-                                // Also get title from profile if available
                                 $title = $user->title;
                                 if (!$title && $user->profile && $user->profile->title) {
                                     $title = $user->profile->title;
+                                }
+                                if (!$title && $user->profile && $user->profile->position) {
+                                    $title = $user->profile->position;
                                 }
                                 
                                 return [
@@ -72,6 +73,7 @@ Route::get('/', function () {
         'laravelVersion' => Application::VERSION,
         'phpVersion'     => PHP_VERSION,
         'jobs'           => $jobs,
+        'featuredTalents' => $featuredTalents,
     ]);
 })->name('home');
 
@@ -82,7 +84,7 @@ Route::get('/jobs/{id}', function ($id) {
 })->name('jobs.show');
 
 // Navigation Pages
-Route::get('/find-jobs', [PageController::class, 'findJobs'])->name('pages.findJobs');
+Route::get('/find-jobs', [JobsController::class, 'index'])->name('pages.findJobs');  // Changed to JobsController
 Route::get('/find-talents', [PageController::class, 'findTalents'])->name('pages.findTalents');
 Route::get('/how-it-works', [PageController::class, 'howItWorks'])->name('pages.howItWorks');
 Route::get('/about', [PageController::class, 'about'])->name('pages.about');
@@ -91,7 +93,7 @@ Route::get('/jobs', [PageController::class, 'jobs'])->name('jobs');
 // User Profile Routes
 Route::get('/user-profile', [ProfileController::class, 'show'])->middleware('auth')->name('pages.userProfile');
 Route::get('/easy-apply-job', [PageController::class, 'easyApplyJob'])->middleware(['auth', 'verified'])->name('pages.easyApplyJob');
-Route::get('/search-jobs', [PageController::class, 'searchJobs'])->middleware(['auth', 'verified'])->name('pages.searchJobs');
+Route::get('/search-jobs', [JobsController::class, 'searchJobs'])->middleware(['auth', 'verified'])->name('search-jobs');
 
 // Contact Routes
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
@@ -113,6 +115,16 @@ Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'ind
 
 // Authenticated User Routes
 Route::middleware(['auth', 'not_admin'])->group(function () {
+    // ========== SETTINGS ROUTE ==========
+    Route::get('/settings', function () {
+        return Inertia::render('Settings', [
+            'user' => auth()->user(),
+            'profile' => auth()->user()->profile,
+            'auth' => ['user' => auth()->user()],
+        ]);
+    })->name('settings');
+    // ====================================
+
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'read'])->name('notifications.read');
     Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'readAll'])->name('notifications.readAll');
@@ -123,35 +135,6 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
 
     Route::get('/profile/edit', [ProfileController::class, 'editExtendedProfile'])->name('profile.editExtended');
     Route::patch('/profile/extended', [ProfileController::class, 'updateExtendedProfile'])->name('profile.updateExtended');
-    
-    // Notification Preferences Routes
-    Route::get('/user/notification-preferences', [ProfileController::class, 'getNotificationPreferences'])->name('user.notification-preferences.get');
-    Route::put('/user/notification-preferences', [ProfileController::class, 'updateNotificationPreferences'])->name('user.notification-preferences.update');
-    
-    // CV Management - Using dedicated ResumeController
-    Route::get('/cv', [ResumeController::class, 'index'])->name('cv');
-    Route::post('/profile/resume', [ResumeController::class, 'store'])->name('profile.resume.store');
-    Route::delete('/profile/resume/{id}', [ResumeController::class, 'destroy'])->name('profile.resume.destroy');
-    Route::get('/profile/resume/{id}/download', [ResumeController::class, 'download'])->name('profile.resume.download');
-    Route::get('/profile/resume/{id}/view', [ResumeController::class, 'view'])->name('profile.resume.view');
-    
-    // User Profile Routes
-    Route::get('/user-profile', [ProfileController::class, 'show'])->name('pages.userProfile');
-    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
-    Route::get('/profile/edit', [ProfileController::class, 'editExtendedProfile'])->name('profile.editExtended');
-    Route::patch('/profile/extended', [ProfileController::class, 'updateExtendedProfile'])->name('profile.updateExtended');
-    
-    // Profile Management Routes for Settings
-    Route::put('/user/profile', [ProfileController::class, 'updateProfile'])->name('user.profile.update');
-    Route::get('/user/skills', [ProfileController::class, 'getSkills'])->name('user.skills.get');
-    Route::post('/user/skills', [ProfileController::class, 'addSkill'])->name('user.skills.add');
-    Route::delete('/user/skills/{skill}', [ProfileController::class, 'removeSkill'])->name('user.skills.remove');
-    Route::post('/user/upload-avatar', [ProfileController::class, 'uploadAvatar'])->name('user.avatar.upload');
-    Route::delete('/user/remove-avatar', [ProfileController::class, 'removeAvatar'])->name('user.avatar.remove');
-    
-    // Avatar Upload Routes (keeping for compatibility)
-    Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar'])->name('profile.avatar.upload');
-    Route::delete('/profile/avatar', [ProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
 
     Route::post('/profile/avatar', [ProfileController::class, 'uploadAvatar'])->middleware('auth')->name('profile.avatar.upload');
     Route::delete('/profile/avatar', [ProfileController::class, 'removeAvatar'])->middleware('auth')->name('profile.avatar.remove');
@@ -215,5 +198,8 @@ Route::middleware(['auth', 'admin'])->prefix('Admin')->name('admin.')->group(fun
 // Google Authentication Routes
 Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('google.redirect');
 Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('google.callback');
+
+// Talent Profile Route
+Route::get('/talent/{id}', [App\Http\Controllers\TalentController::class, 'show'])->name('talent.show');
 
 require __DIR__ . '/auth.php';

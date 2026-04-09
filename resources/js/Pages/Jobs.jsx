@@ -1,7 +1,8 @@
-<<<<<<< HEAD
 import { Head, Link, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
+import '../../css/Dashboard.css';
 import '../../css/jobs.css';
+import ApplicationLogo from '@/Components/ApplicationLogo';
 
 export default function Jobs({ jobs = [], auth }) {
     const [searchQuery, setSearchQuery] = useState('');
@@ -16,15 +17,6 @@ export default function Jobs({ jobs = [], auth }) {
         datePosted: '',
         status: ''
     });
-=======
-import React, { useState } from 'react';
-import { Link, router } from '@inertiajs/react';
-import AppNavbar from '../Components/AppNavbar';
-import '../../css/Dashboard.css';
-
-export default function DashboardLayout({ children, user, newJobsCount = 0, profile, profileComplete, profileStatus, stats }) {
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
->>>>>>> a71b3eb (just finished my privacy page and integrated it to backend and database)
 
     // Get unique values for dropdowns
     const uniqueTypes = [...new Set(jobs.map(job => job.job_type).filter(Boolean))];
@@ -201,7 +193,9 @@ export default function DashboardLayout({ children, user, newJobsCount = 0, prof
                     <nav>
                         <div className='logo-search'>
                             <div className="logo">
-                                <Link href="/" className="brand">GiftedTalents<span>.online</span></Link>
+                                <a className="logo">
+                                    <ApplicationLogo className="w-20 h-10 mt-6 mr-2" />
+                                </a>
                             </div>
 
                             <div className="search-bar">
@@ -246,7 +240,13 @@ export default function DashboardLayout({ children, user, newJobsCount = 0, prof
                 <section className="filters-section">
                     <div className="filters-header">
                         <h3>Filter Jobs</h3>
-                        <button onClick={clearFilters} className="clear-filters-btn">Clear All</button>
+                        <div>
+                            <button onClick={clearFilters} className="clear-filters-btn">Clear All</button>
+
+                            <div className="filter-actions">
+                                <button onClick={applyFilters} className="apply-filters-btn">Apply Filters</button>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="filters-grid">
@@ -333,9 +333,6 @@ export default function DashboardLayout({ children, user, newJobsCount = 0, prof
                         </div>
                     </div>
 
-                    <div className="filter-actions">
-                        <button onClick={applyFilters} className="apply-filters-btn">Apply Filters</button>
-                    </div>
                 </section>
 
                 {/* Job Results Count */}
@@ -417,7 +414,7 @@ export default function DashboardLayout({ children, user, newJobsCount = 0, prof
                                         </div>
                                         <h3>{job.job_title}</h3>
                                         <p className='job-description'>{job.description}</p>
-                                        
+
                                         {/* Tags Section */}
                                         {job.tags && job.tags.length > 0 && (
                                             <div className="job-tags">
@@ -447,6 +444,7 @@ export default function DashboardLayout({ children, user, newJobsCount = 0, prof
                                                 >
                                                     Apply now
                                                 </button>
+                                                {console.log(job)}
                                             </div>
                                         </div>
                                     </div>
@@ -463,17 +461,32 @@ export default function DashboardLayout({ children, user, newJobsCount = 0, prof
 
                 {/* FOOTER */}
                 <footer>
-                    <div className="footer-left">
-                        <a href="/" className="brand">GiftedTalents<span>.online</span></a>
-                        <span>© 2026</span>
+                    <div className="footer-top">
+                        <div className="footer-left">
+                            <a href="#" className="brand" onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
+                                <ApplicationLogo className="logo" />
+                            </a>
+                        </div>
+
+                        <div className="footer-right">
+                            <a href="/about">About</a>
+                            <a href="/contact">Contact</a>
+                            <a href="/privacy">Privacy Policy</a>
+                            <a href="/guidelines">Community Guideline</a>
+                        </div>
                     </div>
 
-                    <div className="footer-right">
-                        <a href="/about">About</a>
-                        <a href="/contact">Contact</a>
-                        <a href="/privacy">Privacy Policy</a>
-                        <a href="/guidelines">Community Guideline</a>
+                    <div className="footer-bottom">
+                        <div className='copyright'>
+                            <p>©</p>
+                            <span>2026</span>
+                        </div>
+
+                        <p>
+                            <span>Powered by:</span> MyTeacher Institute. All rights reserved.
+                        </p>
                     </div>
+
                 </footer>
             </div>
         </>

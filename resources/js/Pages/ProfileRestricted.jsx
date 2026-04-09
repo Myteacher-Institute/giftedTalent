@@ -1,45 +1,92 @@
-import { Head } from '@inertiajs/react';
-import AppNavbar from '../Components/AppNavbar';
+import { useState } from 'react';
+import { Link, router } from '@inertiajs/react';
 
-export default function ProfileRestricted({ auth, user, message }) {
+export default function ProfileRestricted({ children, auth, requiredAction, actionData = null }) {
+    const [showAuthModal, setShowAuthModal] = useState(false);
+    const [intendedAction, setIntendedAction] = useState(null);
+    const [intendedData, setIntendedData] = useState(null);
+
+    const isAuthenticated = () => {
+        return auth && auth.user !== null;
+    };
+
+    const handleProtectedAction = (action, event, data = null) => {
+        if (!isAuthenticated()) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            setIntendedAction(action);
+            setIntendedData(data);
+            setShowAuthModal(true);
+            return false;
+        }
+        return true;
+    };
+
+    const closeModal = () => {
+        setShowAuthModal(false);
+        setIntendedAction(null);
+        setIntendedData(null);
+    };
+
     return (
         <>
-            <Head title="Profile Restricted - GiftedTalent" />
-            <AppNavbar user={auth.user} />
-            <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: '60vh',
-                padding: '40px'
-            }}>
-                <div style={{
-                    textAlign: 'center',
-                    maxWidth: '500px',
-                    background: 'white',
-                    padding: '40px',
-                    borderRadius: '16px',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-                }}>
-                    <i className="fas fa-lock" style={{ fontSize: '48px', color: '#4F46E5', marginBottom: '20px' }}></i>
-                    <h2 style={{ marginBottom: '10px', color: '#1f2937' }}>Profile Restricted</h2>
-                    <p style={{ color: '#6b7280', marginBottom: '20px' }}>{message || 'This user has set their profile to private.'}</p>
-                    <button 
-                        onClick={() => window.history.back()}
-                        style={{
-                            padding: '10px 24px',
-                            background: '#4F46E5',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontSize: '14px'
-                        }}
-                    >
-                        Go Back
-                    </button>
+            {/* Pass the handler to children */}
+            {children(handleProtectedAction)}
+
+            {/* Auth Modal */}
+            {showAuthModal && (
+                <div className="auth-modal-overlay" onClick={closeModal}>
+                    <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
+                        <button className="auth-modal-close" onClick={closeModal}>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                        
+                        <div className="auth-modal-content">
+                            <div className="auth-modal-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                                    <circle cx="12" cy="12" r="4"/>
+                                </svg>
+                            </div>
+                            
+                            <h2>Join GiftedTalent to Continue</h2>
+                            <p>You need to be a member to access this feature. It only takes a minute!</p>
+                            
+                            {intendedAction && (
+                                <div className="auth-modal-action">
+                                    <p>You were trying to:</p>
+                                    <strong>
+                                        {intendedAction === 'apply_job' && 'Apply for a job'}
+                                        {intendedAction === 'save_job' && 'Save a job'}
+                                        {intendedAction === 'view_profile' && 'View talent profile'}
+                                        {intendedAction === 'contact_talent' && 'Contact talent'}
+                                        {intendedAction === 'post_job' && 'Post a job'}
+                                        {intendedAction || 'Access this feature'}
+                                    </strong>
+                                </div>
+                            )}
+                            
+                            <div className="auth-modal-buttons">
+                                <Link href={route('login')} className="auth-modal-btn auth-modal-btn-primary">
+                                    Sign In
+                                </Link>
+                                <Link href={route('register')} className="auth-modal-btn auth-modal-btn-secondary">
+                                    Create Account
+                                </Link>
+                            </div>
+                            
+                            <p className="auth-modal-footer">
+                                By continuing, you agree to our Terms of Service and Privacy Policy
+                            </p>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            )}
         </>
     );
 }
