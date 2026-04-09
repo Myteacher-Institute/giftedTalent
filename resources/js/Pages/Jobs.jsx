@@ -1,376 +1,479 @@
-import { Head } from '@inertiajs/react';
+<<<<<<< HEAD
+import { Head, Link, router } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
 import '../../css/jobs.css';
 
-export default function Jobs() {
+export default function Jobs({ jobs = [], auth }) {
+    const [searchQuery, setSearchQuery] = useState('');
+    const [filteredJobs, setFilteredJobs] = useState(jobs);
+
+    // Filter state - exactly like admin dashboard
+    const [filters, setFilters] = useState({
+        jobType: '',
+        location: '',
+        salary: '',
+        experience: '',
+        datePosted: '',
+        status: ''
+    });
+=======
+import React, { useState } from 'react';
+import { Link, router } from '@inertiajs/react';
+import AppNavbar from '../Components/AppNavbar';
+import '../../css/Dashboard.css';
+
+export default function DashboardLayout({ children, user, newJobsCount = 0, profile, profileComplete, profileStatus, stats }) {
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+>>>>>>> a71b3eb (just finished my privacy page and integrated it to backend and database)
+
+    // Get unique values for dropdowns
+    const uniqueTypes = [...new Set(jobs.map(job => job.job_type).filter(Boolean))];
+    const uniqueLocations = [...new Set(jobs.map(job => job.company_location).filter(Boolean))];
+
+    // Salary ranges
+    const salaryRanges = [
+        { value: '', label: 'Any Salary' },
+        { value: '0-100k', label: '₦0 - ₦100k' },
+        { value: '100k-200k', label: '₦100k - ₦200k' },
+        { value: '200k-300k', label: '₦200k - ₦300k' },
+        { value: '300k+', label: '₦300k+' }
+    ];
+
+    // Experience levels
+    const experienceLevels = [
+        { value: '', label: 'Any Level' },
+        { value: 'entry', label: 'Entry Level' },
+        { value: 'mid', label: 'Mid Level' },
+        { value: 'senior', label: 'Senior Level' },
+        { value: 'lead', label: 'Lead / Manager' }
+    ];
+
+    // Date posted options
+    const dateOptions = [
+        { value: '', label: 'Any Time' },
+        { value: 'today', label: 'Today' },
+        { value: 'week', label: 'This Week' },
+        { value: 'month', label: 'This Month' }
+    ];
+
+    // Apply filters - exactly like admin dashboard
+    useEffect(() => {
+        applyLocalFilters();
+    }, [filters, jobs, searchQuery]);
+
+    const applyLocalFilters = () => {
+        let filtered = [...jobs];
+
+        // Filter by Search Query
+        if (searchQuery) {
+            filtered = filtered.filter(job =>
+                job.job_title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                job.company_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                job.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                job.company_location?.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+        }
+
+        // Filter by Job Type
+        if (filters.jobType) {
+            filtered = filtered.filter(job =>
+                job.job_type?.toLowerCase() === filters.jobType.toLowerCase()
+            );
+        }
+
+        // Filter by Location
+        if (filters.location) {
+            filtered = filtered.filter(job =>
+                job.company_location?.toLowerCase().includes(filters.location.toLowerCase())
+            );
+        }
+
+        // Filter by Salary Range
+        if (filters.salary) {
+            filtered = filtered.filter(job => {
+                const salaryStr = job.salary_range || job.salary || '';
+                const salaryMatch = salaryStr.match(/\d+/g);
+                const salaryNum = salaryMatch ? parseInt(salaryMatch.join('')) : 0;
+
+                switch (filters.salary) {
+                    case '0-100k': return salaryNum <= 100000;
+                    case '100k-200k': return salaryNum >= 100000 && salaryNum <= 200000;
+                    case '200k-300k': return salaryNum >= 200000 && salaryNum <= 300000;
+                    case '300k+': return salaryNum >= 300000;
+                    default: return true;
+                }
+            });
+        }
+
+        // Filter by Experience
+        if (filters.experience) {
+            filtered = filtered.filter(job =>
+                job.job_title?.toLowerCase().includes(filters.experience.toLowerCase()) ||
+                job.description?.toLowerCase().includes(filters.experience.toLowerCase())
+            );
+        }
+
+        // Filter by Date Posted
+        if (filters.datePosted) {
+            const now = new Date();
+            filtered = filtered.filter(job => {
+                const jobDate = new Date(job.created_at);
+                switch (filters.datePosted) {
+                    case 'today':
+                        return jobDate.toDateString() === now.toDateString();
+                    case 'week':
+                        const weekAgo = new Date(now);
+                        weekAgo.setDate(now.getDate() - 7);
+                        return jobDate >= weekAgo;
+                    case 'month':
+                        return jobDate.getMonth() === now.getMonth() &&
+                            jobDate.getFullYear() === now.getFullYear();
+                    default: return true;
+                }
+            });
+        }
+
+        // Filter by Status
+        if (filters.status) {
+            filtered = filtered.filter(job =>
+                job.status?.toLowerCase() === filters.status.toLowerCase()
+            );
+        }
+
+        setFilteredJobs(filtered);
+    };
+
+    // Handle filter changes
+    const handleFilterChange = (filterName, value) => {
+        setFilters(prev => ({
+            ...prev,
+            [filterName]: value
+        }));
+    };
+
+    // Clear all filters
+    const clearFilters = () => {
+        setFilters({
+            jobType: '',
+            location: '',
+            salary: '',
+            experience: '',
+            datePosted: '',
+            status: ''
+        });
+        setSearchQuery('');
+    };
+
+    // Apply filters button click
+    const applyFilters = () => {
+        applyLocalFilters();
+    };
+
+    // Handle search
+    const handleSearch = () => {
+        applyLocalFilters();
+    };
+
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            handleSearch();
+        }
+    };
+
+    // Job type color
+    const getJobTypeColor = () => {
+        const type = job.job_type?.toLowerCase() || '';
+        if (type === 'contract' || type === 'part-time') {
+            return { color: '#2563EB' };
+        }
+        if (type === 'full-time' || type === 'remote') {
+            return { color: '#15803D' };
+        }
+        return { color: '#4B5563' };
+    };
+
     return (
         <>
-            <Head title="Jobs" />
+            <Head title="Jobs - GiftedTalents" />
 
             <div className="jobs-page">
-                {/* HEADER */}
                 <header>
                     <nav>
                         <div className='logo-search'>
                             <div className="logo">
-                                <a href="#" className="brand">GiftedTalents<span>.online</span></a>
+                                <Link href="/" className="brand">GiftedTalents<span>.online</span></Link>
                             </div>
 
                             <div className="search-bar">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M300.3 440.8C312.9 451 331.4 450.3 343.1 438.6L471.1 310.6C480.3 301.4 483 287.7 478 275.7C473 263.7 461.4 256 448.5 256L192.5 256C179.6 256 167.9 263.8 162.9 275.8C157.9 287.8 160.7 301.5 169.9 310.6L297.9 438.6L300.3 440.8z" /></svg>
 
-                                <input type="text" placeholder="Search job titles or companies" />
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M480 272C480 317.9 465.1 360.3 440 394.7L566.6 521.4C579.1 533.9 579.1 554.2 566.6 566.7C554.1 579.2 533.8 579.2 521.3 566.7L394.7 440C360.3 465.1 317.9 480 272 480C157.1 480 64 386.9 64 272C64 157.1 157.1 64 272 64C386.9 64 480 157.1 480 272zM272 416C351.5 416 416 351.5 416 272C416 192.5 351.5 128 272 128C192.5 128 128 192.5 128 272C128 351.5 192.5 416 272 416z" /></svg>
+                                <input
+                                    type="text"
+                                    placeholder="Search job titles, companies, locations..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onKeyPress={handleKeyPress}
+                                />
+
+                                <svg
+                                    className='svg'
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 640 640"
+                                    onClick={handleSearch}
+                                    style={{ cursor: 'pointer' }}
+                                >
+                                    <path d="M480 272C480 317.9 465.1 360.3 440 394.7L566.6 521.4C579.1 533.9 579.1 554.2 566.6 566.7C554.1 579.2 533.8 579.2 521.3 566.7L394.7 440C360.3 465.1 317.9 480 272 480C157.1 480 64 386.9 64 272C64 157.1 157.1 64 272 64C386.9 64 480 157.1 480 272zM272 416C351.5 416 416 351.5 416 272C416 192.5 351.5 128 272 128C192.5 128 128 192.5 128 272C128 351.5 192.5 416 272 416z" />
+                                </svg>
                             </div>
                         </div>
 
                         <div className="nav-buttons">
-                            <button>Sign in</button>
-                            <button>Join now</button>
+                            {auth?.user ? (
+                                <>
+                                    <Link href="/dashboard" className="dashboard-btn">Dashboard</Link>
+                                    <button onClick={() => router.post('/logout')} className="logout-btn">Logout</button>
+                                </>
+                            ) : (
+                                <>
+                                    <button onClick={() => router.get('/login')} className="signin-btn">Sign in</button>
+                                    <button onClick={() => router.get('/register')} className="join-btn">Join now</button>
+                                </>
+                            )}
                         </div>
                     </nav>
                 </header>
 
                 {/* FILTER SECTION */}
-                <section className="filters">
-                    <button>Job Type<svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M300.3 440.8C312.9 451 331.4 450.3 343.1 438.6L471.1 310.6C480.3 301.4 483 287.7 478 275.7C473 263.7 461.4 256 448.5 256L192.5 256C179.6 256 167.9 263.8 162.9 275.8C157.9 287.8 160.7 301.5 169.9 310.6L297.9 438.6L300.3 440.8z" /></svg></button>
+                <section className="filters-section">
+                    <div className="filters-header">
+                        <h3>Filter Jobs</h3>
+                        <button onClick={clearFilters} className="clear-filters-btn">Clear All</button>
+                    </div>
 
-                    <button>Location<svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M300.3 440.8C312.9 451 331.4 450.3 343.1 438.6L471.1 310.6C480.3 301.4 483 287.7 478 275.7C473 263.7 461.4 256 448.5 256L192.5 256C179.6 256 167.9 263.8 162.9 275.8C157.9 287.8 160.7 301.5 169.9 310.6L297.9 438.6L300.3 440.8z" /></svg></button>
+                    <div className="filters-grid">
+                        {/* Job Type Filter */}
+                        <div className="filter-item">
+                            <select
+                                value={filters.jobType}
+                                onChange={(e) => handleFilterChange('jobType', e.target.value)}
+                                className="filter-select"
+                            >
+                                <option value="">Job Type</option>
+                                {uniqueTypes.map(type => (
+                                    <option key={type} value={type}>{type}</option>
+                                ))}
+                            </select>
+                        </div>
 
-                    <button>Company<svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M300.3 440.8C312.9 451 331.4 450.3 343.1 438.6L471.1 310.6C480.3 301.4 483 287.7 478 275.7C473 263.7 461.4 256 448.5 256L192.5 256C179.6 256 167.9 263.8 162.9 275.8C157.9 287.8 160.7 301.5 169.9 310.6L297.9 438.6L300.3 440.8z" /></svg></button>
+                        {/* Location Filter */}
+                        <div className="filter-item">
+                            <select
+                                value={filters.location}
+                                onChange={(e) => handleFilterChange('location', e.target.value)}
+                                className="filter-select"
+                            >
+                                <option value="">Location</option>
+                                {uniqueLocations.map(location => (
+                                    <option key={location} value={location}>{location}</option>
+                                ))}
+                            </select>
+                        </div>
 
-                    <button>Remote<svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M300.3 440.8C312.9 451 331.4 450.3 343.1 438.6L471.1 310.6C480.3 301.4 483 287.7 478 275.7C473 263.7 461.4 256 448.5 256L192.5 256C179.6 256 167.9 263.8 162.9 275.8C157.9 287.8 160.7 301.5 169.9 310.6L297.9 438.6L300.3 440.8z" /></svg></button>
+                        {/* Salary Range Filter */}
+                        <div className="filter-item">
+                            <select
+                                value={filters.salary}
+                                onChange={(e) => handleFilterChange('salary', e.target.value)}
+                                className="filter-select"
+                            >
+                                {salaryRanges.map(range => (
+                                    <option key={range.value} value={range.value}>{range.label}</option>
+                                ))}
+                            </select>
+                        </div>
 
-                    <button>Experience Level<svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M300.3 440.8C312.9 451 331.4 450.3 343.1 438.6L471.1 310.6C480.3 301.4 483 287.7 478 275.7C473 263.7 461.4 256 448.5 256L192.5 256C179.6 256 167.9 263.8 162.9 275.8C157.9 287.8 160.7 301.5 169.9 310.6L297.9 438.6L300.3 440.8z" /></svg></button>
+                        {/* Experience Level Filter */}
+                        <div className="filter-item">
+                            <select
+                                value={filters.experience}
+                                onChange={(e) => handleFilterChange('experience', e.target.value)}
+                                className="filter-select"
+                            >
+                                {experienceLevels.map(level => (
+                                    <option key={level.value} value={level.value}>{level.label}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Date Posted Filter */}
+                        <div className="filter-item">
+                            <select
+                                value={filters.datePosted}
+                                onChange={(e) => handleFilterChange('datePosted', e.target.value)}
+                                className="filter-select"
+                            >
+                                {dateOptions.map(option => (
+                                    <option key={option.value} value={option.value}>{option.label}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Status Filter */}
+                        <div className="filter-item">
+                            <select
+                                value={filters.status}
+                                onChange={(e) => handleFilterChange('status', e.target.value)}
+                                className="filter-select"
+                            >
+                                <option value="">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="review">Under Review</option>
+                                <option value="closed">Closed</option>
+                                <option value="draft">Draft</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="filter-actions">
+                        <button onClick={applyFilters} className="apply-filters-btn">Apply Filters</button>
+                    </div>
                 </section>
+
+                {/* Job Results Count */}
+                <div className="job-results">
+                    <p>Showing {filteredJobs.length} {filteredJobs.length === 1 ? 'job' : 'jobs'}</p>
+                </div>
 
                 {/* HERO SECTION */}
                 <section className="hero">
                     <h1>Find the best creative Jobs,<br /> Curated by GiftedTalents</h1>
-                    <button className="find-job-btn">Find a job</button>
+                    {/* <button className="find-job-btn">Find a job</button> */}
                 </section>
 
                 {/* JOB SECTION */}
                 <section className="jobs-section">
                     <div className="jobs-header">
-                        <h3>Full-Time or Contract Jobs (895)</h3>
+                        <h3>Full-Time or Contract Jobs ({filteredJobs.length})</h3>
                         <div>
                             <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M480 272C480 317.9 465.1 360.3 440 394.7L566.6 521.4C579.1 533.9 579.1 554.2 566.6 566.7C554.1 579.2 533.8 579.2 521.3 566.7L394.7 440C360.3 465.1 317.9 480 272 480C157.1 480 64 386.9 64 272C64 157.1 157.1 64 272 64C386.9 64 480 157.1 480 272zM272 416C351.5 416 416 351.5 416 272C416 192.5 351.5 128 272 128C192.5 128 128 192.5 128 272C128 351.5 192.5 416 272 416z" /></svg>
 
-                            <input type="text" placeholder="Search Jobs" />
+                            <input
+                                type="text"
+                                placeholder="Search Jobs"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onKeyPress={handleKeyPress}
+                            />
                         </div>
                     </div>
 
-                    {/* JOB GRID */}
+                    {/* JOB GRID - ONLY REAL DATA */}
                     <div className="job-grid">
-                        {/* JOB CARD 1 */}
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>UI/UX Designer</h3>
-                            <p>Wireframe, Prototype, Figma</p>
-                            <div className="job-footer">
-                                <span>1 day ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
+                        {filteredJobs.length > 0 ? (
+                            filteredJobs.map((job) => {
+                                const getJobTypeColor = () => {
+                                    const type = job.job_type?.toLowerCase() || '';
+                                    if (type === 'contract' || type === 'part-time') {
+                                        return { color: '#2563EB' };
+                                    }
+                                    if (type === 'full-time' || type === 'remote') {
+                                        return { color: '#15803D' };
+                                    }
+                                    return { color: '#4B5563' };
+                                };
 
-                        {/* JOB CARD 2 */}
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>UI/UX Designer</h3>
-                            <p>Wireframe, Prototype, Figma</p>
-                            <div className="job-footer">
-                                <span>1 day ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
+                                return (
+                                    <div key={job.id} className="job-card">
+                                        <div className="company">
+                                            {job.company_logo_url ? (
+                                                <img
+                                                    src={job.company_logo_url}
+                                                    alt={`${job.company_name} logo`}
+                                                    className="company-logo"
+                                                    onError={(e) => {
+                                                        e.target.style.display = 'none';
+                                                        e.target.nextSibling.style.display = 'flex';
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div className="company-initial">
+                                                    {job.company_name?.charAt(0) || 'C'}
+                                                </div>
+                                            )}
+                                            <div className="company-header-info">
+                                                <div className="company-header">
+                                                    <h2>{job.company_name}</h2>
+                                                    <div>
+                                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
+                                                        <p>{job.company_location}</p>
+                                                    </div>
+                                                </div>
+                                                <p
+                                                    className="job-type"
+                                                    style={getJobTypeColor()}
+                                                >
+                                                    {job.job_type}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <h3>{job.job_title}</h3>
+                                        <p className='job-description'>{job.description}</p>
+                                        
+                                        {/* Tags Section */}
+                                        {job.tags && job.tags.length > 0 && (
+                                            <div className="job-tags">
+                                                {job.tags.slice(0, 3).map((tag, index) => (
+                                                    <span key={index} className="job-tag">{tag}</span>
+                                                ))}
+                                                {job.tags.length > 3 && (
+                                                    <span className="job-tag-more">+{job.tags.length - 3}</span>
+                                                )}
+                                            </div>
+                                        )}
 
-                        {/* JOB CARD 3 */}
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
+                                        <div className="job-footer">
+                                            <div className="job-footer-left">
+                                                <span className="job-salary">{job.salary_range || job.salary}</span>
+                                            </div>
+                                            <div className="job-footer-right">
+                                                <span className="job-date">{new Date(job.created_at).toLocaleDateString('en-US', {
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}</span>
+                                                <button
+                                                    className="apply-btn"
+                                                    onClick={() => window.open(job.application_link, '_blank')}
+                                                >
+                                                    Apply now
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
+                                );
+                            })
+                        ) : (
+                            <div className="no-jobs-message">
+                                <p>No jobs found matching your criteria.</p>
+                                <button onClick={clearFilters} className="clear-filters-link">Clear all filters</button>
                             </div>
-                            <h3>Junior Motion Designer</h3>
-                            <p>Junior Motion Designer</p>
-                            <div className="job-footer">
-                                <span>3 days ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>Junior Motion Designer</h3>
-                            <p>Junior Motion Designer</p>
-                            <div className="job-footer">
-                                <span>3 days ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>Junior Motion Designer</h3>
-                            <p>Junior Motion Designer</p>
-                            <div className="job-footer">
-                                <span>3 days ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>Junior Motion Designer</h3>
-                            <p>Junior Motion Designer</p>
-                            <div className="job-footer">
-                                <span>3 days ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>Junior Motion Designer</h3>
-                            <p>Junior Motion Designer</p>
-                            <div className="job-footer">
-                                <span>3 days ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>Junior Motion Designer</h3>
-                            <p>Junior Motion Designer</p>
-                            <div className="job-footer">
-                                <span>3 days ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>Junior Motion Designer</h3>
-                            <p>Junior Motion Designer</p>
-                            <div className="job-footer">
-                                <span>3 days ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>Junior Motion Designer</h3>
-                            <p>Junior Motion Designer</p>
-                            <div className="job-footer">
-                                <span>3 days ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>Junior Motion Designer</h3>
-                            <p>Junior Motion Designer</p>
-                            <div className="job-footer">
-                                <span>3 days ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>Junior Motion Designer</h3>
-                            <p>Junior Motion Designer</p>
-                            <div className="job-footer">
-                                <span>3 days ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>Junior Motion Designer</h3>
-                            <p>Junior Motion Designer</p>
-                            <div className="job-footer">
-                                <span>3 days ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>Junior Motion Designer</h3>
-                            <p>Junior Motion Designer</p>
-                            <div className="job-footer">
-                                <span>3 days ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
-
-                        <div className="job-card">
-                            <div className="company">
-                                {/* Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc. */}
-                                <svg className='svg' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" /></svg>
-                                <div className="company-header">
-                                    <h2>Brand Hive</h2>
-                                    <div>
-                                        <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                        <p>Rumuogholu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <h3>Junior Motion Designer</h3>
-                            <p>Junior Motion Designer</p>
-                            <div className="job-footer">
-                                <span>3 days ago</span>
-                                <button>Apply now</button>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 </section>
 
                 {/* FOOTER */}
                 <footer>
                     <div className="footer-left">
-                        <a href="#" className="brand">GiftedTalents<span>.online</span></a>
+                        <a href="/" className="brand">GiftedTalents<span>.online</span></a>
                         <span>© 2026</span>
                     </div>
 
                     <div className="footer-right">
-                        <a href="#">About</a>
-                        <a href="#">Contact</a>
-                        <a href="#">Privacy Policy</a>
-                        <a href="#">Community Guideline</a>
+                        <a href="/about">About</a>
+                        <a href="/contact">Contact</a>
+                        <a href="/privacy">Privacy Policy</a>
+                        <a href="/guidelines">Community Guideline</a>
                     </div>
-
                 </footer>
             </div>
         </>

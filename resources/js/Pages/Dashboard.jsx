@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
+import React, { useState, useEffect } from 'react';
+import { Head, Link, router } from '@inertiajs/react';
+import AuthenticatedLayout from '../Layouts/AuthenticatedLayout';
 import '../../css/Dashboard.css';
+import Notification from '../Components/Notification';
+import MessageModal from '../Components/MessageModal';
+
+window.alertify = window.alertify || alertify;
 
 // Job Card Component
 function JobCard({ job }) {
@@ -45,17 +49,152 @@ function JobCard({ job }) {
     );
 }
 
-export default function Dashboard({ auth }) {
+export default function Dashboard({ auth, profileComplete = 75, profileStatus = {}, stats = { applied: 8, review: 3, interview: 1, rejected: 2 }, jobs = [], jobTypes = [], searchParams = {}, notifications }) {
     const [activeMenu, setActiveMenu] = useState(null);
+    const [searchQuery, setSearchQuery] = useState(searchParams.q || '');
+    const [selectedJobType, setSelectedJobType] = useState(searchParams.job_type || '');
+    const [showAdvanced, setShowAdvanced] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [clientFilteredJobs, setClientFilteredJobs] = useState(jobs);
+    const [showSavedJobs, setShowSavedJobs] = useState(false);
+    const [showAppliedJobs, setShowAppliedJobs] = useState(false);
+    const [showMessageModal, setShowMessageModal] = useState(false);
+    const [messages, setMessages] = useState([]);
+    const [loadingMessages, setLoadingMessages] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    const jobs = [
-        { id: 1, company: 'BoyAlone Studio', title: 'Software Engineer', tags: 'Senior Software Engineer. Full Stack . Js', time: '6 hours ago', image: 'https://i.pravatar.cc/40' },
-        { id: 2, company: 'Tech Innovators', title: 'Frontend Developer', tags: 'React. TypeScript. Remote', time: '2 hours ago', image: 'https://i.pravatar.cc/40' },
-        { id: 3, company: 'Digital Solutions', title: 'Full Stack Developer', tags: 'Node.js. MongoDB. Full Time', time: '1 day ago', image: 'https://i.pravatar.cc/40' },
-    ];
+    const currentUser = auth.user;
+    const profile = currentUser?.profile;
+    const hasCV = currentUser?.resumes?.length > 0;
+
+    // Calculate profile level
+    const profileLevel = {
+        message: profileComplete >= 80 ? 'Almost there! Just a few more steps to complete your profile.' :
+                profileComplete >= 60 ? 'Great progress! Keep building your profile to attract more employers.' :
+                profileComplete >= 40 ? 'Good start! Add more details to make your profile stand out.' :
+                profileComplete >= 20 ? 'Getting started! Add your basic information to begin.' :
+                'Welcome! Let\'s build your professional profile together.'
+    };
+
+    // Debounce search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            let filtered = jobs;
+            if (searchQuery) {
+                filtered = filtered.filter(job => 
+                    job.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    job.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    job.tags?.toLowerCase().includes(searchQuery.toLowerCase())
+                );
+            }
+            setClientFilteredJobs(filtered);
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery, jobs]);
+
+    const handleShowAllJobs = () => {
+        setShowSavedJobs(false);
+        setShowAppliedJobs(false);
+    };
+
+    const markMessageAsRead = (messageId) => {
+        setMessages(prev => prev.map(msg => 
+            msg.id === messageId ? { ...msg, read: true } : msg
+        ));
+    };
+
+    const toggleMobileMenu = () => {
+        setIsMobileMenuOpen(!isMobileMenuOpen);
+    };
+
+    const getProfileImageUrl = () => {
+        // Priority 1: Base64 image from profile
+        if (profile?.profile_image_base64) {
+            return profile.profile_image_base64;
+        }
+        
+        // Priority 2: Base64 image from currentUser's profile
+        if (currentUser?.profile?.profile_image_base64) {
+            return currentUser.profile.profile_image_base64;
+        }
+        
+        // Priority 3: Avatar URL from profile
+        if (profile?.avatar_url) {
+            return profile.avatar_url;
+        }
+        
+        // Priority 4: Avatar from profile storage
+        if (profile?.avatar) {
+            const avatarPath = profile.avatar;
+            if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
+                return avatarPath;
+            }
+            const cleanPath = avatarPath.replace(/^\/+/, '');
+            const fullUrl = `/storage/${cleanPath}`;
+            return fullUrl;
+        }
+        
+        // Priority 5: Avatar from users table (backward compatibility)
+        if (currentUser?.avatar) {
+            const avatarPath = currentUser.avatar;
+            if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
+                return avatarPath;
+            }
+            const cleanPath = avatarPath.replace(/^\/+/, '');
+            const fullUrl = `/storage/${cleanPath}`;
+            return fullUrl;
+        }
+
+        // Fallback: Avatar from name
+        const userName = currentUser?.name || 'User';
+        const fallbackUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
+        return fallbackUrl;
+    };
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+        setLoading(true);
+        router.get(
+            '/dashboard',
+            { q: searchQuery, job_type: selectedJobType },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => setLoading(false),
+                onError: () => setLoading(false),
+            }
+        );
+    };
+
+    const clearSearch = () => {
+        setSearchQuery('');
+        setSelectedJobType('');
+        router.get('/dashboard', {}, { preserveState: true, preserveScroll: true });
+    };
+
+    const toggleAdvanced = () => setShowAdvanced(!showAdvanced);
+
+    const handleJobTypeClick = () => {
+        console.log('Job Type clicked');
+    };
+
+    const noResults = clientFilteredJobs.length === 0 && jobs.length === 0;
+
+    const handleLogout = () => {
+        router.post('/logout');
+    };
+
+    useEffect(() => {
+        const hasShown = localStorage.getItem('profileCompleteShown');
+        if (profileComplete === 100 && !hasShown) {
+            alertify.success('Congratulations! Your profile is 100% complete! 🎉', 3);
+            localStorage.setItem('profileCompleteShown', 'true');
+        }
+    }, [profileComplete]);
 
     return (
-        <AuthenticatedLayout user={auth.user}>
+        <>
             <Head title="Dashboard" />
 
             <header className="navbar">
@@ -64,10 +203,10 @@ export default function Dashboard({ auth }) {
                 </div>
 
                 <nav>
-                    <a href="#">Home</a>
-                    <a href="#">Jobs</a>
-                    <a href="#">Explore</a>
-                    <a href="#">Hire</a>
+                    <Link href="/">Home</Link>
+                    <Link href="/search-jobs">Jobs</Link>
+                    <Link href="#">Explore</Link>
+                    <Link href="#">Hire</Link>
                 </nav>
 
                 <div className="search">
@@ -76,100 +215,299 @@ export default function Dashboard({ auth }) {
 
                 <div className="nav-icons">
                     <i className="fa-regular fa-comment"></i>
-                    <i className="fa-regular fa-bell"></i>
-                    <img src="https://i.pravatar.cc/40" alt="" />
+                    <Notification />
+                    <img src={auth.user.profile?.avatar_url || `https://i.pravatar.cc/40?img=${auth.user.id}`} alt="" />
                 </div>
             </header>
 
             <div className="container">
                 <aside className="sidebar">
                     <div className="profile">
-                        <img src="https://i.pravatar.cc/40" alt="" />
-                        <h3>Kelvi Nnaji</h3>
-                        <p>Software Engineer</p>
-                        <button>Edit Profile</button>
+                        <div className="profile-image-wrapper">
+                            <img 
+                                src={getProfileImageUrl()} 
+                                alt={currentUser?.name || 'Profile'} 
+                                className="profile-image"
+                                onError={(e) => {
+                                    const userName = currentUser?.name || 'User';
+                                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
+                                }}
+                            />
+                            <div className="verified-overlay">
+                                <i className="fa-solid fa-check-circle"></i>
+                            </div>
+                        </div>
+
+                        <h3>{currentUser?.name || 'User'}</h3>
+                        <p>{currentUser?.title || profile?.title || profile?.position || 'Add position'}</p>
+                        <button>
+                            <Link href="/profile" className="profile-button">Edit Profile</Link>
+                        </button>
                     </div>
 
                     <ul className="menu">
                         <li className="active"><i className="fa-solid fa-table"></i>Dashboard</li>
-                        <li><i className="fa-solid fa-magnifying-glass"></i> Search Job</li>
+                        <li><Link href="/search-jobs"><i className="fa-solid fa-magnifying-glass"></i> Search Job</Link></li>
                         <li><i className="fa-solid fa-file"></i> Application</li>
                         <li><i className="fa-regular fa-envelope"></i> Message</li>
                         <li><i className="fa-regular fa-bookmark"></i> Save Jobs</li>
                         <li><i className="fa-solid fa-gear"></i> Settings</li>
-                        <li> <Link href={route('logout')} method="post"><i className="fa-solid fa-right-from-bracket"></i> Logout</Link></li>
+                        <li className="logout-item">
+                            <a href="/" onClick={(e) => { e.preventDefault(); handleLogout(); }}>
+                                <i className="fa-solid fa-right-from-bracket logout-icon"></i>
+                                Logout
+                            </a>
+                        </li>
                     </ul>
                 </aside>
 
                 <main className="main">
-                    <h1>Welcome back, Kelvin</h1>
+                    {showSavedJobs ? (
+                        <div className="flex justify-between items-center mb-4">
+                            <h1>Saved Jobs</h1>
+                            <button onClick={handleShowAllJobs} className="text-blue-500 hover:text-blue-700">
+                                ← Back to Dashboard
+                            </button>
+                        </div>
+                    ) : showAppliedJobs ? (
+                        <h1>My Applications</h1>
+                    ) : (
+                        <>
+                            <h1>Welcome back, {currentUser?.name?.split(' ')[0] || 'User'}</h1>
 
-                    <div className="status-bar">
-                        <span className="success">CV Uploaded</span>
-                        <span>Skills: Front End Dev, Software Eng.</span>
-                        <button>Edit Profile</button>
-                    </div>
+                            <div className="status-bar">
+                                <span className="success">{hasCV ? 'CV Uploaded' : 'Upload CV'}</span>
+                                <span>Skills: {auth.user.skills?.slice(0, 2).map(s => s.name).join(', ') || 'No skills added'}</span>
+                                <span>Bio: {auth.user.profile?.bio ? auth.user.profile.bio.substring(0, 50) + '...' : 'Add bio'}</span>
+                                <button><Link href="/cv" className="status-button">Upload Your CV</Link></button>
+                            </div>
 
                     <div className="search-bar">
-                        <input type="text" placeholder="Search for jobs..." />
-                        <button>Job Type</button>
-                        <button>Advanced Filter</button>
+                        <form onSubmit={handleSearch} className="flex gap-2 w-full">
+                            <input 
+                                type="text" 
+                                placeholder="Search for jobs..." 
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            />
+                            <select 
+                                value={selectedJobType} 
+                                onChange={(e) => setSelectedJobType(e.target.value)}
+                                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
+                            >
+                                <option value="">All Types</option>
+                                {jobTypes.map(type => (
+                                    <option key={type} value={type}>{type}</option>
+                                ))}
+                            </select>
+                            <button 
+                                type="button" 
+                                onClick={toggleAdvanced}
+                                className="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md"
+                            >
+                                Advanced
+                            </button>
+                            <button 
+                                type="submit" 
+                                disabled={loading}
+                                className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all duration-200 shadow-md disabled:opacity-50"
+                            >
+                                {loading ? 'Searching...' : 'Search'}
+                            </button>
+                            {searchQuery || selectedJobType ? (
+                                <button 
+                                    type="button" 
+                                    onClick={clearSearch}
+                                    className="px-4 py-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-all"
+                                >
+                                    Clear
+                                </button>
+                            ) : null}
+                        </form>
                     </div>
 
-                    <h2>Recommended Jobs</h2>
+                    {showAdvanced && (
+                        <div className="advanced-filter-modal bg-white p-6 rounded-xl shadow-2xl border border-gray-200 max-w-md mx-auto mb-6">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-xl font-bold text-gray-800">Advanced Filter</h3>
+                                <button onClick={toggleAdvanced} className="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+                            </div>
+                            <div className="space-y-4">
+                                <select className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    <option>Location</option>
+                                </select>
+                                <input type="range" min="0" max="200" className="w-full" />
+                                <span>$0 - $200k</span>
+                            </div>
+                        </div>
+                    )}
+
+                    <h2>{searchQuery ? `Search Results for "${searchQuery}"` : 'Recommended Jobs'}</h2>
 
                     <div className="jobs">
-                        {jobs.map((job) => (
-                            <JobCard key={job.id} job={job} />
-                        ))}
+                        {loading ? (
+                            <div className="flex justify-center py-12">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                            </div>
+                        ) : noResults ? (
+                            <div className="text-center py-16 px-8">
+                                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-3xl flex items-center justify-center">
+                                    <i className="fa-solid fa-magnifying-glass text-3xl text-yellow-500"></i>
+                                </div>
+                                <h3 className="text-2xl font-bold text-gray-800 mb-2">Sorry, no matching jobs</h3>
+                                <p className="text-lg text-gray-600 mb-6 max-w-md mx-auto">
+                                    No admin-posted jobs match your search. We'll notify you when available. Thanks for your patience!
+                                </p>
+                                <button 
+                                    onClick={clearSearch}
+                                    className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg font-semibold"
+                                >
+                                    Browse All Jobs
+                                </button>
+                            </div>
+                        ) : (
+                            clientFilteredJobs.map((job) => (
+                                <JobCard key={job.id} job={job} />
+                            ))
+                        )}
                     </div>
                 </main>
 
-                {/* RIGHT PANEL*/}
                 <aside className="right-panel">
-
                     <div className="progress-card">
                         <h3>Complete Your Profile</h3>
 
-                        <div className="progress-circle">
-                            75%
+                        <div className="progress-circle" style={{ '--progress': `${profileComplete / 100}` }}>
+                            <div className="flex flex-col items-center">
+                                <h2 className="text-2xl font-bold text-indigo-600 mb-1">{profileComplete}%</h2>
+                                <span className="text-xs text-gray-500 font-medium uppercase tracking-wide">Complete</span>
+                            </div>
                         </div>
-                        <ul>
-                            <li>Add Portfolio Link</li>
-                            <li>Upddate Experience</li>
-                            <li className="done">Verify Email</li>
+                        
+                        <p className="text-center text-sm text-gray-600 mt-3 mb-4">
+                            <i className="fas fa-info-circle mr-1 text-indigo-500"></i>
+                            {profileLevel.message}
+                        </p>
+                        
+                        <div className="progress-steps mt-4">
+                            <div className="flex justify-between text-xs text-gray-500 mb-2">
+                                <span>Starter</span>
+                                <span>Beginner</span>
+                                <span>Intermediate</span>
+                                <span>Advanced</span>
+                                <span>Expert</span>
+                            </div>
+                            <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
+                                <div 
+                                    className="h-full rounded-full transition-all duration-500"
+                                    style={{ 
+                                        width: `${profileComplete}%`,
+                                        background: `linear-gradient(90deg, #8b5cf6, ${profileComplete >= 50 ? '#f59e0b' : '#8b5cf6'}, ${profileComplete >= 75 ? '#3b82f6' : ''}, ${profileComplete === 100 ? '#10b981' : ''})`
+                                    }}
+                                ></div>
+                            </div>
+                        </div>
+                        
+                        {/* UPDATED CHECKLIST - Checking BOTH users table AND profiles table */}
+                        <ul className="mt-6 space-y-2">
+                            {/* Title - Check users table first, then profile table */}
+                            <li className={(currentUser?.title || profile?.title || profile?.position) ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
+                                <i className={`fas ${(currentUser?.title || profile?.title || profile?.position) ? 'fa-check-circle text-green-500' : 'fa-plus-circle text-gray-400'} mr-2`}></i>
+                                Professional Title
+                                {!(currentUser?.title || profile?.title || profile?.position) && <span className="text-xs text-gray-400 ml-2">(Add your job title)</span>}
+                            </li>
+                            
+                            {/* Company - Check users table first, then profile table */}
+                            <li className={(currentUser?.company || profile?.company) ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
+                                <i className={`fas ${(currentUser?.company || profile?.company) ? 'fa-check-circle text-green-500' : 'fa-plus-circle text-gray-400'} mr-2`}></i>
+                                Current Company
+                                {!(currentUser?.company || profile?.company) && <span className="text-xs text-gray-400 ml-2">(Where do you work?)</span>}
+                            </li>
+                            
+                            {/* Bio - Check users table first, then profile table */}
+                            <li className={(currentUser?.bio || profile?.bio) ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
+                                <i className={`fas ${(currentUser?.bio || profile?.bio) ? 'fa-check-circle text-green-500' : 'fa-plus-circle text-gray-400'} mr-2`}></i>
+                                Professional Bio
+                                {!(currentUser?.bio || profile?.bio) && <span className="text-xs text-gray-400 ml-2">(Tell employers about yourself)</span>}
+                            </li>
+                            
+                            {/* Skills - Check profileStatus */}
+                            <li className={profileStatus.status?.skills ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
+                                <i className={`fas ${profileStatus.status?.skills ? 'fa-check-circle text-green-500' : 'fa-plus-circle text-gray-400'} mr-2`}></i>
+                                Skills & Expertise
+                                {!profileStatus.status?.skills && <span className="text-xs text-gray-400 ml-2">(Add your top skills)</span>}
+                            </li>
+                            
+                            {/* Phone - Check users table first, then profile table */}
+                            <li className={(currentUser?.phone || profile?.phone) ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
+                                <i className={`fas ${(currentUser?.phone || profile?.phone) ? 'fa-check-circle text-green-500' : 'fa-plus-circle text-gray-400'} mr-2`}></i>
+                                Contact Information
+                                {!(currentUser?.phone || profile?.phone) && <span className="text-xs text-gray-400 ml-2">(Add phone number)</span>}
+                            </li>
+                            
+                            {/* Location - Check users table, also check profile address/city */}
+                            <li className={(currentUser?.location || profile?.address || profile?.city) ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
+                                <i className={`fas ${(currentUser?.location || profile?.address || profile?.city) ? 'fa-check-circle text-green-500' : 'fa-plus-circle text-gray-400'} mr-2`}></i>
+                                Location
+                                {!(currentUser?.location || profile?.address || profile?.city) && <span className="text-xs text-gray-400 ml-2">(Where are you based?)</span>}
+                            </li>
+                            
+                            {/* Portfolio - Check users table first, then profile table */}
+                            <li className={(currentUser?.portfolio_url || profile?.portfolio_url) ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
+                                <i className={`fas ${(currentUser?.portfolio_url || profile?.portfolio_url) ? 'fa-check-circle text-green-500' : 'fa-plus-circle text-gray-400'} mr-2`}></i>
+                                Portfolio / Website
+                                {!(currentUser?.portfolio_url || profile?.portfolio_url) && <span className="text-xs text-gray-400 ml-2">(Showcase your work)</span>}
+                            </li>
+                            
+                            {/* CV / Resume */}
+                            <li className={hasCV ? 'done' : ''} onClick={() => router.visit('/cv')}>
+                                <i className={`fas ${hasCV ? 'fa-check-circle text-green-500' : 'fa-plus-circle text-gray-400'} mr-2`}></i>
+                                CV / Resume
+                                {!hasCV && <span className="text-xs text-gray-400 ml-2">(Upload your resume)</span>}
+                            </li>
+
                         </ul>
                     </div>
 
                     <div className="tracker">
-
                         <h3>Application Tracker</h3>
 
                         <div className="grid">
                             <div className="box blue">
-                                <h2>8</h2>
+                                <h2>{stats.applied}</h2>
                                 <p>Applied</p>
                             </div>
 
                             <div className="box orange">
-                                <h2>3</h2>
+                                <h2>{stats.review}</h2>
                                 <p>Under Review</p>
                             </div>
 
                             <div className="box green">
-                                <h2>1</h2>
+                                <h2>{stats.interview}</h2>
                                 <p>Interview</p>
                             </div>
 
                             <div className="box red">
-                                <h2>2</h2>
+                                <h2>{stats.rejected}</h2>
                                 <p>Rejected</p>
                             </div>
                         </div>
                     </div>
                 </aside>
             </div>
-        </AuthenticatedLayout>
+
+            <MessageModal
+                isOpen={showMessageModal}
+                onClose={() => setShowMessageModal(false)}
+                messages={messages}
+                loading={loadingMessages}
+                onMarkAsRead={markMessageAsRead}
+            />
+
+            <div className={`mobile-overlay ${isMobileMenuOpen ? 'active' : ''}`} onClick={toggleMobileMenu}></div>
+        </>
     );
 }
 

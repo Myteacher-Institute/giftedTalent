@@ -1,166 +1,769 @@
-import React from 'react';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { Head, useForm, router } from '@inertiajs/react';
+import React, { useState, useEffect } from 'react';
+import InputError from '@/Components/InputError';
+import InputLabel from '@/Components/InputLabel';
+import PrimaryButton from '@/Components/PrimaryButton';
+import TextInput from '@/Components/TextInput';
 import '../../css/userProfile.css';
 
-// Simple inline SVG icons
-const CheckCircle = ({ size = 18 }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-        <polyline points="22 4 12 14.01 9 11.01" />
-    </svg>
-);
+export default function EditProfile({ user }) {
+    const { data, setData, patch, processing, errors, clearErrors, reset } = useForm({
+        first_name: '',
+        last_name: '',
+        email: '',
+        phone: '',
+        position: '',
+        education: '',
+        bio: '',
+        city: '',
+        address: '',
+        country: '',
+        linkedin_url: '',
+        github_url: '',
+        portfolio_url: '',
+    });
 
-const Briefcase = ({ size = 18 }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-    </svg>
-);
+    // Populate form with current values on mount
+    useEffect(() => {
+        if (user) {
+            setData({
+                first_name: user.name ? user.name.split(' ')[0] || '' : '',
+                last_name: user.name ? user.name.split(' ').slice(1).join(' ') || '' : '',
+                email: user.email || '',
+                phone: user.profile?.phone || '',
+                position: user.profile?.position || '',
+                education: user.profile?.education || '',
+                bio: user.profile?.bio || '',
+                city: user.profile?.city || '',
+                address: user.profile?.address || '',
+                country: user.profile?.country || '',
+                linkedin_url: user.profile?.linkedin_url || '',
+                github_url: user.profile?.github_url || '',
+                portfolio_url: user.profile?.portfolio_url || '',
+            });
+        }
+    }, [user, setData]);
 
-const Mail = ({ size = 18 }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-        <polyline points="22,6 12,13 2,6" />
-    </svg>
-);
+    // Track changes with debug
+    useEffect(() => {
+        const hasAnyChanges = Object.keys(data).some(
+            key => data[key] !== initialData.current[key]
+        );
+        console.log('Checking changes...');
+        console.log('Has changes:', hasAnyChanges);
+        setHasChanges(hasAnyChanges);
+    }, [data]);
 
-const Phone = ({ size = 18 }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-    </svg>
-);
+    const submit = (e) => {
+        e.preventDefault();
+        
+        console.log('Submit button clicked!');
+        console.log('isSubmitting:', isSubmitting);
+        console.log('hasChanges:', hasChanges);
+        console.log('processing:', processing);
+        
+        if (isSubmitting) return;
+        
+        // Find only the fields that have changed
+        const changedFields = {};
+        Object.keys(data).forEach(key => {
+            if (data[key] !== initialData.current[key]) {
+                changedFields[key] = data[key];
+            }
+        });
+        
+        console.log('Changed fields:', changedFields);
+        
+        // Check if there are any changes
+        if (Object.keys(changedFields).length === 0) {
+            alertify.message('No changes to update');
+            return;
+        }
+        
+        clearErrors();
+        setIsSubmitting(true);
+        
+        // Send only the changed fields to the extended profile endpoint
+        patch(route('profile.updateExtended'), changedFields, {
+            preserveState: false,
+            preserveScroll: true,
+            onSuccess: (response) => {
+                console.log('Success response:', response);
+                alertify.success('Profile updated successfully!');
+                sessionStorage.setItem('profileUpdated', 'true');
+                sessionStorage.setItem('profileUpdateTime', Date.now().toString());
+                router.visit('/dashboard');
+            },
+            onError: (errors) => {
+                console.error('Validation errors:', errors);
+                alertify.error('Please check the form for errors.');
+            }
+        });
 
-const MapPin = ({ size = 18 }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-        <circle cx="12" cy="10" r="3" />
-    </svg>
-);
+    };
 
-const Layers = ({ size = 18 }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <polygon points="12 2 2 7 12 12 22 7 12 2" />
-        <polyline points="2 17 12 22 22 17" />
-        <polyline points="2 12 12 17 22 12" />
-    </svg>
-);
+    // Reset form function
+    const resetForm = () => {
+        setData(initialData.current);
+        setPreviewImage(profile?.profile_image_base64 || profile?.avatar_url || null);
+        alertify.message('Changes discarded');
+        setHasChanges(false);
+    };
 
-const FileText = ({ size = 18 }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <polyline points="14 2 14 8 20 8" />
-        <line x1="16" y1="13" x2="8" y2="13" />
-        <line x1="16" y1="17" x2="8" y2="17" />
-        <polyline points="10 9 9 9 8 9" />
-    </svg>
-);
+    // Handle image upload with base64 conversion
+    const handleImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
 
-const MessageSquare = ({ size = 18 }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-    </svg>
-);
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+            alertify.error('Please upload a valid image file (JPEG, PNG, GIF, or WebP)');
+            return;
+        }
 
-function UserProfile() {
+        if (file.size > 5 * 1024 * 1024) {
+            alertify.error('Image size should be less than 5MB');
+            return;
+        }
+
+        setUploading(true);
+        const formData = new FormData();
+        formData.append('avatar', file);
+
+        try {
+            const base64 = await convertToBase64(file);
+            setData('profile_image', base64);
+            setPreviewImage(base64);
+            alertify.success('Image ready. Click Save Changes to apply.');
+        } catch (error) {
+            console.error('Upload failed', error);
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const removeAvatar = async () => {
+        if (!confirm('Remove profile picture?')) return;
+        setData('profile_image', '');
+        setPreviewImage(null);
+        alertify.message('Image will be removed when you save changes');
+    };
+
+    // Function to get profile image URL with proper fallback
+    const getProfileImageUrl = () => {
+        if (previewImage) {
+            return previewImage;
+        }
+        if (profile?.profile_image_base64) {
+            return profile.profile_image_base64;
+        }
+        if (profile?.avatar_url) {
+            return profile.avatar_url;
+        }
+        if (profile?.avatar) {
+            const avatarPath = profile.avatar;
+            if (avatarPath.startsWith('/storage/')) {
+                return avatarPath;
+            }
+            return `/storage/${avatarPath}`;
+        }
+        if (user?.profile?.avatar_url) {
+            return user.profile.avatar_url;
+        }
+        const userName = user?.name || 'User';
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
+    };
+
     return (
-        <div className="profile-container">
-            {/* Header */}
-            <div className="profile-header">
-                <div className="profile-left">
-                    <img 
-                        src="/assets/img/sample1.jpg" 
-                        alt="Profile" 
-                        className="profile-image" 
-                    />
-                    <div>
-                        <h1>Kelvin Nnaji</h1>
-                        <p className="job-title">Full Stack Developer</p>
-                    </div>
+        <AuthenticatedLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Edit Profile</h2>}>
+            <Head title="Edit Profile" />
+            <div className="profile-edit-page">
+                {/* Back to Dashboard Button */}
+                <div className="back-to-dashboard">
+                    <Link href="/dashboard" className="back-btn">
+                        <i className="fas fa-arrow-left"></i> Back to Dashboard
+                    </Link>
                 </div>
-
-                <div className="availability-badge">
-                    <CheckCircle size={18} /> Available
-                </div>
-            </div>
-
-            <hr className="divider" />
-
-            {/* Availability */}
-            <div className="card">
-                <div className="card-holder">
-                    <Briefcase size={18} />
-                    <span>Availability</span>
-                </div>
-
-                <div className="card-body">
-                    <p>Open to work: Full - Time, Remote</p>
-                    <p>Start Date: Available Immediately</p>
-                </div>
-            </div>
-
-            {/* Contact Info */}
-            <div className="card">
-                <div className="card-holder">
-                    <Mail size={18} />
-                    <span>Contact Info</span>
-                </div>
-
-                <div className="contact-row">
-                    <div className="contact-item">
-                        <Mail size={18} />
-                        <span>Kelvin.Nnaji@example.com</span>
-                    </div>
-
-                    <div className="contact-item">
-                        <Phone size={18} />
-                        <span>+234 90 234 567 8900</span>
-                    </div>
-
-                    <div className="contact-item">
-                        <MapPin size={18} />
-                        <span>New York, USA</span>
-                    </div>
-                </div>
-
-                <button className="message-btn">
-                    <MessageSquare size={18} />
-                    Send Message
-                </button>
-            </div>
-                 
-            {/* Skills */}
-            <div className="card">
-                <div className="card-holder">
-                    <Layers size={18} />
-                    <span>Skills</span>
-                </div>
-                <div className="skills">
-                    <span className="skill-tag">React</span>
-                    <span className="skill-tag">JavaScript</span>
-                    <span className="skill-tag">Laravel</span>
-                    <span className="skill-tag">PHP</span>
-                    <span className="skill-tag">Node.js</span>
-                    <span className="skill-tag">MySQL</span>
-                    <span className="skill-tag">Git</span>
-                </div>
-            </div>
                 
-            {/* Resume */}
-            <div className="card">
-                <div className="card-holder">
-                    <FileText size={18} />
-                    <span>Resume</span>
-                </div>
-                <div className="resume-section">
-                    <div className="resume-left">
-                        <FileText size={18} />
-                        <span>View Resume</span>
+                <div className="py-12">
+                    <div className="container">
+                        <div className="card">
+                            <div className="card-header">
+                                <h1 className="card-title">Edit Profile</h1>
+                                <p className="card-subtitle">Update your personal and professional details</p>
+                            </div>
+
+                            <div className="profile-section">
+                                <div className="profile-left">
+                                    <div className="profile-image-wrapper">
+                                        <img 
+                                            src={getProfileImageUrl()} 
+                                            alt={user?.name || 'Profile'} 
+                                            className="profile-image"
+                                            onError={(e) => {
+                                                const userName = user?.name || 'User';
+                                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
+                                            }}
+                                        />
+                                        <div className="verified-overlay">
+                                            <i className="fa-solid fa-check-circle"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="profile-right">
+                                    <div className="profile-info">
+                                        <div className="profile-name">{user?.name || 'User'}</div>
+                                        <div className="profile-experience">
+                                            {data.title || 'Add your title'} at {data.company || 'Add company'}
+                                        </div>
+                                    </div>
+                                    <div className="profile-actions">
+                                        <label htmlFor="avatar-upload" className="btn-upload">
+                                            <i className="fa-solid fa-camera"></i> 
+                                            {uploading ? 'Processing...' : 'Change Photo'}
+                                            <input 
+                                                id="avatar-upload"
+                                                type="file" 
+                                                onChange={handleImageUpload}
+                                                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                                                className="hidden"
+                                                disabled={uploading || isSubmitting}
+                                            />
+                                        </label>
+                                        {(previewImage || profile?.avatar || profile?.profile_image_base64) && (
+                                            <button 
+                                                type="button"
+                                                onClick={removeAvatar} 
+                                                className="btn-remove" 
+                                                disabled={uploading || isSubmitting}
+                                            >
+                                                <i className="fa-solid fa-trash"></i> Remove
+                                            </button>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-gray-500">
+                                        Max size: 5MB. Supported formats: JPG, PNG, GIF, WebP
+                                    </p>
+                                </div>
+                            </div>
+
+                            <form onSubmit={submit}>
+                                <div className="section-title">
+                                    <i className="fas fa-user-circle"></i>
+                                    Personal Information
+                                </div>
+
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label htmlFor="first_name">First Name</label>
+                                        <TextInput
+                                            id="first_name"
+                                            value={data.first_name}
+                                            onChange={(e) => setData('first_name', e.target.value)}
+                                            className="mt-1 block w-full"
+                                            disabled={isSubmitting}
+                                        />
+                                        <InputError message={errors.first_name} />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="last_name">Last Name</label>
+                                        <TextInput
+                                            id="last_name"
+                                            value={data.last_name}
+                                            onChange={(e) => setData('last_name', e.target.value)}
+                                            className="mt-1 block w-full"
+                                            disabled={isSubmitting}
+                                        />
+                                        <InputError message={errors.last_name} />
+                                    </div>
+                                </div>
+
+                                <div className="form-row">
+                                    <div className="form-group full-width">
+                                        <label htmlFor="email">Email</label>
+                                        <TextInput
+                                            id="email"
+                                            type="email"
+                                            value={data.email}
+                                            onChange={(e) => setData('email', e.target.value)}
+                                            className="mt-1 block w-full"
+                                            disabled={isSubmitting}
+                                        />
+                                        <InputError message={errors.email} />
+                                    </div>
+                                </div>
+
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label htmlFor="phone">Phone</label>
+                                        <TextInput
+                                            id="phone"
+                                            value={data.phone}
+                                            onChange={(e) => setData('phone', e.target.value)}
+                                            className="mt-1 block w-full"
+                                            disabled={isSubmitting}
+                                        />
+                                        <InputError message={errors.phone} />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="employment_type">Employment Type</label>
+                                        <select
+                                            id="employment_type"
+                                            value={data.employment_type}
+                                            onChange={(e) => setData('employment_type', e.target.value)}
+                                            className="mt-1 block w-full"
+                                            disabled={isSubmitting}
+                                        >
+                                            <option value="">Select employment type</option>
+                                            {employmentTypes.map(type => (
+                                                <option key={type} value={type}>{type}</option>
+                                            ))}
+                                        </select>
+                                        <InputError message={errors.employment_type} />
+                                    </div>
+                                </div>
+
+                                <div className="section-title">
+                                    <i className="fas fa-briefcase"></i>
+                                    Professional Details
+                                </div>
+
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label htmlFor="title">Job Title</label>
+                                        <TextInput
+                                            id="title"
+                                            placeholder="e.g. Senior Frontend Developer"
+                                            value={data.title}
+                                            onChange={(e) => setData('title', e.target.value)}
+                                            className="mt-1 block w-full"
+                                            disabled={isSubmitting}
+                                        />
+                                        <InputError message={errors.title} />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="company">Company</label>
+                                        <TextInput
+                                            id="company"
+                                            placeholder="e.g. Tech Company Inc."
+                                            value={data.company}
+                                            onChange={(e) => setData('company', e.target.value)}
+                                            className="mt-1 block w-full"
+                                            disabled={isSubmitting}
+                                        />
+                                        <InputError message={errors.company} />
+                                    </div>
+                                </div>
+
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label htmlFor="start_date">Start Date</label>
+                                        <TextInput
+                                            id="start_date"
+                                            type="date"
+                                            value={data.start_date}
+                                            onChange={(e) => setData('start_date', e.target.value)}
+                                            className="mt-1 block w-full"
+                                            disabled={isSubmitting}
+                                        />
+                                        <InputError message={errors.start_date} />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="education">Education</label>
+                                        <TextInput
+                                            id="education"
+                                            placeholder="e.g. B.Sc Computer Science"
+                                            value={data.education}
+                                            onChange={(e) => setData('education', e.target.value)}
+                                            className="mt-1 block w-full"
+                                            disabled={isSubmitting}
+                                        />
+                                        <InputError message={errors.education} />
+                                    </div>
+                                </div>
+
+                                <div className="form-row">
+                                    <div className="form-group full-width">
+                                        <label htmlFor="bio">Bio</label>
+                                        <textarea
+                                            id="bio"
+                                            placeholder="Tell us about yourself, your experience, and what you're looking for..."
+                                            value={data.bio}
+                                            onChange={(e) => setData('bio', e.target.value)}
+                                            className="mt-1 block w-full"
+                                            rows="4"
+                                            disabled={isSubmitting}
+                                        />
+                                        <InputError message={errors.bio} />
+                                    </div>
+                                </div>
+
+                                <div className="section-title">
+                                    <i className="fas fa-map-marker-alt"></i>
+                                    Location
+                                </div>
+
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label htmlFor="city">City</label>
+                                        <TextInput
+                                            id="city"
+                                            value={data.city}
+                                            onChange={(e) => setData('city', e.target.value)}
+                                            className="mt-1 block w-full"
+                                            disabled={isSubmitting}
+                                        />
+                                        <InputError message={errors.city} />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="country">Country</label>
+                                        <TextInput
+                                            id="country"
+                                            value={data.country}
+                                            onChange={(e) => setData('country', e.target.value)}
+                                            className="mt-1 block w-full"
+                                            disabled={isSubmitting}
+                                        />
+                                        <InputError message={errors.country} />
+                                    </div>
+                                </div>
+
+                                <div className="form-row">
+                                    <div className="form-group full-width">
+                                        <label htmlFor="address">Address</label>
+                                        <TextInput
+                                            id="address"
+                                            value={data.address}
+                                            onChange={(e) => setData('address', e.target.value)}
+                                            className="mt-1 block w-full"
+                                            disabled={isSubmitting}
+                                        />
+                                        <InputError message={errors.address} />
+                                    </div>
+                                </div>
+
+                                <div className="section-title">
+                                    <i className="fas fa-link"></i>
+                                    Social Links
+                                </div>
+
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label htmlFor="linkedin_url">LinkedIn</label>
+                                        <TextInput
+                                            id="linkedin_url"
+                                            value={data.linkedin_url}
+                                            onChange={(e) => setData('linkedin_url', e.target.value)}
+                                            className="mt-1 block w-full"
+                                            placeholder="https://linkedin.com/in/username"
+                                            disabled={isSubmitting}
+                                        />
+                                        <InputError message={errors.linkedin_url} />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="github_url">GitHub</label>
+                                        <TextInput
+                                            id="github_url"
+                                            value={data.github_url}
+                                            onChange={(e) => setData('github_url', e.target.value)}
+                                            className="mt-1 block w-full"
+                                            placeholder="https://github.com/username"
+                                            disabled={isSubmitting}
+                                        />
+                                        <InputError message={errors.github_url} />
+                                    </div>
+                                </div>
+
+                                <div className="form-row">
+                                    <div className="form-group full-width">
+                                        <label htmlFor="portfolio_url">Portfolio</label>
+                                        <TextInput
+                                            id="portfolio_url"
+                                            value={data.portfolio_url}
+                                            onChange={(e) => setData('portfolio_url', e.target.value)}
+                                            className="mt-1 block w-full"
+                                            placeholder="https://yourportfolio.com"
+                                            disabled={isSubmitting}
+                                        />
+                                        <InputError message={errors.portfolio_url} />
+                                    </div>
+                                </div>
+
+                                <div className="card-actions">
+                                    <button 
+                                        type="button" 
+                                        className="btn-secondary" 
+                                        onClick={resetForm}
+                                        disabled={!hasChanges || processing || isSubmitting}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button 
+                                        type="submit" 
+                                        className="btn-primary"
+                                        disabled={isSubmitting}
+                                        style={{
+                                            padding: '12px 24px',
+                                            background: '#4F46E5',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            fontSize: '14px',
+                                            fontWeight: '600'
+                                        }}
+                                    >
+                                        {isSubmitting ? 'Saving...' : 'Save Changes'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div className="profile-section">
+                            <div className="profile-left">
+                                <div className="profile-image-wrapper">
+                                    {user.profile?.avatar_url ? (
+                                        <img 
+                                            src={user.profile.avatar_url} 
+                                            alt="Profile" 
+                                            className="profile-image"
+                                        />
+                                    ) : (
+                                        <div className="profile-initials">
+                                            {initials}
+                                        </div>
+                                    )}
+                                    <div className="verified-overlay">
+                                        <i className="fa-solid fa-check-circle"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="profile-right">
+                                <div className="profile-info">
+                                    <div className="profile-name">{user.name}</div>
+                                    <div className="profile-experience">
+                                        {recentExperience.company} - {recentExperience.job_title}
+                                    </div>
+                                </div>
+                                <div className="profile-actions">
+                                    <label htmlFor="avatar-upload" className="btn-upload">
+                                        <i className="fa-solid fa-camera"></i> Change Photo
+                                        <input 
+                                            id="avatar-upload"
+                                            type="file" 
+                                            onChange={uploadAvatar}
+                                            accept="image/*"
+                                            className="hidden"
+                                            disabled={uploading}
+                                        />
+                                    </label>
+                                    {user.profile?.avatar && (
+                                        <button onClick={removeAvatar} className="btn-remove" disabled={uploading}>
+                                            <i className="fa-solid fa-trash"></i> Remove
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        <form onSubmit={submit}>
+<div className="section-title">
+    <i className="fas fa-user-circle text-teal-500 mr-2"></i>
+    Personal Information
+</div>
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label htmlFor="first_name">First Name</label>
+                                    <TextInput
+                                        id="first_name"
+                                        value={data.first_name}
+                                        onChange={(e) => setData('first_name', e.target.value)}
+                                        className="mt-1 block w-full"
+                                    />
+                                    <InputError message={errors.first_name} />
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor="last_name">Last Name</label>
+                                    <TextInput
+                                        id="last_name"
+                                        value={data.last_name}
+                                        onChange={(e) => setData('last_name', e.target.value)}
+                                        className="mt-1 block w-full"
+                                    />
+                                    <InputError message={errors.last_name} />
+                                </div>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group full-width">
+                                    <label htmlFor="email">Email</label>
+                                    <TextInput
+                                        id="email"
+                                        type="email"
+                                        value={data.email}
+                                        onChange={(e) => setData('email', e.target.value)}
+                                        className="mt-1 block w-full"
+                                    />
+                                    <InputError message={errors.email} />
+                                </div>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group full-width">
+                                    <label htmlFor="phone">Phone</label>
+                                    <TextInput
+                                        id="phone"
+                                        value={data.phone}
+                                        onChange={(e) => setData('phone', e.target.value)}
+                                        className="mt-1 block w-full"
+                                    />
+                                    <InputError message={errors.phone} />
+                                </div>
+                            </div>
+
+<div className="section-title">
+    <i className="fas fa-briefcase text-blue-500 mr-2"></i>
+    Professional Details
+</div>
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label htmlFor="position">Position</label>
+                                    <TextInput
+                                        id="position"
+                                        placeholder="e.g. Frontend Developer"
+                                        value={data.position}
+                                        onChange={(e) => setData('position', e.target.value)}
+                                        className="mt-1 block w-full"
+                                    />
+                                    <InputError message={errors.position} />
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor="education">Education</label>
+                                    <TextInput
+                                        id="education"
+                                        placeholder="e.g. B.Sc Computer Science"
+                                        value={data.education}
+                                        onChange={(e) => setData('education', e.target.value)}
+                                        className="mt-1 block w-full"
+                                    />
+                                    <InputError message={errors.education} />
+                                </div>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group full-width">
+                                    <label htmlFor="bio">Bio</label>
+                                    <textarea
+                                        id="bio"
+                                        placeholder="Tell us about yourself..."
+                                        value={data.bio}
+                                        onChange={(e) => setData('bio', e.target.value)}
+                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        rows="4"
+                                    />
+                                    <InputError message={errors.bio} />
+                                </div>
+                            </div>
+
+<div className="section-title">
+    <i className="fas fa-map-marker-alt text-orange-500 mr-2"></i>
+    Location
+</div>
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label htmlFor="city">City</label>
+                                    <TextInput
+                                        id="city"
+                                        value={data.city}
+                                        onChange={(e) => setData('city', e.target.value)}
+                                        className="mt-1 block w-full"
+                                    />
+
+                                    <InputError message={errors.city} />
+
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor="country">Country</label>
+                                    <TextInput
+                                        id="country"
+                                        value={data.country}
+                                        onChange={(e) => setData('country', e.target.value)}
+                                        className="mt-1 block w-full"
+                                    />
+                                    <InputError message={errors.country} />
+                                </div>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group full-width">
+                                    <label htmlFor="address">Address</label>
+                                    <TextInput
+                                        id="address"
+                                        value={data.address}
+                                        onChange={(e) => setData('address', e.target.value)}
+                                        className="mt-1 block w-full"
+                                    />
+                                    <InputError message={errors.address} />
+                                </div>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label htmlFor="linkedin_url">LinkedIn</label>
+                                    <TextInput
+                                        id="linkedin_url"
+                                        value={data.linkedin_url}
+                                        onChange={(e) => setData('linkedin_url', e.target.value)}
+                                        className="mt-1 block w-full"
+                                    />
+                                    <InputError message={errors.linkedin_url} />
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor="github_url">GitHub</label>
+                                    <TextInput
+                                        id="github_url"
+                                        value={data.github_url}
+                                        onChange={(e) => setData('github_url', e.target.value)}
+                                        className="mt-1 block w-full"
+                                    />
+                                    <InputError message={errors.github_url} />
+                                </div>
+                            </div>
+
+                            <div className="card-actions">
+                                <button type="button" className="btn-secondary" onClick={() => window.history.back()}>
+                                    Cancel
+                                </button>
+                                <PrimaryButton className="btn-primary" disabled={processing}>
+                                    {processing ? 'Saving...' : 'Save Changes'}
+                                </PrimaryButton>
+                                {user && (
+                                    <a href="/dashboard" className="btn-secondary">
+                                        View Dashboard →
+                                    </a>
+                                )}
+
+                            </div>
+
+                        </form>
                     </div>
-                    <button className="resume-btn">View Resume</button>
                 </div>
             </div>
-        </div>
+        </AuthenticatedLayout>
     );
 }
-
-export default UserProfile;
 

@@ -1,8 +1,10 @@
-import { useState } from 'react';
+ import { useState } from 'react';
 import NavLink from '@/Components/NavLink';
 import Dropdown from '@/Components/Dropdown';
 import { Link, usePage } from '@inertiajs/react';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
+
+import Notification from '@/Components/Notification';
 
 export default function AuthenticatedLayout({ header, children }) {
     const user = usePage().props.auth.user;
@@ -33,6 +35,12 @@ export default function AuthenticatedLayout({ header, children }) {
                         </div>
 
                         <div className="hidden sm:ms-6 sm:flex sm:items-center">
+                            {!route().current('cv') && (
+                                <>
+                                    <Notification />
+                                    <div className="mx-2" />
+                                </>
+                            )}
                             <div className="relative ms-3">
                                 <Dropdown>
                                     <Dropdown.Trigger>
@@ -61,7 +69,7 @@ export default function AuthenticatedLayout({ header, children }) {
 
                                     <Dropdown.Content>
                                         <Dropdown.Link
-                                            href={route('profile.edit')}
+                                            href={route('pages.userProfile')}
                                         >
                                             Profile
                                         </Dropdown.Link>
@@ -146,7 +154,7 @@ export default function AuthenticatedLayout({ header, children }) {
                         </div>
 
                         <div className="mt-3 space-y-1">
-                            <ResponsiveNavLink href={route('profile.edit')}>
+                            <ResponsiveNavLink href={route('pages.userProfile')}>
                                 Profile
                             </ResponsiveNavLink>
                             <ResponsiveNavLink

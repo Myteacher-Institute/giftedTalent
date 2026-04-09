@@ -42,6 +42,9 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        // Auto-create profile
+
+
         event(new Registered($user));
 
         Auth::login($user);

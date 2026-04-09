@@ -1,0 +1,439 @@
+/* Admin Notifications CSS - Fully Responsive */
+.admin-notifications-container {
+    padding: 20px;
+    background: #F5F7FB;
+    min-height: 100vh;
+}
+
+@media (min-width: 768px) {
+    .admin-notifications-container {
+        padding: 24px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .admin-notifications-container {
+        padding: 32px;
+    }
+}
+
+/* Header */
+.notifications-header {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 24px;
+}
+
+@media (min-width: 640px) {
+    .notifications-header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+}
+
+.notifications-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0A2463;
+}
+
+@media (min-width: 768px) {
+    .notifications-header h1 {
+        font-size: 28px;
+    }
+}
+
+.mark-all-btn {
+    padding: 8px 16px;
+    background: #0A2463;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    white-space: nowrap;
+    transition: background 0.2s;
+}
+
+.mark-all-btn:hover {
+    background: #051A44;
+}
+
+/* Stats Cards */
+.notifications-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+@media (min-width: 640px) {
+    .notifications-stats {
+        gap: 16px;
+    }
+}
+
+.stat-card {
+    background: white;
+    padding: 10px 20px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    flex: 1;
+    min-width: 100px;
+}
+
+@media (min-width: 640px) {
+    .stat-card {
+        padding: 12px 24px;
+        min-width: auto;
+        flex: 0 1 auto;
+    }
+}
+
+.stat-card .stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #0A2463;
+    display: block;
+}
+
+@media (min-width: 768px) {
+    .stat-card .stat-value {
+        font-size: 24px;
+    }
+}
+
+.stat-card .stat-label {
+    font-size: 11px;
+    color: #6B7280;
+}
+
+@media (min-width: 768px) {
+    .stat-card .stat-label {
+        font-size: 12px;
+    }
+}
+
+.stat-card.unread .stat-value {
+    color: #DC2626;
+}
+
+/* Notifications List */
+.notifications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+/* Notification Card */
+.notification-card {
+    background: white;
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s;
+}
+
+@media (min-width: 640px) {
+    .notification-card {
+        flex-direction: row;
+        align-items: center;
+        padding: 16px 20px;
+        gap: 16px;
+    }
+}
+
+.notification-card.unread {
+    border-left: 4px solid #0A2463;
+    background: #F8FAFF;
+}
+
+/* Notification Icon */
+.notification-icon {
+    flex-shrink: 0;
+}
+
+.notification-icon-svg {
+    width: 28px;
+    height: 28px;
+    color: #0A2463;
+    stroke-width: 1.5;
+}
+
+@media (min-width: 768px) {
+    .notification-icon-svg {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+/* Notification Content */
+.notification-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+@media (min-width: 480px) {
+    .notification-header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+}
+
+.notification-header h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1A1E24;
+    word-break: break-word;
+}
+
+@media (min-width: 768px) {
+    .notification-header h3 {
+        font-size: 16px;
+    }
+}
+
+.notification-date {
+    font-size: 11px;
+    color: #9CA3AF;
+    white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+    .notification-date {
+        font-size: 12px;
+    }
+}
+
+.notification-content p {
+    font-size: 13px;
+    color: #4B5563;
+    margin-bottom: 8px;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+@media (min-width: 768px) {
+    .notification-content p {
+        font-size: 14px;
+    }
+}
+
+.notification-link {
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    color: #0A2463;
+    text-decoration: none;
+}
+
+@media (min-width: 768px) {
+    .notification-link {
+        font-size: 13px;
+    }
+}
+
+.notification-link:hover {
+    text-decoration: underline;
+}
+
+.arrow-icon {
+    width: 12px;
+    height: 12px;
+    margin-left: 4px;
+    vertical-align: middle;
+}
+
+@media (min-width: 768px) {
+    .arrow-icon {
+        width: 14px;
+        height: 14px;
+    }
+}
+
+/* Notification Actions */
+.notification-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    flex-shrink: 0;
+}
+
+.mark-read-btn,
+.delete-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mark-read-btn svg,
+.delete-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+@media (min-width: 768px) {
+    .mark-read-btn svg,
+    .delete-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+.mark-read-btn {
+    color: #10B981;
+}
+
+.mark-read-btn:hover {
+    background: #F0FDF4;
+}
+
+.delete-btn {
+    color: #DC2626;
+}
+
+.delete-btn:hover {
+    background: #FEF2F2;
+}
+
+/* Empty State */
+.no-notifications {
+    text-align: center;
+    padding: 40px 20px;
+    background: white;
+    border-radius: 12px;
+}
+
+@media (min-width: 768px) {
+    .no-notifications {
+        padding: 60px;
+    }
+}
+
+.empty-icon {
+    width: 48px;
+    height: 48px;
+    color: #D1D5DB;
+    margin-bottom: 16px;
+}
+
+.no-notifications p {
+    color: #6B7280;
+    font-size: 14px;
+}
+
+@media (min-width: 768px) {
+    .no-notifications p {
+        font-size: 16px;
+    }
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 24px;
+}
+
+.pagination a {
+    padding: 6px 10px;
+    border: 1px solid #E5E7EB;
+    background: white;
+    border-radius: 6px;
+    text-decoration: none;
+    color: #4B5563;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+@media (min-width: 768px) {
+    .pagination a {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+}
+
+.pagination a.active {
+    background: #0A2463;
+    color: white;
+    border-color: #0A2463;
+}
+
+.pagination a:hover:not(.active) {
+    background: #F3F4F6;
+}
+
+/* Responsive adjustments for very small screens */
+@media (max-width: 480px) {
+    .notification-card {
+        padding: 12px;
+    }
+    
+    .notification-header h3 {
+        font-size: 14px;
+    }
+    
+    .notification-content p {
+        font-size: 12px;
+    }
+    
+    .notification-actions {
+        gap: 4px;
+    }
+    
+    .mark-read-btn,
+    .delete-btn {
+        padding: 4px 6px;
+    }
+    
+    .stat-card {
+        padding: 8px 12px;
+    }
+    
+    .stat-card .stat-value {
+        font-size: 18px;
+    }
+    
+    .stat-card .stat-label {
+        font-size: 10px;
+    }
+}
+
+/* Touch-friendly buttons for mobile */
+@media (max-width: 768px) {
+    .mark-read-btn,
+    .delete-btn,
+    .mark-all-btn {
+        min-height: 40px;
+    }
+    
+    .mark-read-btn svg,
+    .delete-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+}

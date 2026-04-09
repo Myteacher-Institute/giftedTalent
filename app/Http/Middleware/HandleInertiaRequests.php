@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -32,8 +33,24 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $request->user()?->loadMissing(['profile', 'skills', 'resumes']),
             ],
+            'notifications' => $request->user()
+                ? [
+                    'unread_count' => $request->user()->unreadNotifications->count(),
+                    'recent_unread' => $request->user()->notifications()
+                        ->whereNull('read_at')
+                        ->latest()
+                        ->limit(5)
+                        ->get()
+                        ->map(fn($n) => [
+                            'id' => $n->id,
+                            'title' => $n->title ?? 'Notification',
+                            'message' => $n->message ?? '',
+                            'time' => $n->created_at->diffForHumans(),
+                        ]),
+                ]
+                : ['unread_count' => 0, 'recent_unread' => []],
         ];
     }
 }

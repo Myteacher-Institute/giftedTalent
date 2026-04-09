@@ -2,7 +2,7 @@
 .feature-jobs {
     width: 100%;
     margin: 0 auto;
-     background: linear-gradient(180deg, #FFFFFF 0%, #EFF6FF 100%);
+    background: linear-gradient(180deg, #FFFFFF 0%, #EFF6FF 100%);
     padding: 2rem 1rem;
 }
 
@@ -148,6 +148,8 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    background-color: #EFF6FF;
+    padding: 5px;
 }
 
 /* Gradient backgrounds - keep as is */
@@ -183,20 +185,17 @@
 
 /* Job Type Badge */
 .job-type {
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
     font-size: 0.75rem;
     font-weight: 600;
     font-family: 'Inter', sans-serif;
-    color: #6B7280;
 }
 
-#job-type-contract {
-    color: #1D4ED8;
-}
-
-#job-type-fulltime {
+.job-type-green {
     color: #15803D;
+}
+
+.job-type-blue {
+    color: #2563EB;
 }
 
 /* Job Title */
@@ -283,23 +282,31 @@
     }
 }
 
-/* Tags */
+/* Job Tags */
 .job-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 1.25rem;
+    gap: 8px;
+    margin: 12px 0;
 }
 
 .job-tag {
-    font-family: 'Inter', sans-serif;
-    font-weight: 500;
-    font-size: 11px;
-    line-height: 15px;
-    letter-spacing: -0.5px;
+    padding: 4px 2px;
     color: #3B82F6;
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+}
+
+.job-tag-more {
+    padding: 4px 12px;
+    background-color: #F3F4F6;
+    color: #6B7280;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
 }
 
 @media (min-width: 768px) {
@@ -379,7 +386,7 @@
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     .job-details {
         flex-direction: column;
         align-items: flex-start;
