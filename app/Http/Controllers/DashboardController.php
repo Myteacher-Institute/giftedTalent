@@ -9,8 +9,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Skill;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -42,15 +42,11 @@ class DashboardController extends Controller
         if (!$profile) {
             $profile = Profile::create(['user_id' => $user->id]);
             $user->setRelation('profile', $profile);
-            Log::info('Created default profile for user: ' . $user->id);
         } else {
             // Set avatar_url for easy access
             if ($profile->avatar) {
                 $profile->avatar_url = asset('storage/' . $profile->avatar);
             }
-            
-            // Log the base64 image status for debugging
-            Log::info('Profile base64 status: ' . ($profile->profile_image_base64 ? 'HAS BASE64 (length: ' . strlen($profile->profile_image_base64) . ')' : 'NO BASE64'));
         }
 
         // ========== GET RECOMMENDED JOBS BASED ON USER PROFILE ==========
@@ -115,23 +111,6 @@ class DashboardController extends Controller
             return $job['match_score'] > 0;
         })->sortByDesc('match_score')->take(6)->values();
         // ================================================================
-
-        // Debug: Log profile status
-        Log::info('Dashboard loaded', [
-            'user_id' => $user->id,
-            'user_name' => $user->name,
-            'profile_completed' => $user->profile_completed,
-            'profile_exists' => $user->profile ? 'yes' : 'no',
-            'profile_id' => $user->profile->id ?? 'null',
-            'profile_position' => $user->profile->position ?? 'null',
-            'profile_bio' => $user->profile->bio ?? 'null',
-            'avatar' => $user->profile->avatar ?? 'null',
-            'avatar_url' => $user->profile->avatar_url ?? 'null',
-            'has_base64' => $user->profile->profile_image_base64 ? 'yes' : 'no',
-            'skills_count' => $user->skills()->count(),
-            'resumes_count' => $user->resumes()->count(),
-            'recommended_jobs_count' => $recommendedJobs->count(),
-        ]);
 
         // Search parameters
         $query = $request->get('q', '');
@@ -208,11 +187,39 @@ class DashboardController extends Controller
 
         $skills = Skill::where('user_id', Auth::id())->get();
 
+        // ========== GET SAVED JOBS (FULL JOB OBJECTS) ==========
+        $savedJobIds = DB::table('saved_jobs')
+            ->where('user_id', $user->id)
+            ->pluck('job_id')
+            ->toArray();
+
+        // Get full job details for saved jobs
+        $savedJobs = [];
+        if (!empty($savedJobIds)) {
+            $savedJobs = Job::whereIn('id', $savedJobIds)
+                ->get()
+                ->map(function($job) {
+                    return [
+                        'id' => $job->id,
+                        'company' => $job->company_name ?? $job->company ?? 'Company',
+                        'title' => $job->job_title ?? $job->title,
+                        'tags' => ($job->job_type ?? 'Full-time') . ($job->company_location ? ' • ' . $job->company_location : ''),
+                        'time' => $job->created_at ? $job->created_at->diffForHumans() : 'Recently',
+                        'image' => $job->logo_url ?? 'https://i.pravatar.cc/40?img=' . $job->id,
+                        'type' => $job->job_type ?? 'Full-time',
+                        'location' => $job->company_location ?? 'Remote',
+                        'match_score' => 0,
+                    ];
+                })
+                ->toArray();
+        }
+        // =======================================================
+
         return Inertia::render('Dashboard', [
             'auth' => [
                 'user' => $user,
             ],
-            'profile' => $profile, // IMPORTANT: Pass profile directly to access profile_image_base64
+            'profile' => $profile,
             'profileComplete' => $profileComplete,
             'profileStatus' => $profileStatus,
             'stats' => [
@@ -240,7 +247,8 @@ class DashboardController extends Controller
             ],
             'jobTypes' => $jobTypes,
             'notifications' => $notificationsData,
-            'recommendedJobs' => $recommendedJobs, // ADD THIS LINE - Recommended jobs for user
+            'recommendedJobs' => $recommendedJobs,
+            'savedJobs' => $savedJobs,
         ]);
     }
 
