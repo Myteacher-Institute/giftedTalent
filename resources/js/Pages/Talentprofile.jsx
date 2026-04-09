@@ -1,9 +1,11 @@
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
+import AppNavbar from '../Components/AppNavbar';
 import '../../css/talent_profile.css';
 
 export default function TalentProfile({ auth, talent }) {
     const [imageError, setImageError] = useState(false);
+    const currentUser = auth?.user;
 
     // Get initials for avatar fallback
     const getInitials = (name) => {
@@ -44,6 +46,7 @@ export default function TalentProfile({ auth, talent }) {
     if (!talent) {
         return (
             <div className="talent-profile-page">
+                <AppNavbar user={currentUser} />
                 <div className="talent-profile-container">
                     <div className="talent-profile-card-full">
                         <p>Loading talent profile...</p>
@@ -56,6 +59,8 @@ export default function TalentProfile({ auth, talent }) {
     return (
         <>
             <Head title={`${talent.name || 'Talent'} - GiftedTalent Profile`} />
+            
+            <AppNavbar user={currentUser} />
             
             <div className="talent-profile-page">
                 <div className="talent-profile-container">

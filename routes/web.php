@@ -7,7 +7,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PrivacySettingsController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\JobsController;  // Changed from JobController to JobsController
+use App\Http\Controllers\JobsController;
 use App\Models\Job;
 use App\Models\User;
 use Illuminate\Foundation\Application;
@@ -84,7 +84,7 @@ Route::get('/jobs/{id}', function ($id) {
 })->name('jobs.show');
 
 // Navigation Pages
-Route::get('/find-jobs', [JobsController::class, 'index'])->name('pages.findJobs');  // Changed to JobsController
+Route::get('/find-jobs', [JobsController::class, 'index'])->name('pages.findJobs');
 Route::get('/find-talents', [PageController::class, 'findTalents'])->name('pages.findTalents');
 Route::get('/how-it-works', [PageController::class, 'howItWorks'])->name('pages.howItWorks');
 Route::get('/about', [PageController::class, 'about'])->name('pages.about');
@@ -146,13 +146,6 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     Route::put('/profile/experiences/{experience}', [ProfileController::class, 'updateExperience'])->name('profile.experiences.update');
     Route::delete('/profile/experiences/{experience}', [ProfileController::class, 'deleteExperience'])->name('profile.experiences.delete');
 
-    // Saved Jobs Routes
-    Route::get('/saved-jobs', [\App\Http\Controllers\Api\SavedJobController::class, 'index'])->name('saved-jobs.index');
-    Route::post('/saved-jobs/{jobId}', [\App\Http\Controllers\Api\SavedJobController::class, 'store'])->name('saved-jobs.store');
-    Route::delete('/saved-jobs/{jobId}', [\App\Http\Controllers\Api\SavedJobController::class, 'destroy'])->name('saved-jobs.destroy');
-    Route::get('/saved-jobs/check/{jobId}', [\App\Http\Controllers\Api\SavedJobController::class, 'check'])->name('saved-jobs.check');
-    Route::get('/saved-jobs/count', [\App\Http\Controllers\Api\SavedJobController::class, 'count'])->name('saved-jobs.count');
-
     // Job Preferences Routes
     Route::get('/user/job-preferences', [ProfileController::class, 'getJobPreferences'])->name('user.job-preferences.get');
     Route::put('/user/job-preferences', [ProfileController::class, 'updateJobPreferences'])->name('user.job-preferences.update');
@@ -201,5 +194,8 @@ Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name
 
 // Talent Profile Route
 Route::get('/talent/{id}', [App\Http\Controllers\TalentController::class, 'show'])->name('talent.show');
+
+// Explore Page Route
+Route::get('/explore', [App\Http\Controllers\ExploreController::class, 'index'])->name('explore');
 
 require __DIR__ . '/auth.php';

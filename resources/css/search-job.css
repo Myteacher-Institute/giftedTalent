@@ -340,6 +340,56 @@ body {
   position: sticky;
   top: 90px;
   box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+/* ============================================
+   SIDEBAR CLOSE BUTTON - MOBILE ONLY
+   ============================================ */
+
+/* Hide sidebar close button on desktop by default */
+.sidebar-close {
+    display: none;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #64748b;
+    padding: 10px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    z-index: 10;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar-close:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    transform: rotate(90deg);
+}
+
+.sidebar-close i {
+    font-size: 20px;
+}
+
+/* Show sidebar close button ONLY on mobile */
+@media (max-width: 768px) {
+    .sidebar-close {
+        display: flex;
+    }
+}
+
+/* On desktop, ensure sidebar-close is hidden */
+@media (min-width: 769px) {
+    .sidebar-close {
+        display: none !important;
+    }
 }
 
 /* Profile Section */
@@ -1483,7 +1533,6 @@ body {
   background: #94a3b8;
 }
 
-
 /* Mobile Navigation Section - Only visible on mobile */
 .mobile-nav-section {
     display: none;
@@ -1546,7 +1595,6 @@ body {
         display: none;
     }
 }
-
 
 /* Search Bar Styles - Fully Responsive */
 .search-bar-container {
