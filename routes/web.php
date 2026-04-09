@@ -5,21 +5,75 @@ use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PrivacySettingsController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\JobsController;
 use App\Models\Job;
+use App\Models\User;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 Route::get('/', function () {
     $jobs = Job::latest()->take(10)->get();
 
+    $featuredTalents = User::where('profile_completed', '>=', 50)
+                            ->with('profile')
+                            ->orderBy('profile_completed', 'desc')
+                            ->take(6)
+                            ->get()
+                            ->map(function($user) {
+                                $skills = [];
+                                if ($user->skills) {
+                                    $skills = is_string($user->skills) ? json_decode($user->skills, true) : $user->skills;
+                                }
+                                if (empty($skills)) {
+                                    $skills = ['Available for work'];
+                                }
+                                
+                                $rating = 3.5;
+                                if ($user->profile_completed >= 90) $rating = 5.0;
+                                elseif ($user->profile_completed >= 80) $rating = 4.8;
+                                elseif ($user->profile_completed >= 70) $rating = 4.5;
+                                elseif ($user->profile_completed >= 60) $rating = 4.2;
+                                elseif ($user->profile_completed >= 50) $rating = 4.0;
+                                
+                                $avatar = null;
+                                if ($user->profile && $user->profile->profile_image_base64) {
+                                    $avatar = $user->profile->profile_image_base64;
+                                } elseif ($user->profile && $user->profile->avatar_url) {
+                                    $avatar = $user->profile->avatar_url;
+                                }
+                                
+                                $title = $user->title;
+                                if (!$title && $user->profile && $user->profile->title) {
+                                    $title = $user->profile->title;
+                                }
+                                if (!$title && $user->profile && $user->profile->position) {
+                                    $title = $user->profile->position;
+                                }
+                                
+                                return [
+                                    'id' => $user->id,
+                                    'name' => $user->name,
+                                    'title' => $title ?? 'Professional',
+                                    'avatar' => $avatar,
+                                    'avatar_url' => $avatar,
+                                    'profile_image_base64' => $avatar,
+                                    'skills' => $skills,
+                                    'rating' => $rating,
+                                    'profile_completed' => $user->profile_completed,
+                                ];
+                            });
+     
     return Inertia::render('Welcome', [
         'canLogin'       => Route::has('login'),
         'canRegister'    => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion'     => PHP_VERSION,
         'jobs'           => $jobs,
+        'featuredTalents' => $featuredTalents,
     ]);
 })->name('home');
 
@@ -30,7 +84,7 @@ Route::get('/jobs/{id}', function ($id) {
 })->name('jobs.show');
 
 // Navigation Pages
-Route::get('/find-jobs', [PageController::class, 'findJobs'])->name('pages.findJobs');
+Route::get('/find-jobs', [JobsController::class, 'index'])->name('pages.findJobs');
 Route::get('/find-talents', [PageController::class, 'findTalents'])->name('pages.findTalents');
 Route::get('/how-it-works', [PageController::class, 'howItWorks'])->name('pages.howItWorks');
 Route::get('/about', [PageController::class, 'about'])->name('pages.about');
@@ -39,7 +93,7 @@ Route::get('/jobs', [PageController::class, 'jobs'])->name('jobs');
 // User Profile Routes
 Route::get('/user-profile', [ProfileController::class, 'show'])->middleware('auth')->name('pages.userProfile');
 Route::get('/easy-apply-job', [PageController::class, 'easyApplyJob'])->middleware(['auth', 'verified'])->name('pages.easyApplyJob');
-Route::get('/search-jobs', [PageController::class, 'searchJobs'])->middleware(['auth', 'verified'])->name('pages.searchJobs');
+Route::get('/search-jobs', [JobsController::class, 'searchJobs'])->middleware(['auth', 'verified'])->name('search-jobs');
 
 // Contact Routes
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
@@ -61,6 +115,16 @@ Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'ind
 
 // Authenticated User Routes
 Route::middleware(['auth', 'not_admin'])->group(function () {
+    // ========== SETTINGS ROUTE ==========
+    Route::get('/settings', function () {
+        return Inertia::render('Settings', [
+            'user' => auth()->user(),
+            'profile' => auth()->user()->profile,
+            'auth' => ['user' => auth()->user()],
+        ]);
+    })->name('settings');
+    // ====================================
+
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'read'])->name('notifications.read');
     Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'readAll'])->name('notifications.readAll');
@@ -81,6 +145,14 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     Route::post('/profile/experiences', [ProfileController::class, 'addExperience'])->name('profile.experiences.add');
     Route::put('/profile/experiences/{experience}', [ProfileController::class, 'updateExperience'])->name('profile.experiences.update');
     Route::delete('/profile/experiences/{experience}', [ProfileController::class, 'deleteExperience'])->name('profile.experiences.delete');
+
+    // Job Preferences Routes
+    Route::get('/user/job-preferences', [ProfileController::class, 'getJobPreferences'])->name('user.job-preferences.get');
+    Route::put('/user/job-preferences', [ProfileController::class, 'updateJobPreferences'])->name('user.job-preferences.update');
+    
+    // Privacy Settings Routes
+    Route::get('/user/privacy-settings', [PrivacySettingsController::class, 'getSettings'])->name('user.privacy-settings.get');
+    Route::put('/user/privacy-settings', [PrivacySettingsController::class, 'updateSettings'])->name('user.privacy-settings.update');
 });
 
 // Admin Routes - Protected by IsAdmin middleware
@@ -119,5 +191,11 @@ Route::middleware(['auth', 'admin'])->prefix('Admin')->name('admin.')->group(fun
 // Google Authentication Routes
 Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('google.redirect');
 Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('google.callback');
+
+// Talent Profile Route
+Route::get('/talent/{id}', [App\Http\Controllers\TalentController::class, 'show'])->name('talent.show');
+
+// Explore Page Route
+Route::get('/explore', [App\Http\Controllers\ExploreController::class, 'index'])->name('explore');
 
 require __DIR__ . '/auth.php';
