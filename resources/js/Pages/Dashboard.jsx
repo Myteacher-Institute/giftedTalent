@@ -118,7 +118,8 @@ export default function Dashboard({
     profile,
     flash,
     profileLevel = { message: 'Keep going!' },
-    recommendedJobs = []  // ADDED: Jobs recommended based on user profile
+    recommendedJobs = [],
+    savedJobs = []  // <-- Now receives full job objects from controller
 }) {
     const [searchQuery, setSearchQuery] = useState(searchParams.q || '');
     const [selectedJobType, setSelectedJobType] = useState(searchParams.job_type || '');
@@ -132,8 +133,8 @@ export default function Dashboard({
     const [unreadCount, setUnreadCount] = useState(0);
     const [messages, setMessages] = useState([]);
     const [loadingMessages, setLoadingMessages] = useState(false);
-    const [savedJobs, setSavedJobs] = useState([]);
-    const [savedJobsCount, setSavedJobsCount] = useState(0);
+    const [localSavedJobs, setLocalSavedJobs] = useState(savedJobs);  // <-- Use props directly
+    const [savedJobsCount, setSavedJobsCount] = useState(savedJobs.length);  // <-- Use prop length
     const [showSavedJobs, setShowSavedJobs] = useState(false);
     const [loadingSaved, setLoadingSaved] = useState(false);
     
@@ -261,39 +262,62 @@ export default function Dashboard({
         setShowSavedJobs(false);
     };
 
-    const fetchSavedJobs = () => {
-        setLoadingSaved(true);
-        setTimeout(() => {
-            setSavedJobs([]);
-            setLoadingSaved(false);
-        }, 500);
-    };
-
     const handleShowSavedJobs = () => {
         setShowAppliedJobs(false);
         setShowSavedJobs(true);
-        fetchSavedJobs();
     };
 
-    const handleSaveJob = (jobId) => {
-        if (savedJobs.includes(jobId)) {
-            const updated = savedJobs.filter(id => id !== jobId);
-            setSavedJobs(updated);
-            setSavedJobsCount(savedJobsCount - 1);
-            alertify.success('Job removed from saved');
-        } else {
-            const updated = [...savedJobs, jobId];
-            setSavedJobs(updated);
-            setSavedJobsCount(savedJobsCount + 1);
-            alertify.success('Job saved successfully!');
+    // <-- SIMPLIFIED: Save job to database
+    const handleSaveJob = async (jobId) => {
+        try {
+            const response = await fetch(`/saved-jobs/${jobId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                },
+            });
+            
+            if (response.ok) {
+                // Find the job from existing lists to add to saved
+                const jobToAdd = [...jobs, ...recommendedJobs].find(job => job.id === jobId);
+                if (jobToAdd) {
+                    setLocalSavedJobs([...localSavedJobs, jobToAdd]);
+                    setSavedJobsCount(savedJobsCount + 1);
+                }
+                alertify.success('Job saved successfully!');
+            } else {
+                alertify.error('Failed to save job');
+            }
+        } catch (error) {
+            console.error('Error saving job:', error);
+            alertify.error('Network error. Please try again.');
         }
     };
 
-    const handleUnsaveJob = (jobId) => {
-        const updated = savedJobs.filter(id => id !== jobId);
-        setSavedJobs(updated);
-        setSavedJobsCount(savedJobsCount - 1);
-        alertify.success('Job removed from saved');
+    // <-- SIMPLIFIED: Unsave job from database
+    const handleUnsaveJob = async (jobId) => {
+        try {
+            const response = await fetch(`/saved-jobs/${jobId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                },
+            });
+            
+            if (response.ok) {
+                const updated = localSavedJobs.filter(job => job.id !== jobId);
+                setLocalSavedJobs(updated);
+                setSavedJobsCount(updated.length);
+                alertify.success('Job removed from saved');
+            } else {
+                alertify.error('Failed to remove job');
+            }
+        } catch (error) {
+            console.error('Error removing saved job:', error);
+            alertify.error('Network error. Please try again.');
+        }
     };
 
     const fetchUnreadCount = () => {
@@ -461,13 +485,9 @@ export default function Dashboard({
                                     ← Back to Dashboard
                                 </button>
                             </div>
-                            {loadingSaved ? (
-                                <div className="flex justify-center py-12">
-                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-                                </div>
-                            ) : savedJobs.length > 0 ? (
+                            {localSavedJobs.length > 0 ? (
                                 <div className="jobs">
-                                    {savedJobs.map((job) => (
+                                    {localSavedJobs.map((job) => (
                                         <JobCard
                                             key={job.id}
                                             job={job}
@@ -585,7 +605,7 @@ export default function Dashboard({
                                 </div>
                             )}
 
-                            {/* Recommended Jobs Section - Based on User Profile from Controller */}
+                            {/* Recommended Jobs Section */}
                             {recommendedJobs && recommendedJobs.length > 0 && (
                                 <div className="jobs-section">
                                     <div className="section-header">
@@ -599,7 +619,7 @@ export default function Dashboard({
                                                 job={job}
                                                 onSave={handleSaveJob}
                                                 onUnsave={handleUnsaveJob}
-                                                isSaved={savedJobs.includes(job.id)}
+                                                isSaved={localSavedJobs.some(saved => saved.id === job.id)}
                                             />
                                         ))}
                                     </div>
@@ -617,7 +637,7 @@ export default function Dashboard({
                                                 job={job}
                                                 onSave={handleSaveJob}
                                                 onUnsave={handleUnsaveJob}
-                                                isSaved={savedJobs.includes(job.id)}
+                                                isSaved={localSavedJobs.some(saved => saved.id === job.id)}
                                             />
                                         ))}
                                     </div>

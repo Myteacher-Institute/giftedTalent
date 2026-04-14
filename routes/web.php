@@ -14,6 +14,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 Route::get('/', function () {
@@ -154,6 +155,39 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     // Privacy Settings Routes
     Route::get('/user/privacy-settings', [PrivacySettingsController::class, 'getSettings'])->name('user.privacy-settings.get');
     Route::put('/user/privacy-settings', [PrivacySettingsController::class, 'updateSettings'])->name('user.privacy-settings.update');
+
+    // Saved Jobs Routes
+    Route::post('/saved-jobs/{jobId}', function ($jobId) {
+        $user = auth()->user();
+        
+        $exists = DB::table('saved_jobs')
+            ->where('user_id', $user->id)
+            ->where('job_id', $jobId)
+            ->exists();
+        
+        if (!$exists) {
+            DB::table('saved_jobs')->insert([
+                'user_id' => $user->id,
+                'job_id' => $jobId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            return response()->json(['message' => 'Job saved successfully']);
+        }
+        
+        return response()->json(['message' => 'Job already saved'], 409);
+    })->name('saved-jobs.store');
+
+    Route::delete('/saved-jobs/{jobId}', function ($jobId) {
+        $user = auth()->user();
+        
+        DB::table('saved_jobs')
+            ->where('user_id', $user->id)
+            ->where('job_id', $jobId)
+            ->delete();
+        
+        return response()->json(['message' => 'Job removed from saved']);
+    })->name('saved-jobs.destroy');
 });
 
 // Admin Routes - Protected by IsAdmin middleware
