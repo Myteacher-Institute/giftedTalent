@@ -259,6 +259,7 @@ nav div p {
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-left: 0.7rem;
 }
 
 /* Welcome Section */
@@ -314,6 +315,13 @@ nav div p {
     padding: 0.6rem 1.5rem;
     margin-bottom: 0.7rem;
     border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.stat-item:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
 }
 
 #stat-item-1 {
@@ -342,6 +350,7 @@ nav div p {
     letter-spacing: 0.14rem;
     font-size: 0.85rem;
     margin-top: 0.25rem;
+    color: #000;
 }
 
 .stat-card-post-job {
@@ -361,7 +370,7 @@ nav div p {
     background: #50AE62;
     color: white;
     border: none;
-    margin: 2rem auto 0 14.7rem;
+    margin: 2rem auto 0 9.5rem;
     padding: 1rem;
     border-radius: 10px;
     font-weight: 600;
@@ -510,6 +519,116 @@ nav div p {
     color: #64748B;
 }
 
+.jobs-info {
+    margin-bottom: 3rem;
+}
+
+/* Menu Dropdown Styles */
+.menu-container {
+    position: relative;
+    display: inline-block;
+}
+
+.menu-trigger {
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    transition: transform 0.2s ease;
+}
+
+.menu-trigger:hover {
+    transform: scale(1.1);
+}
+
+.dropdown-content {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background-color: white;
+    min-width: 120px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    z-index: 1000;
+    margin-top: 8px;
+    overflow: hidden;
+    padding: 0 1.5rem;
+}
+
+.dropdown-content.show {
+    display: block;
+    animation: dropdownFade 0.2s ease;
+}
+
+.dropdown-content button {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 10px 16px;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 14px;
+    color: #333;
+    transition: background 0.2s;
+    margin: 0.5rem 0;
+}
+
+.dropdown-content button:first-child {
+    display: flex;
+}
+
+.dropdown-content button:hover {
+    background-color: #f0f0f0;
+}
+
+.dropdown-content button svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    margin-right: 8px;
+}
+
+/* View Details button - Blue */
+.dropdown-content button:first-child:hover {
+    color: #3B82F6;
+    background-color: #EFF6FF;
+}
+
+.dropdown-content button:first-child:hover svg {
+    stroke: #3B82F6;
+}
+
+/* View Details - Blue */
+.dropdown-content button:first-child:hover {
+    color: #3B82F6;
+    background-color: #EFF6FF;
+}
+
+/* Edit Job - Dark Blue */
+.dropdown-content button:nth-child(2):hover {
+    color: #0A2463;
+}
+
+/* Delete Job - Red */
+.dropdown-content button:last-child:hover {
+    color: #dc2626;
+}
+
+@keyframes dropdownFade {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .job-details-container {
     display: flex;
     gap: 5rem;
@@ -581,6 +700,23 @@ hr {
     display: flex;
     font-size: 0.85rem;
     color: #94A3B8;
+}
+
+.job-details-container p {
+    padding: 0;
+    margin: 0;
+}
+
+.job-details-container .applicants a {
+    color: #0A2463;
+    text-decoration: none;
+    font-weight: 600;
+    margin-top: 0.25rem;
+}
+
+.job-details-container .applicants p {
+    font-weight: 600;
+    padding-bottom: 0.5rem;
 }
 
 .job-details-container button {
@@ -766,6 +902,40 @@ footer {
     color: #0A2463;
 }
 
+
+.footer-bottom {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6B7280;
+}
+
+.footer-bottom .copyright {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    margin-bottom: 0.5rem;
+}
+
+.footer-bottom p span {
+    font-weight: 600;
+    color: #000;
+}
+
+.avatar img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-bottom: 1.5rem;
+}
+
+.icon-wrapper {
+    position: relative;
+    cursor: pointer;
+}
+
 @media (max-width: 768px) {
 
     .feature-jobs,
@@ -807,39 +977,6 @@ footer {
         padding: 12px 20px;
         font-size: 16px;
     }
-}
-
-.footer-bottom {
-    display: flex;
-    flex-direction: column;
-    text-align: center;
-    font-size: 12px;
-    font-weight: 600;
-    color: #6B7280;
-}
-
-.footer-bottom .copyright {
-    display: flex;
-    justify-content: center;
-    gap: 4px;
-    margin-bottom: 0.5rem;
-}
-
-.footer-bottom p span {
-    font-weight: 600;
-    color: #000;
-}
-
-.avatar-img {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
-.icon-wrapper {
-    position: relative;
-    cursor: pointer;
 }
 
 .notification-badge {

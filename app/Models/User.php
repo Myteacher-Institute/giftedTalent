@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -7,7 +6,6 @@ use App\Models\Job;
 use App\Models\Resume;
 use App\Models\Skill;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -29,7 +27,7 @@ class User extends Authenticatable
         'password',
         'is_admin',
         'google_id',
-        'email_verified_at'
+        'email_verified_at',
     ];
 
     /**
@@ -51,17 +49,17 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'is_admin' => 'boolean',
+            'password'          => 'hashed',
+            'is_admin'          => 'boolean',
         ];
     }
 
     /**
      * Get the user's profile.
      */
-    public function profile(): BelongsTo
+    public function profile()
     {
-        return $this->belongsTo(Profile::class);
+        return $this->hasOne(Profile::class);
     }
 
     /**
@@ -81,8 +79,6 @@ class User extends Authenticatable
     {
         return $this->hasMany(Experience::class);
     }
-
-
 
     /**
      * Get the user's resumes.

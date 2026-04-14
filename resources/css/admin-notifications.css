@@ -34,6 +34,50 @@
     }
 }
 
+.back-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: #F3F4F6;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    color: #4B5563;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.back-btn:hover {
+    background: #E5E7EB;
+    color: #0A2463;
+    transform: translateX(-2px);
+}
+
+.back-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+@media (max-width: 768px) {
+    .header-left {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .back-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .back-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
 .notifications-header h1 {
     font-size: 24px;
     font-weight: 700;
@@ -295,6 +339,7 @@
 }
 
 @media (min-width: 768px) {
+
     .mark-read-btn svg,
     .delete-btn svg {
         width: 18px;
@@ -392,32 +437,32 @@
     .notification-card {
         padding: 12px;
     }
-    
+
     .notification-header h3 {
         font-size: 14px;
     }
-    
+
     .notification-content p {
         font-size: 12px;
     }
-    
+
     .notification-actions {
         gap: 4px;
     }
-    
+
     .mark-read-btn,
     .delete-btn {
         padding: 4px 6px;
     }
-    
+
     .stat-card {
         padding: 8px 12px;
     }
-    
+
     .stat-card .stat-value {
         font-size: 18px;
     }
-    
+
     .stat-card .stat-label {
         font-size: 10px;
     }
@@ -425,12 +470,13 @@
 
 /* Touch-friendly buttons for mobile */
 @media (max-width: 768px) {
+
     .mark-read-btn,
     .delete-btn,
     .mark-all-btn {
         min-height: 40px;
     }
-    
+
     .mark-read-btn svg,
     .delete-btn svg {
         width: 20px;

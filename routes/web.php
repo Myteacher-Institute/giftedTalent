@@ -54,6 +54,12 @@ Route::get('/guidelines', function () {
     return Inertia::render('Guidelines');
 })->name('guidelines');
 
+// Explore Route
+Route::get('/explore', function () {
+    $jobs = App\Models\Job::where('status', 'active')->latest()->get();
+    return Inertia::render('Explore', ['jobs' => $jobs]);
+})->name('explore');
+
 // User Dashboard (non-admin)
 Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'not_admin'])
@@ -85,11 +91,21 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
 
 // Admin Routes - Protected by IsAdmin middleware
 Route::middleware(['auth', 'admin'])->prefix('Admin')->name('admin.')->group(function () {
+
+    // Admin Dashboard & Management Routes
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/users', [AdminController::class, 'users'])->name('users');
     Route::get('/jobs', [AdminController::class, 'jobs'])->name('jobs');
     Route::get('/jobs/create', [AdminController::class, 'createJob'])->name('jobs.create');
     Route::post('/jobs', [AdminController::class, 'storeJob'])->name('jobs.store');
+    Route::get('/jobs/{id}/edit', [AdminController::class, 'editJob'])->name('jobs.edit');
+    Route::patch('/jobs/{id}', [AdminController::class, 'updateJob'])->name('jobs.update');
+    Route::delete('/jobs/{id}', [AdminController::class, 'deleteJob'])->name('jobs.delete');
+    Route::get('/jobs/{id}/applicants', [AdminController::class, 'jobApplicants'])->name('admin.jobs.applicants');
+
+    // Profile Management Routes
+    Route::post('/profile/avatar', [AdminController::class, 'uploadAvatar'])->name('profile.avatar.upload');
+    Route::delete('/profile/avatar', [AdminController::class, 'removeAvatar'])->name('profile.avatar.remove');
 
     // Notification Routes
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications');
@@ -104,10 +120,18 @@ Route::middleware(['auth', 'admin'])->prefix('Admin')->name('admin.')->group(fun
     Route::delete('/messages/{id}', [AdminController::class, 'deleteMessage'])->name('messages.delete');
     Route::patch('/messages/{id}/read', [AdminController::class, 'markAsRead'])->name('messages.read');
 
+    // Settings Route
     Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
 
+    // Profile Management Routes
     Route::patch('/profile', [AdminController::class, 'updateProfile'])->name('profile.update');
     Route::put('/password', [AdminController::class, 'updatePassword'])->name('password.update');
+
+    // Candidate Management Routes
+    Route::get('/candidates', [AdminController::class, 'candidates'])->name('candidates');
+    Route::patch('/candidates/{applicationId}/status', [AdminController::class, 'updateCandidateStatus'])->name('candidates.status'); // Keep only this one
+    Route::get('/candidates/{id}', [AdminController::class, 'viewCandidate'])->name('candidates.show');
+    Route::delete('/candidates/{id}', [AdminController::class, 'deleteCandidate'])->name('candidates.delete');
 
     // CV Review Routes
     Route::resource('cv-review', \App\Http\Controllers\Admin\CvReviewController::class)->only(['index', 'show']);

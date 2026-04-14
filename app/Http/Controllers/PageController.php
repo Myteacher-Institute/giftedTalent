@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Job;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -66,11 +67,41 @@ class PageController extends Controller
         ]);
     }
 
-    public function jobs()
+    public function jobs(Request $request)
     {
-        $jobs = Job::latest()->get();
+        $query = Job::query();
+
+        // Filter by category if provided
+        if ($request->has('category') && $request->category) {
+            $category = $request->category;
+
+            // Define keywords for each category
+            $keywords = match ($category) {
+                'technology' => ['developer', 'engineer', 'programmer', 'software', 'full-stack', 'frontend', 'backend', 'php', 'javascript', 'react', 'laravel', 'web developer', 'full stack', 'senior frontend'],
+                'design'     => ['designer', 'ui', 'ux', 'graphic', 'creative', 'figma', 'web designer', 'tailwind css'],
+                'marketing'  => ['marketing', 'seo', 'social media', 'digital marketing', 'content', 'digital marketer'],
+                'finance'    => ['finance', 'accounting', 'banking', 'financial', 'audit'],
+                'sales'      => ['sales', 'business development', 'account manager', 'client relations'],
+                'support'    => ['support', 'customer service', 'help desk', 'customer care', 'technical support'],
+                'other'      => ['administrative', 'operations', 'coordinator', 'assistant', 'hr', 'project manager'],
+                default      => []
+            };
+
+            if (! empty($keywords)) {
+                $query->where(function ($q) use ($keywords) {
+                    foreach ($keywords as $keyword) {
+                        $q->orWhere('job_title', 'like', "%{$keyword}%")
+                            ->orWhere('description', 'like', "%{$keyword}%");
+                    }
+                });
+            }
+        }
+
+        $jobs = $query->latest()->get();
+
         return Inertia::render('Jobs', [
-            'jobs' => $jobs,
+            'jobs'     => $jobs,
+            'category' => $request->category,
         ]);
     }
 
