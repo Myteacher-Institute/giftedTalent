@@ -7,15 +7,13 @@ import { createRoot } from 'react-dom/client';
 
 const appName = import.meta.env.VITE_APP_NAME || 'GiftedTalents';
 
-// Wait for DOM to be fully loaded before mounting
+// Wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', () => {
-    // Create app element if it doesn't exist
-    let appElement = document.getElementById('app');
+    const appElement = document.getElementById('app');
+    
     if (!appElement) {
-        appElement = document.createElement('div');
-        appElement.id = 'app';
-        document.body.appendChild(appElement);
-        console.log('Created app element');
+        console.error('App element not found!');
+        return;
     }
 
     createInertiaApp({
@@ -26,15 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 import.meta.glob('./Pages/**/*.jsx'),
             ),
         setup({ el, App, props }) {
-            // Use the app element
-            const mountEl = document.getElementById('app');
-            
-            if (!mountEl) {
-                console.error('Mounting element not found!');
-                return;
-            }
-            
-            const root = createRoot(mountEl);
+            // Use the app element we found, not the el parameter
+            const root = createRoot(appElement);
             root.render(<App {...props} />);
         },
         progress: {

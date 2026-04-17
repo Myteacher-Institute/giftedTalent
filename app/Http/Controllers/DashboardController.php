@@ -202,7 +202,7 @@ class DashboardController extends Controller
                     return [
                         'id' => $job->id,
                         'company' => $job->company_name ?? $job->company ?? 'Company',
-                        'title' => $job->job_title ?? $job->title,
+                        'title' => $job->job_title ?? $job->title,  
                         'tags' => ($job->job_type ?? 'Full-time') . ($job->company_location ? ' • ' . $job->company_location : ''),
                         'time' => $job->created_at ? $job->created_at->diffForHumans() : 'Recently',
                         'image' => $job->logo_url ?? 'https://i.pravatar.cc/40?img=' . $job->id,

@@ -238,4 +238,71 @@ class JobsController extends Controller
         
         return response()->json($recommendedJobs);
     }
+
+    /**
+ * Apply for a job
+ */
+public function apply($jobId)
+{
+    $user = auth()->user();
+    
+    // Check if job exists
+    $job = DB::table('job_posts')->where('id', $jobId)->first();
+    
+    if (!$job) {
+        return response()->json(['message' => 'Job not found'], 404);
+    }
+    
+    // Check if already applied
+    $existing = DB::table('job_applications')
+        ->where('user_id', $user->id)
+        ->where('job_id', $jobId)
+        ->exists();
+    
+    if ($existing) {
+        return response()->json(['message' => 'You have already applied for this job'], 409);
+    }
+    
+    // Create application
+    DB::table('job_applications')->insert([
+        'user_id' => $user->id,
+        'job_id' => $jobId,
+        'status' => 'pending',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+    
+    return response()->json(['message' => 'Application submitted successfully!']);
+}
+
+/**
+ * Get user's job applications
+ */
+public function myApplications()
+{
+    $user = auth()->user();
+    
+    $applications = \App\Models\JobApplication::where('user_id', $user->id)
+        ->with('job')
+        ->orderBy('created_at', 'desc')
+        ->get()
+        ->map(function($application) {
+            $job = $application->job;
+            return [
+                'id' => $application->id,
+                'job_id' => $application->job_id,
+                'title' => $job->job_title ?? $job->title ?? 'Job Title',
+                'company' => $job->company_name ?? $job->company ?? 'Company',
+                'location' => $job->company_location ?? $job->location ?? 'Location',
+                'status' => $application->status,
+                'applied_at' => $application->created_at,
+                'applied_at_human' => $application->created_at->diffForHumans(),
+            ];
+        });
+    
+    return response()->json([
+        'success' => true,
+        'data' => $applications
+    ]);
+}
 }

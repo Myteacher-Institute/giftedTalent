@@ -749,7 +749,6 @@ footer {
     width: 100%;
     display: flex;
     flex-direction: column;
-    /* padding: 1.5rem 1.5rem; */
     margin-top: 1rem;
     gap: 2rem;
     align-items: center;
@@ -845,7 +844,6 @@ footer {
     color: #000;
     font-weight: 600;
     font-size: 14px;
-    /* margin-top: 6rem; */
     margin-left: 0;
     white-space: nowrap;
 }
@@ -859,605 +857,596 @@ footer {
     .feature-jobs,
     .featured-talents {
         padding: 60px 16px;
-
-
-        .talent-swiper-container {
-            overflow-x: auto;
-            overflow-y: hidden;
-            scroll-snap-type: x mandatory;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: thin;
-            padding: 10px 0 20px 0;
-        }
-
-        .talent-swiper-container::-webkit-scrollbar {
-            height: 4px;
-        }
-
-        .talent-swiper-container::-webkit-scrollbar-track {
-            background: #e2e8f0;
-            border-radius: 10px;
-        }
-
-        .talent-swiper-container::-webkit-scrollbar-thumb {
-            background: #0A2463;
-            border-radius: 10px;
-        }
-
-        .talent-swiper-wrapper {
-            display: flex;
-            flex-direction: row;
-            gap: 16px;
-            width: max-content;
-            padding: 0 16px;
-        }
-
-        .feature-talent-card {
-            width: 280px;
-            flex-shrink: 0;
-            scroll-snap-align: start;
-        }
-
-        .feature-talent-card-header img,
-        .feature-talent-avatar-initials {
-            width: 80px;
-            height: 80px;
-        }
-
-        .feature-talent-avatar-initials {
-            font-size: 32px;
-        }
-
-        /* Hide navigation arrows on mobile */
-        .talent-swiper-prev,
-        .talent-swiper-next {
-            display: none;
-
-        }
-
-        .footer-right {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem !important;
-            margin: 0;
-        }
     }
 
-    .footer-bottom {
+    .talent-swiper-container {
+        overflow-x: auto;
+        overflow-y: hidden;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        padding: 10px 0 20px 0;
+    }
+
+    .talent-swiper-container::-webkit-scrollbar {
+        height: 4px;
+    }
+
+    .talent-swiper-container::-webkit-scrollbar-track {
+        background: #e2e8f0;
+        border-radius: 10px;
+    }
+
+    .talent-swiper-container::-webkit-scrollbar-thumb {
+        background: #0A2463;
+        border-radius: 10px;
+    }
+
+    .talent-swiper-wrapper {
         display: flex;
-        flex-direction: column;
-        text-align: center;
-        font-size: 12px;
-        font-weight: 600;
-        color: #6B7280;
-        margin-bottom: 1.2rem;
+        flex-direction: row;
+        gap: 16px;
+        width: max-content;
+        padding: 0 16px;
     }
 
-    .footer-bottom .copyright {
-        display: flex;
-        justify-content: center;
-        gap: 4px;
-        margin-bottom: 0.5rem;
+    .feature-talent-card {
+        width: 280px;
+        flex-shrink: 0;
+        scroll-snap-align: start;
     }
 
-    .footer-bottom p span {
-        font-weight: 600;
-        color: #000;
+    .feature-talent-card-header img,
+    .feature-talent-avatar-initials {
+        width: 80px;
+        height: 80px;
     }
 
-    /* Small Mobile */
-    @media (max-width: 480px) {
-        .featured-talents {
-            padding: 40px 12px;
-        }
-
-
-        .footer-right {
-            display: flex;
-            flex-direction: row;
-            gap: 1.2rem !important;
-            margin-top: 2.2rem;
-        }
-
-        /* Prevent any overflow */
-        * {
-            max-width: 100%;
-
-        }
-
-        .feature-talent-header h3 {
-            font-size: 24px;
-
-        }
-
-        .feature-talent-header p {
-            font-size: 14px;
-        }
-
-        .feature-talent-card {
-            width: 260px;
-        }
-
-        .feature-talent-card-header img,
-        .feature-talent-avatar-initials {
-            width: 70px;
-            height: 70px;
-        }
-
-        .feature-talent-avatar-initials {
-            font-size: 28px;
-        }
-
-        .talent-rating-badge {
-            right: 16px;
-            padding: 3px 8px;
-            font-size: 10px;
-        }
-
-        .feature-talent-card-body h3 {
-            font-size: 16px;
-        }
-
-        .browse-all-btn {
-            width: 100%;
-            text-align: center;
-            padding: 10px 20px;
-            font-size: 14px;
-        }
+    .feature-talent-avatar-initials {
+        font-size: 32px;
     }
 
-    /* Optional: Navigation Arrows for Desktop */
     .talent-swiper-prev,
     .talent-swiper-next {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 40px;
-        height: 40px;
-        background: white;
-        border: 1px solid #e2e8f0;
-        border-radius: 50%;
-        cursor: pointer;
+        display: none;
+    }
+
+    .footer-right {
         display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
-        z-index: 10;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        flex-direction: column;
+        gap: 1rem !important;
+        margin: 0;
+    }
+}
+
+.footer-bottom {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6B7280;
+    margin-bottom: 1.2rem;
+}
+
+.footer-bottom .copyright {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    margin-bottom: 0.5rem;
+}
+
+.footer-bottom p span {
+    font-weight: 600;
+    color: #000;
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+    .featured-talents {
+        padding: 40px 12px;
     }
 
-    .talent-swiper-prev {
-        left: -20px;
+    .footer-right {
+        display: flex;
+        flex-direction: row;
+        gap: 1.2rem !important;
+        margin-top: 2.2rem;
     }
 
-    .talent-swiper-next {
-        right: -20px;
+    * {
+        max-width: 100%;
     }
 
-    .talent-swiper-prev:hover,
-    .talent-swiper-next:hover {
-        background: #0A2463;
-        border-color: #0A2463;
+    .feature-talent-header h3 {
+        font-size: 24px;
     }
 
-    .talent-swiper-prev:hover svg,
-    .talent-swiper-next:hover svg {
-        stroke: white;
+    .feature-talent-header p {
+        font-size: 14px;
     }
 
-    .talent-swiper-prev svg,
-    .talent-swiper-next svg {
-        width: 20px;
-        height: 20px;
-        stroke: #0A2463;
-        stroke-width: 2;
+    .feature-talent-card {
+        width: 260px;
     }
 
-    /* Hide arrows on tablet and mobile */
-    @media (max-width: 1024px) {
-
-        .talent-swiper-prev,
-        .talent-swiper-next {
-            display: none;
-        }
+    .feature-talent-card-header img,
+    .feature-talent-avatar-initials {
+        width: 70px;
+        height: 70px;
     }
 
-    /* No talents message */
-    .no-talents-message {
-        grid-column: 1 / -1;
+    .feature-talent-avatar-initials {
+        font-size: 28px;
+    }
+
+    .talent-rating-badge {
+        right: 16px;
+        padding: 3px 8px;
+        font-size: 10px;
+    }
+
+    .feature-talent-card-body h3 {
+        font-size: 16px;
+    }
+
+    .browse-all-btn {
+        width: 100%;
         text-align: center;
-        padding: 60px 24px;
-        background: #ffffff;
-        border-radius: 16px;
-        border: 1px solid #eef2f6;
+        padding: 10px 20px;
+        font-size: 14px;
     }
+}
 
-    .no-talents-message i {
-        font-size: 56px;
-        color: #cbd5e1;
-        margin-bottom: 16px;
+/* Optional: Navigation Arrows for Desktop */
+.talent-swiper-prev,
+.talent-swiper-next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.talent-swiper-prev {
+    left: -20px;
+}
+
+.talent-swiper-next {
+    right: -20px;
+}
+
+.talent-swiper-prev:hover,
+.talent-swiper-next:hover {
+    background: #0A2463;
+    border-color: #0A2463;
+}
+
+.talent-swiper-prev:hover svg,
+.talent-swiper-next:hover svg {
+    stroke: white;
+}
+
+.talent-swiper-prev svg,
+.talent-swiper-next svg {
+    width: 20px;
+    height: 20px;
+    stroke: #0A2463;
+    stroke-width: 2;
+}
+
+/* Hide arrows on tablet and mobile */
+@media (max-width: 1024px) {
+    .talent-swiper-prev,
+    .talent-swiper-next {
+        display: none;
     }
+}
 
-    .no-talents-message h3 {
-        font-size: 22px;
-        font-weight: 700;
-        color: #1e293b;
-        margin-bottom: 8px;
-    }
+/* No talents message */
+.no-talents-message {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 24px;
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #eef2f6;
+}
 
-    .no-talents-message p {
-        color: #64748b;
-        margin-bottom: 20px;
-    }
+.no-talents-message i {
+    font-size: 56px;
+    color: #cbd5e1;
+    margin-bottom: 16px;
+}
 
+.no-talents-message h3 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 8px;
+}
 
-    /* ============================================
-   AUTH MODAL STYLES - Professional Popup
-   ============================================ */
+.no-talents-message p {
+    color: #64748b;
+    margin-bottom: 20px;
+}
 
-    .auth-modal-overlay {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        background: rgba(0, 0, 0, 0.7) !important;
-        backdrop-filter: blur(8px) !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        z-index: 99999 !important;
-        animation: fadeIn 0.3s ease !important;
-    }
-
-    .auth-modal {
-        background: #ffffff !important;
-        border-radius: 24px !important;
-        width: 90% !important;
-        max-width: 450px !important;
-        position: relative !important;
-        animation: slideUp 0.3s ease !important;
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25) !important;
-        overflow: hidden !important;
-    }
-
-    .auth-modal-close {
-        position: absolute !important;
-        top: 16px !important;
-        right: 16px !important;
-        background: #f1f5f9 !important;
-        border: none !important;
-        cursor: pointer !important;
-        width: 32px !important;
-        height: 32px !important;
-        border-radius: 50% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        transition: all 0.2s ease !important;
-        z-index: 10 !important;
-    }
-
-    .auth-modal-close svg {
-        width: 18px !important;
-        height: 18px !important;
-        stroke: #64748b !important;
-        stroke-width: 2 !important;
-    }
-
-    .auth-modal-close:hover {
-        background: #e2e8f0 !important;
-        transform: scale(1.05) !important;
-    }
-
-    .auth-modal-content {
-        padding: 40px 32px !important;
-        text-align: center !important;
-    }
-
-    .auth-modal-icon {
-        width: 72px !important;
-        height: 72px !important;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-        border-radius: 50% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        margin: 0 auto 20px !important;
-        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3) !important;
-    }
-
-    .auth-modal-icon svg {
-        width: 36px !important;
-        height: 36px !important;
-        stroke: white !important;
-        stroke-width: 1.5 !important;
-    }
-
-    .auth-modal-content h2 {
-        font-size: 24px !important;
-        font-weight: 700 !important;
-        color: #1e293b !important;
-        margin-bottom: 12px !important;
-        letter-spacing: -0.3px !important;
-    }
-
-    .auth-modal-content>p {
-        color: #64748b !important;
-        font-size: 14px !important;
-        line-height: 1.5 !important;
-        margin-bottom: 24px !important;
-    }
-
-    .auth-modal-job {
-        background: #f8fafc !important;
-        padding: 16px !important;
-        border-radius: 16px !important;
-        margin: 20px 0 !important;
-        border: 1px solid #e2e8f0 !important;
-    }
-
-    .auth-modal-job p {
-        font-size: 12px !important;
-        color: #94a3b8 !important;
-        margin-bottom: 6px !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.5px !important;
-    }
-
-    .auth-modal-job strong {
-        font-size: 16px !important;
-        color: #0A2463 !important;
-        font-weight: 700 !important;
-        display: block !important;
-        word-break: break-word !important;
-    }
-
-    .auth-modal-buttons {
-        display: flex !important;
-        gap: 12px !important;
-        margin-top: 24px !important;
-    }
-
-    .auth-modal-btn {
-        flex: 1 !important;
-        padding: 12px 20px !important;
-        border-radius: 40px !important;
-        font-weight: 600 !important;
-        font-size: 14px !important;
-        text-align: center !important;
-        text-decoration: none !important;
-        transition: all 0.3s ease !important;
-        cursor: pointer !important;
-    }
-
-    .auth-modal-btn-primary {
-        background: #0A2463 !important;
-        color: white !important;
-        border: none !important;
-    }
-
-    .auth-modal-btn-primary:hover {
-        background: #1e40af !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 8px 20px rgba(10, 36, 99, 0.2) !important;
-    }
-
-    .auth-modal-btn-secondary {
-        background: white !important;
-        color: #0A2463 !important;
-        border: 1px solid #e2e8f0 !important;
-    }
-
-    .auth-modal-btn-secondary:hover {
-        background: #f8fafc !important;
-        border-color: #0A2463 !important;
-        transform: translateY(-2px) !important;
-    }
-
-    .auth-modal-footer {
-        font-size: 11px !important;
-        color: #94a3b8 !important;
-        margin-top: 24px !important;
-        margin-bottom: 0 !important;
-        line-height: 1.4 !important;
-    }
-
-    /* Animations */
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-        }
-
-        to {
-            opacity: 1;
-        }
-    }
-
-    @keyframes slideUp {
-        from {
-            transform: translateY(30px);
-            opacity: 0;
-        }
-
-        to {
-            transform: translateY(0);
-            opacity: 1;
-        }
-    }
-
-    /* Mobile Responsive */
-    @media (max-width: 480px) {
-        .auth-modal {
-            width: 95% !important;
-            max-width: 95% !important;
-        }
-
-        .auth-modal-content {
-            padding: 30px 20px !important;
-        }
-
-        .auth-modal-icon {
-            width: 56px !important;
-            height: 56px !important;
-        }
-
-        .auth-modal-icon svg {
-            width: 28px !important;
-            height: 28px !important;
-        }
-
-        .auth-modal-content h2 {
-            font-size: 20px !important;
-        }
-
-        .auth-modal-buttons {
-            flex-direction: column !important;
-            gap: 10px !important;
-        }
-
-        .auth-modal-btn {
-            padding: 10px 16px !important;
-        }
-    }
-
-    /* ============================================
+/* ============================================
    TOAST NOTIFICATION STYLES
    ============================================ */
 
+.toast-notification {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    z-index: 10000;
+    animation: slideInRight 0.3s ease;
+}
+
+.toast-content {
+    background: white;
+    border-radius: 12px;
+    padding: 14px 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 280px;
+    max-width: 400px;
+    border-left: 4px solid;
+}
+
+/* Toast Types */
+.toast-success {
+    border-left-color: #10b981;
+}
+
+.toast-error {
+    border-left-color: #ef4444;
+}
+
+.toast-info {
+    border-left-color: #3b82f6;
+}
+
+.toast-loading {
+    border-left-color: #f59e0b;
+}
+
+/* Toast Icons */
+.toast-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.toast-success .toast-icon {
+    stroke: #10b981;
+}
+
+.toast-error .toast-icon {
+    stroke: #ef4444;
+}
+
+.toast-info .toast-icon {
+    stroke: #3b82f6;
+}
+
+.toast-loading .toast-icon {
+    stroke: #f59e0b;
+    animation: spin 1s linear infinite;
+}
+
+/* Toast Message */
+.toast-message {
+    flex: 1;
+    font-size: 14px;
+    color: #1e293b;
+    font-weight: 500;
+}
+
+/* Toast Close Button */
+.toast-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.toast-close svg {
+    width: 16px;
+    height: 16px;
+    stroke: #94a3b8;
+    stroke-width: 2;
+}
+
+.toast-close:hover {
+    background: #f1f5f9;
+}
+
+.toast-close:hover svg {
+    stroke: #1e293b;
+}
+
+/* Animations */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
     .toast-notification {
-        position: fixed;
-        top: 100px;
-        right: 20px;
-        z-index: 10000;
-        animation: slideInRight 0.3s ease;
+        top: 80px;
+        right: 10px;
+        left: 10px;
     }
 
     .toast-content {
-        background: white;
-        border-radius: 12px;
-        padding: 14px 20px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        min-width: 280px;
-        max-width: 400px;
-        border-left: 4px solid;
+        min-width: auto;
+        width: 100%;
+        max-width: none;
     }
+}
 
-    /* Toast Types */
-    .toast-success {
-        border-left-color: #10b981;
+/* ============================================
+   AUTH MODAL STYLES - Professional Popup
+   ============================================ */
+
+.auth-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    animation: fadeIn 0.3s ease;
+}
+
+.auth-modal {
+    background: #ffffff;
+    border-radius: 24px;
+    width: 90%;
+    max-width: 450px;
+    position: relative;
+    animation: slideUp 0.3s ease;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+}
+
+.auth-modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: #f1f5f9;
+    border: none;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.auth-modal-close svg {
+    width: 18px;
+    height: 18px;
+    stroke: #64748b;
+    stroke-width: 2;
+}
+
+.auth-modal-close:hover {
+    background: #e2e8f0;
+    transform: scale(1.05);
+}
+
+.auth-modal-close:hover svg {
+    stroke: #1e293b;
+}
+
+.auth-modal-content {
+    padding: 40px 32px;
+    text-align: center;
+}
+
+.auth-modal-icon {
+    width: 72px;
+    height: 72px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+}
+
+.auth-modal-icon svg {
+    width: 36px;
+    height: 36px;
+    stroke: white;
+    stroke-width: 1.5;
+}
+
+.auth-modal-content h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 12px;
+    letter-spacing: -0.3px;
+}
+
+.auth-modal-content > p {
+    color: #64748b;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 24px;
+}
+
+.auth-modal-job {
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: 16px;
+    margin: 20px 0;
+    border: 1px solid #e2e8f0;
+}
+
+.auth-modal-job p {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.auth-modal-job strong {
+    font-size: 16px;
+    color: #0A2463;
+    font-weight: 700;
+    display: block;
+    word-break: break-word;
+}
+
+.auth-modal-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.auth-modal-btn {
+    flex: 1;
+    padding: 12px 20px;
+    border-radius: 40px;
+    font-weight: 600;
+    font-size: 14px;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.auth-modal-btn-primary {
+    background: #0A2463;
+    color: white;
+    border: none;
+}
+
+.auth-modal-btn-primary:hover {
+    background: #1e40af;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(10, 36, 99, 0.2);
+}
+
+.auth-modal-btn-secondary {
+    background: white;
+    color: #0A2463;
+    border: 1px solid #e2e8f0;
+}
+
+.auth-modal-btn-secondary:hover {
+    background: #f8fafc;
+    border-color: #0A2463;
+    transform: translateY(-2px);
+}
+
+.auth-modal-footer {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 24px;
+    margin-bottom: 0;
+    line-height: 1.4;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
     }
-
-    .toast-error {
-        border-left-color: #ef4444;
+    to {
+        transform: translateY(0);
+        opacity: 1;
     }
+}
 
-    .toast-info {
-        border-left-color: #3b82f6;
+/* Mobile Responsive */
+@media (max-width: 480px) {
+    .auth-modal {
+        width: 95%;
+        max-width: 95%;
     }
-
-    .toast-loading {
-        border-left-color: #f59e0b;
+    
+    .auth-modal-content {
+        padding: 30px 20px;
     }
-
-    /* Toast Icons */
-    .toast-icon {
-        width: 20px;
-        height: 20px;
-        flex-shrink: 0;
+    
+    .auth-modal-icon {
+        width: 56px;
+        height: 56px;
     }
-
-    .toast-success .toast-icon {
-        stroke: #10b981;
+    
+    .auth-modal-icon svg {
+        width: 28px;
+        height: 28px;
     }
-
-    .toast-error .toast-icon {
-        stroke: #ef4444;
+    
+    .auth-modal-content h2 {
+        font-size: 20px;
     }
-
-    .toast-info .toast-icon {
-        stroke: #3b82f6;
+    
+    .auth-modal-buttons {
+        flex-direction: column;
+        gap: 10px;
     }
-
-    .toast-loading .toast-icon {
-        stroke: #f59e0b;
-        animation: spin 1s linear infinite;
-    }
-
-    /* Toast Message */
-    .toast-message {
-        flex: 1;
-        font-size: 14px;
-        color: #1e293b;
-        font-weight: 500;
-    }
-
-    /* Toast Close Button */
-    .toast-close {
-        background: none;
-        border: none;
-        cursor: pointer;
-        padding: 4px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        transition: all 0.2s ease;
-    }
-
-    .toast-close svg {
-        width: 16px;
-        height: 16px;
-        stroke: #94a3b8;
-        stroke-width: 2;
-    }
-
-    .toast-close:hover {
-        background: #f1f5f9;
-    }
-
-    .toast-close:hover svg {
-        stroke: #1e293b;
-    }
-
-    /* Animations */
-    @keyframes slideInRight {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-
-    @keyframes spin {
-        from {
-            transform: rotate(0deg);
-        }
-
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
-    /* Mobile Responsive */
-    @media (max-width: 480px) {
-        .toast-notification {
-            top: 80px;
-            right: 10px;
-            left: 10px;
-        }
-
-        .toast-content {
-            min-width: auto;
-            width: 100%;
-            max-width: none;
-        }
+    
+    .auth-modal-btn {
+        padding: 10px 16px;
     }
 }
