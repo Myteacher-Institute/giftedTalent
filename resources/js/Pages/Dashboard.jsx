@@ -107,9 +107,6 @@ export default function Dashboard({
     const [selectedJobType, setSelectedJobType] = useState(searchParams.job_type || '');
     const [showAdvanced, setShowAdvanced] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [showAppliedJobs, setShowAppliedJobs] = useState(false);
-    const [appliedJobs, setAppliedJobs] = useState([]);
-    const [loadingApplied, setLoadingApplied] = useState(false);
     const [newJobsCount, setNewJobsCount] = useState(0);
     const [localSavedJobs, setLocalSavedJobs] = useState(savedJobs);
     const [savedJobsCount, setSavedJobsCount] = useState(savedJobs.length);
@@ -216,34 +213,11 @@ export default function Dashboard({
         router.post('/logout');
     };
 
-    const fetchAppliedJobs = async () => {
-        setLoadingApplied(true);
-        try {
-            const response = await fetch('/my-applications');
-            const data = await response.json();
-            if (data.success) {
-                setAppliedJobs(data.data);
-            }
-        } catch (error) {
-            console.error('Error fetching applications:', error);
-        } finally {
-            setLoadingApplied(false);
-        }
-    };
-
-    const handleShowAppliedJobs = () => {
-        setShowAppliedJobs(true);
-        setShowSavedJobs(false);
-        fetchAppliedJobs();
-    };
-
     const handleShowAllJobs = () => {
-        setShowAppliedJobs(false);
         setShowSavedJobs(false);
     };
 
     const handleShowSavedJobs = () => {
-        setShowAppliedJobs(false);
         setShowSavedJobs(true);
     };
 
@@ -413,12 +387,14 @@ export default function Dashboard({
                     </div>
 
                     <ul className="menu">
-                        <li className={!showAppliedJobs && !showSavedJobs ? 'active' : ''} onClick={handleShowAllJobs}>
+                        <li className={!showSavedJobs ? 'active' : ''} onClick={handleShowAllJobs}>
                             <i className="fa-solid fa-table"></i>Dashboard
                         </li>
                         <li><Link href="/search-jobs"><i className="fa-solid fa-magnifying-glass"></i> Search Job</Link></li>
-                        <li className={showAppliedJobs ? 'active' : ''} onClick={handleShowAppliedJobs}>
-                            <i className="fa-solid fa-file"></i> My Applications
+                        <li>
+                            <Link href="/my-applications">
+                                <i className="fa-solid fa-file"></i> My Applications
+                            </Link>
                         </li>
                         <li>
                             <Link href="/messages">
@@ -472,28 +448,6 @@ export default function Dashboard({
                                     <i className="fa-regular fa-bookmark"></i>
                                     <h3>No Saved Jobs Yet</h3>
                                     <p>Save jobs you're interested in to review them later!</p>
-                                    <button onClick={handleShowAllJobs} className="btn-primary">Browse Jobs</button>
-                                </div>
-                            )}
-                        </>
-                    ) : showAppliedJobs ? (
-                        <>
-                            <h1>My Applications</h1>
-                            {loadingApplied ? (
-                                <div className="flex justify-center py-12">
-                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-                                </div>
-                            ) : appliedJobs.length > 0 ? (
-                                <div className="jobs">
-                                    {appliedJobs.map((job) => (
-                                        <JobCard key={job.id} job={job} onSave={handleSaveJob} onUnsave={handleUnsaveJob} onApply={handleApplyJob} isSaved={false} />
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="empty-state">
-                                    <i className="fa-solid fa-file"></i>
-                                    <h3>No Applications Yet</h3>
-                                    <p>You haven't applied to any jobs yet. Start browsing and apply to your first job!</p>
                                     <button onClick={handleShowAllJobs} className="btn-primary">Browse Jobs</button>
                                 </div>
                             )}

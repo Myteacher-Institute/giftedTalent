@@ -110,13 +110,15 @@ export default function Hire({ auth, profile, stats, featuredTalents }) {
                         <button><Link href="/profile/edit" className="profile-button">Edit Profile</Link></button>
                     </div>
                     <ul className="menu">
-                        <li><Link href="/dashboard"><i className="fa-solid fa-table"></i>Dashboard</Link></li>
-                        <li className="active"><Link href="/hire"><i className="fa-solid fa-user-plus"></i>Hire Talent</Link></li>
-                        <li><Link href="/my-jobs"><i className="fa-solid fa-briefcase"></i>My Jobs</Link></li>
-                        <li><Link href="/applications"><i className="fa-solid fa-file"></i>Applications</Link></li>
-                        <li><Link href="/messages"><i className="fa-regular fa-envelope"></i>Messages</Link></li>
-                        <li><Link href="/settings"><i className="fa-solid fa-gear"></i>Settings</Link></li>
-                        <li className="logout-item"><a href="/" onClick={(e) => { e.preventDefault(); handleLogout(); }}><i className="fa-solid fa-right-from-bracket logout-icon"></i>Logout</a></li>
+                      <ul className="menu">
+    <li><Link href="/dashboard"><i className="fa-solid fa-table"></i>Dashboard</Link></li>
+    <li className="active"><Link href="/hire"><i className="fa-solid fa-user-plus"></i>Hire Talent</Link></li>
+    <li><Link href="/jobs"><i className="fa-solid fa-briefcase"></i>Jobs</Link></li>
+    <li><Link href="/my-applications"><i className="fa-solid fa-file"></i>Applications</Link></li>
+    <li><Link href="/messages"><i className="fa-regular fa-envelope"></i>Messages</Link></li>
+    <li><Link href="/settings"><i className="fa-solid fa-gear"></i>Settings</Link></li>
+    <li className="logout-item"><a href="/" onClick={(e) => { e.preventDefault(); handleLogout(); }}><i className="fa-solid fa-right-from-bracket logout-icon"></i>Logout</a></li>
+</ul>
                     </ul>
                 </aside>
 

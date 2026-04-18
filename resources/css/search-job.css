@@ -1781,3 +1781,70 @@ body {
         padding: 10px;
     }
 }
+
+/* Filter Sidebar Button */
+.filter-sidebar-header {
+    padding: 0 16px;
+    margin: 16px 0;
+}
+
+.filter-sidebar-btn {
+    width: 100%;
+    background: #0A2463;
+    color: white;
+    border: none;
+    padding: 12px 16px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.3s;
+}
+
+.filter-sidebar-btn:hover {
+    background: #1e3a5f;
+}
+
+.left {
+    transition: transform 0.3s ease;
+}
+
+@media (max-width: 768px) {
+    .left {
+        position: fixed;
+        top: 60px;
+        left: 0;
+        transform: translateX(-100%);
+        width: 280px;
+        height: calc(100vh - 60px);
+        z-index: 1002;
+        background: white;
+    }
+    
+    .left.mobile-open {
+        transform: translateX(0);
+    }
+}
+
+
+/* FORCE SIDEBAR TOGGLE - OVERRIDE EXTENSION ISSUES */
+@media (max-width: 768px) {
+    .left {
+        position: fixed !important;
+        top: 60px !important;
+        left: 0 !important;
+        transform: translateX(-100%) !important;
+        width: 280px !important;
+        height: calc(100vh - 60px) !important;
+        z-index: 1002 !important;
+        background: white !important;
+        transition: transform 0.3s ease !important;
+    }
+    
+    .left.mobile-open {
+        transform: translateX(0) !important;
+    }
+}

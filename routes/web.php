@@ -99,8 +99,7 @@ Route::middleware(['auth'])->group(function () {
     })->name('jobs.show');
 
     Route::post('/jobs/{jobId}/apply', [App\Http\Controllers\JobsController::class, 'apply'])->name('jobs.apply');
-    Route::get('/my-applications', [App\Http\Controllers\JobsController::class, 'myApplications'])->name('my.applications');
-});
+    Route::get('/my-applications', [App\Http\Controllers\JobsController::class, 'applicationsPage'])->name('my.applications');
 
     // ============================================
     // HIRE PAGE - Browse Talent (No API, just Inertia)
@@ -115,7 +114,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/find-talents', [PageController::class, 'findTalents'])->name('pages.findTalents');
     Route::get('/how-it-works', [PageController::class, 'howItWorks'])->name('pages.howItWorks');
     Route::get('/about', [PageController::class, 'about'])->name('pages.about');
-    Route::get('/jobs', [PageController::class, 'jobs'])->name('jobs');
+    Route::get('/jobs', [JobsController::class, 'index'])->name('jobs');
 
     // User Profile Routes
     Route::get('/user-profile', [ProfileController::class, 'show'])->name('pages.userProfile');
@@ -178,7 +177,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/user/privacy-settings', [PrivacySettingsController::class, 'getSettings'])->name('user.privacy-settings.get');
     Route::put('/user/privacy-settings', [PrivacySettingsController::class, 'updateSettings'])->name('user.privacy-settings.update');
 
-    // Saved Jobs Routes
+    // ============================================
+    // SAVED JOBS ROUTES (UPDATED - No JSON, redirects back)
+    // ============================================
+    
     Route::post('/saved-jobs/{jobId}', function ($jobId) {
         $user = auth()->user();
         
@@ -194,10 +196,14 @@ Route::middleware(['auth'])->group(function () {
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
-            return response()->json(['message' => 'Job saved successfully']);
+        } else {
+            DB::table('saved_jobs')
+                ->where('user_id', $user->id)
+                ->where('job_id', $jobId)
+                ->delete();
         }
         
-        return response()->json(['message' => 'Job already saved'], 409);
+        return redirect()->back();
     })->name('saved-jobs.store');
 
     Route::delete('/saved-jobs/{jobId}', function ($jobId) {
@@ -208,7 +214,7 @@ Route::middleware(['auth'])->group(function () {
             ->where('job_id', $jobId)
             ->delete();
         
-        return response()->json(['message' => 'Job removed from saved']);
+        return redirect()->back();
     })->name('saved-jobs.destroy');
 
     // Explore Page Route
@@ -218,26 +224,27 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('google.redirect');
     Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('google.callback');
 
-       // ============================================
-// USER MESSAGE ROUTES
-// ============================================
+    // ============================================
+    // USER MESSAGE ROUTES
+    // ============================================
 
-// GET routes first (no parameters or specific patterns)
-Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
-Route::get('/messages/conversations', [MessageController::class, 'getConversations'])->name('messages.conversations');
-Route::get('/messages/unread/count', [MessageController::class, 'getUnreadCount'])->name('messages.unread.count');
+    // GET routes first (no parameters or specific patterns)
+    Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
+    Route::get('/messages/conversations', [MessageController::class, 'getConversations'])->name('messages.conversations');
+    Route::get('/messages/unread/count', [MessageController::class, 'getUnreadCount'])->name('messages.unread.count');
 
-// GET routes with parameters
-Route::get('/messages/user/{userId}', [MessageController::class, 'getUserMessages'])->name('messages.user');
+    // GET routes with parameters
+    Route::get('/messages/user/{userId}', [MessageController::class, 'getUserMessages'])->name('messages.user');
 
-// POST routes
-Route::post('/messages/send', [MessageController::class, 'send'])->name('messages.send');
+    // POST routes
+    Route::post('/messages/send', [MessageController::class, 'send'])->name('messages.send');
 
-// PATCH routes
-Route::patch('/messages/{messageId}/read', [MessageController::class, 'markAsRead'])->name('messages.read');
+    // PATCH routes
+    Route::patch('/messages/{messageId}/read', [MessageController::class, 'markAsRead'])->name('messages.read');
 
-// DELETE routes (always last)
-Route::delete('/messages/{messageId}', [MessageController::class, 'destroy'])->name('messages.destroy');
+    // DELETE routes (always last)
+    Route::delete('/messages/{messageId}', [MessageController::class, 'destroy'])->name('messages.destroy');
+});
 
 // ============================================
 // ADMIN ROUTES (Auth + Admin middleware)

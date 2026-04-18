@@ -305,4 +305,31 @@ public function myApplications()
         'data' => $applications
     ]);
 }
+
+public function applicationsPage()
+{
+    $user = Auth::user();
+    
+    $applications = DB::table('job_applications')
+        ->join('job_posts', 'job_applications.job_id', '=', 'job_posts.id')
+        ->where('job_applications.user_id', $user->id)
+        ->select('job_applications.*', 'job_posts.job_title as title', 'job_posts.company_name as company', 'job_posts.company_location as location')
+        ->orderBy('job_applications.created_at', 'desc')
+        ->get()
+        ->map(function($app) {
+            return [
+                'id' => $app->id,
+                'title' => $app->title,
+                'company' => $app->company,
+                'location' => $app->location,
+                'status' => $app->status,
+                'applied_at' => $app->created_at,
+            ];
+        });
+    
+    return Inertia::render('Applications', [
+        'applications' => $applications,
+        'auth' => ['user' => $user],
+    ]);
+}
 }

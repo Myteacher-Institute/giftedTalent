@@ -408,8 +408,8 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
                 </div>
             )}
 
-            {/* AppNavbar */}
-            <AppNavbar user={currentUser} newJobsCount={notificationCount} />
+            {/* AppNavbar - Hamburger button is here */}
+            <AppNavbar user={currentUser} newJobsCount={notificationCount} onMenuToggle={toggleMobileSidebar} isMenuOpen={mobileSidebarOpen} />
 
             {/* Quick Apply Modal */}
             {showApplyModal && selectedJob && (
@@ -513,14 +513,14 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
             )}
 
             <div className="container">
-                {/* LEFT SIDEBAR */}
+                {/* LEFT SIDEBAR - Filter button is here */}
                 <div className={`left ${mobileSidebarOpen ? 'mobile-open' : ''}`}>
                     <div className="sidebar-card">
                         <button className="sidebar-close" onClick={toggleMobileSidebar}>
                             <i className="fas fa-times"></i>
                         </button>
 
-                        {/* Profile Section - Using the same profile data as dashboard */}
+                        {/* Profile Section */}
                         <div className="profile-section">
                             <div className="profile-image-wrapper">
                                 <img 
@@ -562,8 +562,19 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
                             </div>
                         </div>
 
+                        {/* Filter Button in Sidebar */}
+                        <div className="filter-sidebar-header">
+                            <button 
+                                className="filter-sidebar-btn"
+                                onClick={() => setShowSalaryFilter(!showSalaryFilter)}
+                            >
+                                <i className="fas fa-sliders-h"></i> Filters
+                                <i className={`fas fa-chevron-${showSalaryFilter ? 'up' : 'down'}`}></i>
+                            </button>
+                        </div>
+
                         {/* Filters Container */}
-                        <div className="filters-container">
+                        <div className="filters-container" style={{ display: showSalaryFilter ? 'block' : 'none' }}>
                             <div className="filter-group">
                                 <h4 className="filter-title"><i className="fas fa-briefcase"></i> Job Type</h4>
                                 <div className="job-type-buttons">
@@ -626,26 +637,23 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
 
                             <div className="filter-group">
                                 <div className="salary-range">
-                                    <div className="salary-header" onClick={() => setShowSalaryFilter(!showSalaryFilter)}>
+                                    <div className="salary-header">
                                         <span><i className="fas fa-dollar-sign"></i> Salary Range</span>
-                                        <i className={`fas fa-chevron-${showSalaryFilter ? 'up' : 'down'}`}></i>
                                     </div>
-                                    {showSalaryFilter && (
-                                        <div className="salary-slider">
-                                            <input 
-                                                type="range" 
-                                                min="0" 
-                                                max="200000" 
-                                                step="5000"
-                                                value={salaryRange[1]}
-                                                onChange={(e) => setSalaryRange([0, parseInt(e.target.value)])}
-                                            />
-                                            <div className="salary-values">
-                                                <span>₦{salaryRange[0].toLocaleString()}</span>
-                                                <span>₦{salaryRange[1].toLocaleString()}</span>
-                                            </div>
+                                    <div className="salary-slider">
+                                        <input 
+                                            type="range" 
+                                            min="0" 
+                                            max="200000" 
+                                            step="5000"
+                                            value={salaryRange[1]}
+                                            onChange={(e) => setSalaryRange([0, parseInt(e.target.value)])}
+                                        />
+                                        <div className="salary-values">
+                                            <span>₦{salaryRange[0].toLocaleString()}</span>
+                                            <span>₦{salaryRange[1].toLocaleString()}</span>
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -669,11 +677,6 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
 
                 {/* Mobile Sidebar Overlay */}
                 {mobileSidebarOpen && <div className="mobile-sidebar-overlay active" onClick={toggleMobileSidebar}></div>}
-
-                {/* Mobile Menu Toggle Button */}
-                <button className="mobile-menu-toggle" onClick={toggleMobileSidebar}>
-                    <i className="fas fa-sliders-h"></i>
-                </button>
 
                 {/* RIGHT CONTENT */}
                 <div className="right">
