@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import AppNavbar from '../Components/AppNavbar';
 import '../../css/Dashboard.css';
 import Notification from '../Components/Notification';
@@ -8,9 +8,10 @@ import Notification from '../Components/Notification';
 window.alertify = window.alertify || alertify;
 
 // Job Card Component
-function JobCard({ job, onSave, onUnsave, isSaved = false }) {
+function JobCard({ job, onSave, onUnsave, onApply, isSaved = false }) {
     const [showMenu, setShowMenu] = useState(null);
     const [saved, setSaved] = useState(isSaved);
+    const [applying, setApplying] = useState(false);
 
     const toggleMenu = (index) => {
         setShowMenu(showMenu === index ? null : index);
@@ -27,16 +28,22 @@ function JobCard({ job, onSave, onUnsave, isSaved = false }) {
         setShowMenu(null);
     };
 
+    const handleApplyClick = async () => {
+        setApplying(true);
+        await onApply(job.id);
+        setApplying(false);
+    };
+
     return (
         <div className={`job-card ${job.match_score >= 60 ? 'recommended-job' : ''}`}>
             <div className="job-left">
-                <img src={job.image} alt="" />
+                <img src={job.image || job.company_logo_url} alt="" />
             </div>
             <div className="job-right">
-                <h3>{job.company}</h3>
-                <p>{job.title}</p>
-                <span>{job.tags}</span>
-                <p className="time">{job.time}</p>
+                <h3>{job.company_name || job.company}</h3>
+                <p>{job.job_title || job.title}</p>
+                <span>{job.tags || job.job_type}</span>
+                <p className="time">{job.time || job.posted_at}</p>
                 {job.match_score && (
                     <div className="match-score mt-2">
                         <div className="flex items-center">
@@ -54,7 +61,13 @@ function JobCard({ job, onSave, onUnsave, isSaved = false }) {
                 )}
             </div>
             <div className="job-actions">
-                <button className="apply desktop-only">Apply Now</button>
+                <button 
+                    className="apply desktop-only" 
+                    onClick={handleApplyClick}
+                    disabled={applying}
+                >
+                    {applying ? 'Applying...' : 'Apply Now'}
+                </button>
                 <div className="menu-trigger" onClick={() => toggleMenu(job.id)}>
                     <i className="fa-solid fa-ellipsis"></i>
                 </div>
@@ -63,8 +76,8 @@ function JobCard({ job, onSave, onUnsave, isSaved = false }) {
                         <button onClick={() => setShowMenu(null)}>
                             <i className="fa-regular fa-eye-slash"></i> Hide Job
                         </button>
-                        <button onClick={() => setShowMenu(null)}>
-                            <i className="fa-regular fa-paper-plane"></i> Apply Now
+                        <button onClick={handleApplyClick} disabled={applying}>
+                            <i className="fa-regular fa-paper-plane"></i> {applying ? 'Applying...' : 'Apply Now'}
                         </button>
                         <button onClick={handleSaveClick}>
                             <i className={`fa-regular fa-bookmark`} style={{ color: saved ? '#4F46E5' : '' }}></i>
@@ -72,36 +85,6 @@ function JobCard({ job, onSave, onUnsave, isSaved = false }) {
                         </button>
                     </div>
                 )}
-            </div>
-        </div>
-    );
-}
-
-// Message Modal Component
-function MessageModal({ isOpen, onClose, messages, loading, onMarkAsRead }) {
-    if (!isOpen) return null;
-
-    return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="message-modal" onClick={(e) => e.stopPropagation()}>
-                <div className="modal-header">
-                    <h3>Messages</h3>
-                    <button className="modal-close" onClick={onClose}>×</button>
-                </div>
-                <div className="modal-body">
-                    {loading ? (
-                        <div className="text-center py-8">Loading...</div>
-                    ) : messages.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">No messages</div>
-                    ) : (
-                        messages.map(msg => (
-                            <div key={msg.id} className="message-item" onClick={() => onMarkAsRead(msg.id)}>
-                                <p><strong>{msg.sender}</strong></p>
-                                <p className="text-sm text-gray-600">{msg.message}</p>
-                            </div>
-                        ))
-                    )}
-                </div>
             </div>
         </div>
     );
@@ -119,7 +102,7 @@ export default function Dashboard({
     flash,
     profileLevel = { message: 'Keep going!' },
     recommendedJobs = [],
-    savedJobs = []  // <-- Now receives full job objects from controller
+    savedJobs = []
 }) {
     const [searchQuery, setSearchQuery] = useState(searchParams.q || '');
     const [selectedJobType, setSelectedJobType] = useState(searchParams.job_type || '');
@@ -129,26 +112,18 @@ export default function Dashboard({
     const [appliedJobs, setAppliedJobs] = useState([]);
     const [loadingApplied, setLoadingApplied] = useState(false);
     const [newJobsCount, setNewJobsCount] = useState(0);
-    const [showMessageModal, setShowMessageModal] = useState(false);
-    const [unreadCount, setUnreadCount] = useState(0);
-    const [messages, setMessages] = useState([]);
-    const [loadingMessages, setLoadingMessages] = useState(false);
-    const [localSavedJobs, setLocalSavedJobs] = useState(savedJobs);  // <-- Use props directly
-    const [savedJobsCount, setSavedJobsCount] = useState(savedJobs.length);  // <-- Use prop length
+    const [localSavedJobs, setLocalSavedJobs] = useState(savedJobs);
+    const [savedJobsCount, setSavedJobsCount] = useState(savedJobs.length);
     const [showSavedJobs, setShowSavedJobs] = useState(false);
     const [loadingSaved, setLoadingSaved] = useState(false);
-    
-    // State for sidebar toggle
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const currentUser = auth?.user;
 
-    // Function to toggle sidebar
     const toggleSidebar = () => {
         setSidebarOpen(!sidebarOpen);
     };
 
-    // Flash message effect
     useEffect(() => {
         if (flash?.success) {
             alertify.success(flash.success);
@@ -158,7 +133,6 @@ export default function Dashboard({
         }
     }, [flash]);
 
-    // Profile update effect
     useEffect(() => {
         const profileUpdated = sessionStorage.getItem('profileUpdated');
         const profileUpdateTime = sessionStorage.getItem('profileUpdateTime');
@@ -243,12 +217,19 @@ export default function Dashboard({
         router.post('/logout');
     };
 
-    const fetchAppliedJobs = () => {
+    const fetchAppliedJobs = async () => {
         setLoadingApplied(true);
-        setTimeout(() => {
-            setAppliedJobs([]);
+        try {
+            const response = await fetch('/my-applications');
+            const data = await response.json();
+            if (data.success) {
+                setAppliedJobs(data.data);
+            }
+        } catch (error) {
+            console.error('Error fetching applications:', error);
+        } finally {
             setLoadingApplied(false);
-        }, 500);
+        }
     };
 
     const handleShowAppliedJobs = () => {
@@ -267,19 +248,18 @@ export default function Dashboard({
         setShowSavedJobs(true);
     };
 
-    // <-- SIMPLIFIED: Save job to database
     const handleSaveJob = async (jobId) => {
         try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const response = await fetch(`/saved-jobs/${jobId}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-CSRF-TOKEN': csrfToken,
                 },
             });
             
             if (response.ok) {
-                // Find the job from existing lists to add to saved
                 const jobToAdd = [...jobs, ...recommendedJobs].find(job => job.id === jobId);
                 if (jobToAdd) {
                     setLocalSavedJobs([...localSavedJobs, jobToAdd]);
@@ -295,14 +275,14 @@ export default function Dashboard({
         }
     };
 
-    // <-- SIMPLIFIED: Unsave job from database
     const handleUnsaveJob = async (jobId) => {
         try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const response = await fetch(`/saved-jobs/${jobId}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-CSRF-TOKEN': csrfToken,
                 },
             });
             
@@ -320,32 +300,30 @@ export default function Dashboard({
         }
     };
 
-    const fetchUnreadCount = () => {
-        setUnreadCount(0);
+    const handleApplyJob = async (jobId) => {
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            
+            const response = await fetch(`/jobs/${jobId}/apply`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                alertify.success(data.message || 'Application submitted successfully!');
+            } else {
+                alertify.error(data.message || 'Failed to apply for job');
+            }
+        } catch (error) {
+            console.error('Error applying for job:', error);
+            alertify.error('Network error. Please try again.');
+        }
     };
-
-    const fetchMessages = () => {
-        setLoadingMessages(true);
-        setTimeout(() => {
-            setMessages([]);
-            setLoadingMessages(false);
-        }, 500);
-    };
-
-    const handleOpenMessages = () => {
-        setShowMessageModal(true);
-        fetchMessages();
-    };
-
-    const markMessageAsRead = (messageId) => {
-        console.log('Mark message as read:', messageId);
-    };
-
-    useEffect(() => {
-        fetchUnreadCount();
-        const interval = setInterval(fetchUnreadCount, 30000);
-        return () => clearInterval(interval);
-    }, []);
 
     useEffect(() => {
         const hasShown = localStorage.getItem('profileCompleteShown');
@@ -393,7 +371,6 @@ export default function Dashboard({
         }
     };
 
-    // Other jobs (regular jobs from the jobs array)
     const otherJobs = jobs.filter(job => !job.match_score || job.match_score < 60);
     const hasCV = currentUser?.resumes?.length > 0;
     const cvCount = currentUser?.resumes?.length || 0;
@@ -402,7 +379,6 @@ export default function Dashboard({
         <>
             <Head title="Dashboard" />
 
-            {/* AppNavbar Component - With sidebar toggle props */}
             <AppNavbar 
                 user={currentUser} 
                 newJobsCount={newJobsCount}
@@ -410,11 +386,9 @@ export default function Dashboard({
                 isMenuOpen={sidebarOpen}
             />
 
-            {/* Mobile Overlay - Shows when sidebar is open on mobile */}
             {sidebarOpen && <div className="mobile-overlay" onClick={toggleSidebar}></div>}
 
             <div className="container">
-                {/* Sidebar - Add mobile-open class for mobile toggle */}
                 <aside className={`sidebar ${sidebarOpen ? 'mobile-open' : ''}`}>
                     <div className="profile">
                         <div className="profile-image-wrapper">
@@ -447,13 +421,10 @@ export default function Dashboard({
                         <li className={showAppliedJobs ? 'active' : ''} onClick={handleShowAppliedJobs}>
                             <i className="fa-solid fa-file"></i> My Applications
                         </li>
-                        <li onClick={handleOpenMessages} style={{ position: 'relative' }}>
-                            <i className="fa-regular fa-envelope"></i> Message
-                            {unreadCount > 0 && (
-                                <span className="message-badge">
-                                    {unreadCount > 99 ? '99+' : unreadCount}
-                                </span>
-                            )}
+                        <li>
+                            <Link href="/messages">
+                                <i className="fa-regular fa-envelope"></i> Messages
+                            </Link>
                         </li>
                         <li onClick={handleShowSavedJobs} style={{ position: 'relative' }}>
                             <i className="fa-regular fa-bookmark"></i> Save Jobs
@@ -475,7 +446,6 @@ export default function Dashboard({
                     </ul>
                 </aside>
 
-                {/* Main Content */}
                 <main className="main">
                     {showSavedJobs ? (
                         <>
@@ -493,6 +463,7 @@ export default function Dashboard({
                                             job={job}
                                             onSave={handleSaveJob}
                                             onUnsave={handleUnsaveJob}
+                                            onApply={handleApplyJob}
                                             isSaved={true}
                                         />
                                     ))}
@@ -516,7 +487,7 @@ export default function Dashboard({
                             ) : appliedJobs.length > 0 ? (
                                 <div className="jobs">
                                     {appliedJobs.map((job) => (
-                                        <JobCard key={job.id} job={job} onSave={handleSaveJob} onUnsave={handleUnsaveJob} isSaved={false} />
+                                        <JobCard key={job.id} job={job} onSave={handleSaveJob} onUnsave={handleUnsaveJob} onApply={handleApplyJob} isSaved={false} />
                                     ))}
                                 </div>
                             ) : (
@@ -557,7 +528,6 @@ export default function Dashboard({
                                 </div>
                             ) : null}
 
-                            {/* Search Bar */}
                             <div className="search-bar">
                                 <form onSubmit={handleSearch}>
                                     <input
@@ -619,6 +589,7 @@ export default function Dashboard({
                                                 job={job}
                                                 onSave={handleSaveJob}
                                                 onUnsave={handleUnsaveJob}
+                                                onApply={handleApplyJob}
                                                 isSaved={localSavedJobs.some(saved => saved.id === job.id)}
                                             />
                                         ))}
@@ -637,6 +608,7 @@ export default function Dashboard({
                                                 job={job}
                                                 onSave={handleSaveJob}
                                                 onUnsave={handleUnsaveJob}
+                                                onApply={handleApplyJob}
                                                 isSaved={localSavedJobs.some(saved => saved.id === job.id)}
                                             />
                                         ))}
@@ -663,7 +635,6 @@ export default function Dashboard({
                     )}
                 </main>
 
-                {/* Right Panel */}
                 <aside className="right-panel">
                     <div className="progress-card">
                         <h3>Complete Your Profile</h3>
@@ -774,15 +745,6 @@ export default function Dashboard({
                     </div>
                 </aside>
             </div>
-
-            {/* Message Modal */}
-            <MessageModal
-                isOpen={showMessageModal}
-                onClose={() => setShowMessageModal(false)}
-                messages={messages}
-                loading={loadingMessages}
-                onMarkAsRead={markMessageAsRead}
-            />
         </>
     );
 }

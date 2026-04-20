@@ -1,11 +1,18 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import AppNavbar from '../Components/AppNavbar';
 import '../../css/talent_profile.css';
 
 export default function TalentProfile({ auth, talent }) {
     const [imageError, setImageError] = useState(false);
+    const [showMessageModal, setShowMessageModal] = useState(false);
     const currentUser = auth?.user;
+
+    // Use Inertia's useForm hook - automatically handles CSRF!
+    const { data, setData, post, processing, reset, errors } = useForm({
+        receiver_id: talent?.id || '',
+        message: ''
+    });
 
     // Get initials for avatar fallback
     const getInitials = (name) => {
@@ -38,8 +45,27 @@ export default function TalentProfile({ auth, talent }) {
         return Array.isArray(data) ? data : [];
     };
 
-    const handleMessage = () => {
-        alert('Messaging feature coming soon!');
+    // Send message function using Inertia
+    const sendMessage = (e) => {
+        e.preventDefault();
+        
+        if (!data.message.trim()) {
+            alertify.error('Please enter a message');
+            return;
+        }
+
+        post('/messages/send', {
+            preserveScroll: true,
+            onSuccess: () => {
+                alertify.success('Message sent successfully!');
+                setShowMessageModal(false);
+                reset('message');
+            },
+            onError: (errors) => {
+                console.error('Send message errors:', errors);
+                alertify.error(errors.message || 'Failed to send message');
+            }
+        });
     };
 
     // If no talent data, show loading
@@ -55,6 +81,15 @@ export default function TalentProfile({ auth, talent }) {
             </div>
         );
     }
+
+    // Update form data when modal opens
+    const openMessageModal = () => {
+        setData({
+            receiver_id: talent.id,
+            message: ''
+        });
+        setShowMessageModal(true);
+    };
 
     return (
         <>
@@ -188,7 +223,7 @@ export default function TalentProfile({ auth, talent }) {
                                 <div className="talent-contact-text-full"></div>
                                 <button 
                                     className="talent-message-btn-full"
-                                    onClick={handleMessage}
+                                    onClick={openMessageModal}
                                 >
                                     Send Message
                                 </button>
@@ -306,6 +341,57 @@ export default function TalentProfile({ auth, talent }) {
                     </div>
                 </div>
             </div>
+
+            {/* Message Modal - Using Inertia form */}
+            {showMessageModal && (
+                <div className="message-modal-overlay" onClick={() => setShowMessageModal(false)}>
+                    <form className="message-modal" onSubmit={sendMessage} onClick={(e) => e.stopPropagation()}>
+                        <div className="message-modal-header">
+                            <h3>Send Message to {talent?.name}</h3>
+                            <button 
+                                type="button"
+                                className="message-modal-close" 
+                                onClick={() => setShowMessageModal(false)}
+                            >
+                                <i className="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div className="message-modal-body">
+                            <textarea
+                                className="message-input"
+                                placeholder="Type your message here..."
+                                value={data.message}
+                                onChange={(e) => setData('message', e.target.value)}
+                                rows="5"
+                                disabled={processing}
+                            />
+                            {errors.message && (
+                                <div className="error-message" style={{ color: '#ef4444', fontSize: '12px', marginTop: '5px' }}>
+                                    {errors.message}
+                                </div>
+                            )}
+                        </div>
+                        <div className="message-modal-footer">
+                            <button 
+                                type="button"
+                                className="btn-cancel" 
+                                onClick={() => setShowMessageModal(false)}
+                                disabled={processing}
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                type="submit"
+                                className="btn-send" 
+                                disabled={processing}
+                            >
+                                {processing ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-paper-plane"></i>}
+                                {processing ? ' Sending...' : ' Send Message'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )}
         </>
     );
 }

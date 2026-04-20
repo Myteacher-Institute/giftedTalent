@@ -143,6 +143,19 @@ class User extends Authenticatable
         return $this->savedJobs()->where('job_id', $jobId)->where('is_saved', true)->exists();
     }
 
+
+    public function sentMessages(): HasMany
+{
+    return $this->hasMany(Message::class, 'sender_id');
+}
+
+public function receivedMessages(): HasMany
+{
+    return $this->hasMany(Message::class, 'receiver_id');
+}
+
+    
+
     /**
      * Calculate profile completion percentage using data from all related tables
      * 

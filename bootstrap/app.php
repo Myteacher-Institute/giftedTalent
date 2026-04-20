@@ -24,6 +24,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\IsAdmin::class,
             'not_admin' => \App\Http\Middleware\NotAdmin::class,
         ]);
+
+        // Exclude all message routes from CSRF protection
+        $middleware->validateCsrfTokens(except: [
+            'messages/*',
+            'saved-jobs/*',
+            'jobs/*/apply',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
