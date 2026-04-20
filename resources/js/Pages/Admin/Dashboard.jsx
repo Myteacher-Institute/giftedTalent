@@ -228,7 +228,7 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
 
                                 <div>
                                     <a href="/Admin/candidates" className='hire' onClick={(e) => { e.preventDefault(); navigateTo('/Admin/candidates'); }}>Hire</a>
-                                    <img src="/assets/svg/arrow-down.svg" alt="" className="arrow-down-icon" />
+                                    {/* <img src="/assets/svg/arrow-down.svg" alt="" className="arrow-down-icon" /> */}
                                 </div>
                             </div>
                         </div>
