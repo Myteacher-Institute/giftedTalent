@@ -4,6 +4,7 @@ import AppNavbar from '../Components/AppNavbar';
 import '../../css/Dashboard.css';
 import Notification from '../Components/Notification';
 
+
 window.alertify = window.alertify || alertify;
 
 // Job Card Component
