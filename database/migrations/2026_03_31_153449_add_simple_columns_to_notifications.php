@@ -11,13 +11,13 @@ return new class extends Migration
         Schema::table('notifications', function (Blueprint $table) {
             // Add simple columns
             if (!Schema::hasColumn('notifications', 'title')) {
-                $table->string('title')->nullable()->after('type');
+                $table->string('title')->nullable();
             }
             if (!Schema::hasColumn('notifications', 'message')) {
-                $table->text('message')->nullable()->after('title');
+                $table->text('message')->nullable();
             }
             if (!Schema::hasColumn('notifications', 'link')) {
-                $table->string('link')->nullable()->after('message');
+                $table->string('link')->nullable();
             }
         });
     }

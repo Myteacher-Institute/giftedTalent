@@ -105,7 +105,7 @@ export default function EditProfile({ user }) {
     const recentExperience = user.experiences?.[0] || { company: 'No experience added', job_title: 'Add experience' };
 
     return (
-        <AuthenticatedLayout header={<h2 className="text-xl font-semibold leading-tight text-gray-800">Edit Profile</h2>}>
+        <>
             <Head title="Edit Profile" />
             <div className="py-12">
                 <div className="container">
@@ -352,7 +352,7 @@ export default function EditProfile({ user }) {
                     </div>
                 </div>
             </div>
-        </AuthenticatedLayout>
+        </>
     );
 }
 

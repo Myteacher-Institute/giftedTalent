@@ -198,9 +198,60 @@ body {
   backdrop-filter: blur(20px);
   border-radius: 20px;
   overflow: hidden;
-  margin-bottom: 25px;
-  transition: all 0.4s ease;
-  border: 1px solid rgba(255,255,255,0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: sticky;
+  top: 90px;
+  box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+/* ============================================
+   SIDEBAR CLOSE BUTTON - MOBILE ONLY
+   ============================================ */
+
+/* Hide sidebar close button on desktop by default */
+.sidebar-close {
+    display: none;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #64748b;
+    padding: 10px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    z-index: 10;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar-close:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    transform: rotate(90deg);
+}
+
+.sidebar-close i {
+    font-size: 20px;
+}
+
+/* Show sidebar close button ONLY on mobile */
+@media (max-width: 768px) {
+    .sidebar-close {
+        display: flex;
+    }
+}
+
+/* On desktop, ensure sidebar-close is hidden */
+@media (min-width: 769px) {
+    .sidebar-close {
+        display: none !important;
+    }
 }
 
 .cover {
@@ -598,3 +649,265 @@ body {
   }
 }
 
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Mobile Navigation Section - Only visible on mobile */
+.mobile-nav-section {
+    display: none;
+    padding: 20px 25px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+}
+
+.mobile-nav-item {
+    padding: 12px 15px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #475569;
+    margin-bottom: 5px;
+}
+
+.mobile-nav-item:hover {
+    background: linear-gradient(135deg, rgba(10, 102, 194, 0.1), rgba(30, 64, 175, 0.05));
+    transform: translateX(4px);
+    color: #0a66c2;
+}
+
+.mobile-nav-item.active {
+    background: linear-gradient(135deg, rgba(10, 102, 194, 0.15), rgba(30, 64, 175, 0.1));
+    color: #0a66c2;
+    font-weight: 600;
+}
+
+.mobile-nav-item i {
+    width: 22px;
+    color: #94a3b8;
+    transition: all 0.3s ease;
+}
+
+.mobile-nav-item:hover i,
+.mobile-nav-item.active i {
+    color: #0a66c2;
+}
+
+/* Hide desktop nav links on mobile, show mobile nav section */
+@media (max-width: 768px) {
+    .nav-links {
+        display: none;
+    }
+    
+    .mobile-nav-section {
+        display: block;
+    }
+}
+
+/* On desktop, hide mobile nav section */
+@media (min-width: 769px) {
+    .mobile-nav-section {
+        display: none;
+    }
+}
+
+/* Search Bar Styles - Fully Responsive */
+.search-bar-container {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.search-form {
+    width: 100%;
+}
+
+.search-input-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: white;
+    border-radius: 60px;
+    padding: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.search-input-group:focus-within {
+    border-color: #0a66c2;
+    box-shadow: 0 4px 15px rgba(10, 102, 194, 0.15);
+}
+
+.search-input-icon {
+    color: #94a3b8;
+    font-size: 18px;
+    margin-left: 15px;
+}
+
+.search-input-field {
+    flex: 1;
+    border: none;
+    padding: 14px 0;
+    font-size: 15px;
+    outline: none;
+    background: transparent;
+    color: #1e293b;
+}
+
+.search-input-field::placeholder {
+    color: #94a3b8;
+}
+
+.clear-search-btn-field {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.clear-search-btn-field:hover {
+    background: #f1f5f9;
+    color: #ef4444;
+}
+
+.search-submit-btn {
+    background: linear-gradient(135deg, #0a66c2, #1e40af);
+    border: none;
+    padding: 10px 24px;
+    border-radius: 50px;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.search-submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(10, 102, 194, 0.3);
+}
+
+/* Sort Bar */
+.sort-bar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}
+
+.sort-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: white;
+    padding: 8px 16px;
+    border-radius: 40px;
+    border: 1px solid #e2e8f0;
+}
+
+.sort-label {
+    font-size: 14px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.sort-select {
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    color: #1e293b;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .search-input-group {
+        flex-wrap: wrap;
+        border-radius: 20px;
+        padding: 8px;
+    }
+    
+    .search-input-icon {
+        margin-left: 12px;
+    }
+    
+    .search-input-field {
+        flex: 1;
+        min-width: 150px;
+    }
+    
+    .search-submit-btn {
+        padding: 8px 18px;
+        font-size: 13px;
+    }
+    
+    .sort-bar {
+        justify-content: flex-start;
+    }
+    
+    .sort-wrapper {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
+@media (max-width: 480px) {
+    .search-input-group {
+        flex-direction: column;
+        border-radius: 16px;
+    }
+    
+    .search-input-icon {
+        display: none;
+    }
+    
+    .search-input-field {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        margin-bottom: 8px;
+    }
+    
+    .clear-search-btn-field {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+    
+    .search-input-field {
+        position: relative;
+    }
+    
+    .search-submit-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 10px;
+    }
+}
