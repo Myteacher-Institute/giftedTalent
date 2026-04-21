@@ -54,7 +54,7 @@ const AppNavbar = ({ user, newJobsCount, onMenuToggle, isMenuOpen }) => {
                     <Link href="/">Home</Link>
                     <Link href="/search-jobs">Jobs</Link>
                     <Link href="/explore">Explore</Link>
-                    <Link href="/hire">Hire</Link>
+                    {/* <Link href="/hire">Hire</Link> */}
                 </div>
 
                 <div className="search">
