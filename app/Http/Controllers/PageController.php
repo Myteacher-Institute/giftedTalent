@@ -62,7 +62,7 @@ class PageController extends Controller
         $user = Auth::user();
         
         // Fetch all registered users with profiles (similar to featured talents)
-        $talents = User::where('profile_completed', '>=', 50)
+        $talents = User::where('profile_completed', '>=', 35)
             ->with('profile')
             ->orderBy('profile_completed', 'desc')
             ->get()
