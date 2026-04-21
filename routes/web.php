@@ -14,6 +14,7 @@ use App\Http\Controllers\HireController;
 use App\Models\Job;
 use App\Models\User;
 use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
@@ -142,9 +143,9 @@ Route::middleware(['auth'])->group(function () {
     // Settings
     Route::get('/settings', function () {
         return Inertia::render('Settings', [
-            'user' => auth()->user(),
-            'profile' => auth()->user()->profile,
-            'auth' => ['user' => auth()->user()],
+            'user' => Auth::user(),
+            'profile' => Auth::user()->profile,
+            'auth' => ['user' => Auth::user()],
         ]);
     })->name('settings');
 
