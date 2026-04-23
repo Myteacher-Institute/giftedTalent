@@ -21,6 +21,15 @@
         @inertiaHead
     </head>
     <body class="font-sans antialiased">
+<<<<<<< HEAD
         @inertia
+=======
+        <div id="app">
+            @inertia
+        </div>
+        
+        <!-- Alertify JS -->
+        <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js"></script>
+>>>>>>> 648e41f0b790b1c2bd51287552e304c650cfcc4e
     </body>
 </html>

@@ -14,104 +14,115 @@ class ExploreController extends Controller
     {
         $user = auth()->user();
         
-        // Get featured jobs (active jobs with company info)
-        $featuredJobs = Job::where('status', 'active')
-            ->latest()
-            ->take(6)
-            ->get()
-            ->map(function($job) {
-                return [
-                    'id' => $job->id,
-                    'title' => $job->job_title ?? $job->title ?? 'Job Title',
-                    'company' => $job->company_name ?? $job->company ?? 'Company',
-                    'location' => $job->company_location ?? $job->location ?? 'Location',
-                    'job_type' => $job->job_type ?? 'Full-time',
-                    'salary_range' => $job->salary_range ?? $job->salary ?? null,
-                    'company_logo' => null, // Remove this if column doesn't exist
-                    'created_at' => $job->created_at,
-                ];
-            });
-        
-        // Get featured talents (users with completed profiles)
-        $featuredTalents = User::where('profile_completed', '>=', 50)
-            ->with('profile')
-            ->orderBy('profile_completed', 'desc')
-            ->take(6)
-            ->get()
-            ->map(function($user) {
-                // Get skills
-                $skills = [];
-                if ($user->skills) {
-                    $skills = is_string($user->skills) ? json_decode($user->skills, true) : $user->skills;
-                }
-                if (empty($skills) && $user->profile && $user->profile->skills) {
-                    $skills = is_string($user->profile->skills) ? json_decode($user->profile->skills, true) : $user->profile->skills;
-                }
-                
-                // Get avatar
-                $avatar = null;
-                if ($user->profile && $user->profile->profile_image_base64) {
-                    $avatar = $user->profile->profile_image_base64;
-                } elseif ($user->profile && $user->profile->avatar_url) {
-                    $avatar = $user->profile->avatar_url;
-                }
-                
-                // Get title
-                $title = $user->title;
-                if (!$title && $user->profile) {
-                    $title = $user->profile->position ?? $user->profile->title ?? 'Professional';
-                }
-                
-                // Calculate rating
-                $rating = 4.0;
-                if ($user->profile_completed >= 90) $rating = 5.0;
-                elseif ($user->profile_completed >= 80) $rating = 4.8;
-                elseif ($user->profile_completed >= 70) $rating = 4.5;
-                elseif ($user->profile_completed >= 60) $rating = 4.2;
-                elseif ($user->profile_completed >= 50) $rating = 4.0;
-                
-                return [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'title' => $title,
-                    'avatar' => $avatar,
-                    'skills' => $skills,
-                    'rating' => $rating,
-                ];
-            });
-        
-        // Get popular companies (from jobs) - FIXED: removed logo_url
-        $popularCompanies = Job::where('status', 'active')
-            ->whereNotNull('company_name')
-            ->select('company_name', 'company_location')
-            ->groupBy('company_name', 'company_location')
-            ->take(6)
-            ->get()
-            ->map(function($job) {
-                return [
-                    'name' => $job->company_name,
-                    'location' => $job->company_location,
-                    'logo' => null, // No logo column available
-                    'job_count' => Job::where('company_name', $job->company_name)->count(),
-                ];
-            });
-        
-        // Get job categories (job types)
-        $categories = Job::where('status', 'active')
+        // 1. TRENDING INDUSTRIES (Job types with counts)
+        $trendingIndustries = Job::where('status', 'active')
             ->whereNotNull('job_type')
-            ->select('job_type')
-            ->distinct()
-            ->pluck('job_type')
-            ->filter()
-            ->values()
-            ->toArray();
+            ->select('job_type', DB::raw('count(*) as count'))
+            ->groupBy('job_type')
+            ->orderBy('count', 'desc')
+            ->limit(6)
+            ->get()
+            ->map(function($item) {
+                return [
+                    'name' => $item->job_type,
+                    'count' => $item->count,
+                    'icon' => $this->getIconForIndustry($item->job_type)
+                ];
+            });
+        
+        // 2. FEATURED COMPANIES (Companies with most jobs) - FIXED: removed logo_url
+        $featuredCompanies = Job::where('status', 'active')
+            ->whereNotNull('company_name')
+            ->select('company_name', 'company_location', DB::raw('count(*) as job_count'))
+            ->groupBy('company_name', 'company_location')
+            ->orderBy('job_count', 'desc')
+            ->limit(8)
+            ->get()
+            ->map(function($company) {
+                return [
+                    'name' => $company->company_name,
+                    'location' => $company->company_location ?? 'Remote / Flexible',
+                    'logo' => null,
+                    'job_count' => $company->job_count,
+                    'description' => 'Innovative Solutions Provider'
+                ];
+            });
+        
+        // 3. TOP SKILLS IN DEMAND
+        $allJobs = Job::where('status', 'active')->get();
+        $skillCounts = [];
+        
+        foreach ($allJobs as $job) {
+            $skills = $job->required_skills;
+            if (is_string($skills)) {
+                $skills = json_decode($skills, true);
+            }
+            if (is_array($skills)) {
+                foreach ($skills as $skill) {
+                    $skillName = trim($skill);
+                    if (!empty($skillName)) {
+                        if (!isset($skillCounts[$skillName])) {
+                            $skillCounts[$skillName] = 0;
+                        }
+                        $skillCounts[$skillName]++;
+                    }
+                }
+            }
+        }
+        
+        arsort($skillCounts);
+        $topSkills = array_slice($skillCounts, 0, 8, true);
+        
+        $colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#f97316'];
+        $skillsData = [];
+        $i = 0;
+        foreach ($topSkills as $skill => $count) {
+            $skillsData[] = [
+                'name' => $skill,
+                'count' => $count,
+                'color' => $colors[$i++ % count($colors)]
+            ];
+        }
+        
+        // 4. STATISTICS
+        $stats = [
+            'total_jobs' => Job::where('status', 'active')->count(),
+            'total_companies' => Job::where('status', 'active')->distinct('company_name')->count('company_name'),
+            'total_talents' => User::where('profile_completed', '>=', 50)->count(),
+            'success_rate' => 98
+        ];
         
         return Inertia::render('Explore', [
             'auth' => ['user' => $user],
-            'featuredJobs' => $featuredJobs,
-            'featuredTalents' => $featuredTalents,
-            'popularCompanies' => $popularCompanies,
-            'categories' => $categories,
+            'trendingIndustries' => $trendingIndustries,
+            'featuredCompanies' => $featuredCompanies,
+            'topSkills' => $skillsData,
+            'stats' => $stats,
         ]);
+    }
+    
+    private function getIconForIndustry($industry)
+    {
+        $industryLower = strtolower($industry);
+        
+        if (str_contains($industryLower, 'tech') || str_contains($industryLower, 'software')) {
+            return 'fa-microchip';
+        }
+        if (str_contains($industryLower, 'data')) {
+            return 'fa-chart-line';
+        }
+        if (str_contains($industryLower, 'market')) {
+            return 'fa-bullhorn';
+        }
+        if (str_contains($industryLower, 'health') || str_contains($industryLower, 'medical')) {
+            return 'fa-hospital-user';
+        }
+        if (str_contains($industryLower, 'design')) {
+            return 'fa-pen-ruler';
+        }
+        if (str_contains($industryLower, 'remote')) {
+            return 'fa-globe';
+        }
+        return 'fa-briefcase';
     }
 }

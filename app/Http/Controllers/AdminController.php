@@ -207,6 +207,8 @@ class AdminController extends Controller
             'description'      => $request->description,
             'status'           => 'active',
             'posted_at'        => now(),
+            'application_link' => $request->application_link,
+            'tags' => $tags,
             'applicants_count' => 0,
         ]);
 
@@ -228,13 +230,29 @@ class AdminController extends Controller
 
         $request->validate([
             'company_name'     => 'required|string|max:255',
+            'company_logo_url' => 'nullable|url|max:500',
             'company_location' => 'required|string|max:255',
+            'job_title'        => 'required|string|max:255',
             'job_type'         => 'required|string|max:255',
             'salary_range'     => 'required|string|max:255',
             'description'      => 'required|string',
+            'tags'             => 'nullable|array',
+            'application_link' => 'required|url|max:500',
         ]);
 
-        $job->update($request->all());
+        $tags = $request->tags ?? [];
+
+        $job->update([
+            'company_name'     => $request->company_name,
+            'company_logo_url' => $request->company_logo_url,
+            'company_location' => $request->company_location,
+            'job_title'        => $request->job_title,
+            'job_type'         => $request->job_type,
+            'salary_range'     => $request->salary_range,
+            'description'      => $request->description,
+            'tags'             => $tags,
+            'application_link' => $request->application_link,
+        ]);
 
         return redirect()->route('admin.dashboard')->with('success', 'Job updated successfully!');
     }

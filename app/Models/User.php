@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Job;
 use App\Models\Resume;
 use App\Models\Skill;
+use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,7 +15,7 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, MustVerifyEmail;
 
     /**
      * The attributes that are mass assignable.
@@ -139,6 +140,19 @@ class User extends Authenticatable
     {
         return $this->savedJobs()->where('job_id', $jobId)->where('is_saved', true)->exists();
     }
+
+
+    public function sentMessages(): HasMany
+{
+    return $this->hasMany(Message::class, 'sender_id');
+}
+
+public function receivedMessages(): HasMany
+{
+    return $this->hasMany(Message::class, 'receiver_id');
+}
+
+    
 
     /**
      * Calculate profile completion percentage using data from all related tables

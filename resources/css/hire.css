@@ -1,0 +1,962 @@
+/* ============================================
+   HIRE PAGE STYLES
+   ============================================ */
+
+.hire-container {
+    display: flex;
+    min-height: calc(100vh - 70px);
+    background: #f8fafc;
+}
+
+/* ============================================
+   SIDEBAR STYLES
+   ============================================ */
+.hire-sidebar {
+    width: 280px;
+    background: #ffffff;
+    padding: 24px 20px;
+    border-right: 1px solid #e5e7eb;
+    height: fit-content;
+    position: sticky;
+    top: 80px;
+    transition: all 0.3s ease;
+}
+
+.hire-sidebar .profile {
+    text-align: center;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.hire-sidebar .profile-image-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.hire-sidebar .profile-image {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #eef2ff;
+    padding: 3px;
+    background: #fff;
+}
+
+.hire-sidebar .verified-overlay {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background: #0A2463;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+}
+
+.hire-sidebar .verified-overlay i {
+    color: white;
+    font-size: 12px;
+}
+
+.hire-sidebar .profile h3 {
+    margin-top: 14px;
+    font-size: 17px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.hire-sidebar .profile p {
+    color: #6b7280;
+    font-size: 13px;
+    margin-top: 4px;
+}
+
+.hire-sidebar .profile button {
+    margin-top: 14px;
+    padding: 8px 20px;
+    border: 1px solid #0A2463;
+    color: #0A2463;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    background: transparent;
+    transition: all 0.2s ease;
+}
+
+.hire-sidebar .profile button:hover {
+    background: #0A2463;
+    color: white;
+}
+
+.hire-sidebar .profile button a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.hire-sidebar .menu {
+    margin-top: 20px;
+    list-style: none;
+}
+
+.hire-sidebar .menu li {
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-bottom: 4px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.hire-sidebar .menu li i {
+    color: #0A66C2;
+    width: 18px;
+    font-size: 16px;
+}
+
+.hire-sidebar .menu li:hover,
+.hire-sidebar .menu li.active {
+    background: #eef2ff;
+    color: #0A2463;
+}
+
+.hire-sidebar .menu li a {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.hire-sidebar .logout-item {
+    margin-top: 20px;
+    border-top: 1px solid #f3f4f6;
+    padding-top: 12px;
+}
+
+.logout-icon {
+    color: #dc2626;
+}
+
+/* ============================================
+   MAIN CONTENT
+   ============================================ */
+.hire-main {
+    flex: 1;
+    padding: 30px;
+    overflow-x: hidden;
+}
+
+/* Hero Section */
+.hire-hero {
+    background: linear-gradient(135deg, #0A2463 0%, #1e3a5f 50%, #0A2463 100%);
+    border-radius: 24px;
+    padding: 60px 40px;
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.hire-hero-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.hero-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    padding: 8px 20px;
+    border-radius: 50px;
+    color: #a78bfa;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.hero-badge i {
+    margin-right: 6px;
+}
+
+.hire-hero h1 {
+    font-size: 48px;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 16px;
+}
+
+.gradient-text {
+    background: linear-gradient(135deg, #a78bfa, #c084fc);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.hire-hero p {
+    font-size: 18px;
+    color: #cbd5e1;
+    margin-bottom: 32px;
+}
+
+/* Stats Section */
+.hire-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin-bottom: 50px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    text-align: center;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    border-color: #0A2463;
+}
+
+.stat-card i {
+    font-size: 32px;
+    color: #0A2463;
+    margin-bottom: 12px;
+}
+
+.stat-number {
+    display: block;
+    font-size: 28px;
+    font-weight: 800;
+    color: #1f2937;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+/* Content Header */
+.content-header {
+    margin-bottom: 30px;
+}
+
+.content-header h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 8px;
+}
+
+.content-header h2 i {
+    color: #0A2463;
+    margin-right: 10px;
+}
+
+.content-header p {
+    color: #6b7280;
+    font-size: 15px;
+}
+
+/* Results Count */
+.results-count {
+    margin-bottom: 20px;
+    padding: 10px 0;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.results-count strong {
+    color: #0A2463;
+    font-size: 16px;
+}
+
+/* Search Filters */
+.search-filters {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 30px;
+}
+
+.search-bar {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.search-bar i {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+}
+
+.search-bar input {
+    width: 100%;
+    padding: 14px 16px 14px 45px;
+    border: 1px solid #e5e7eb;
+    border-radius: 50px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.search-bar input:focus {
+    outline: none;
+    border-color: #0A2463;
+    box-shadow: 0 0 0 3px rgba(10, 36, 99, 0.1);
+}
+
+.clear-search-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+.clear-search-btn:hover {
+    color: #dc2626;
+}
+
+.filter-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.filter-group select {
+    flex: 1;
+    padding: 12px 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: white;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.filter-group select:focus {
+    outline: none;
+    border-color: #0A2463;
+}
+
+/* Talents Grid */
+.talents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+.talent-card {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    text-align: center;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.talent-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    border-color: #0A2463;
+}
+
+.talent-avatar {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 16px;
+}
+
+.talent-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0A2463, #1e3a5f);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 700;
+    color: white;
+}
+
+.talent-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+.talent-title {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 8px;
+}
+
+.talent-rating {
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.talent-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.skill-tag {
+    background: #eef2ff;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    color: #0A2463;
+    font-weight: 500;
+}
+
+.skill-tag i {
+    margin-right: 4px;
+    font-size: 10px;
+}
+
+.skill-tag.more {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+/* Talent Info */
+.talent-info {
+    margin: 12px 0;
+    text-align: left;
+    padding: 0 8px;
+}
+
+.talent-info div {
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.talent-info i {
+    width: 18px;
+    color: #0A2463;
+}
+
+.talent-experience,
+.talent-location,
+.talent-availability,
+.talent-salary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Talent Actions */
+.talent-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.view-profile-btn,
+.contact-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.view-profile-btn {
+    background: #0A2463;
+    color: white;
+    border: none;
+}
+
+.view-profile-btn:hover {
+    background: #1e3a5f;
+    transform: translateY(-2px);
+}
+
+.contact-btn {
+    background: white;
+    border: 1px solid #e5e7eb;
+    color: #374151;
+}
+
+.contact-btn:hover {
+    border-color: #0A2463;
+    color: #0A2463;
+    transform: translateY(-2px);
+}
+
+/* No Results */
+.no-results {
+    text-align: center;
+    padding: 60px 20px;
+    background: white;
+    border-radius: 20px;
+    border: 1px solid #e5e7eb;
+}
+
+.no-results i {
+    font-size: 64px;
+    color: #cbd5e1;
+    margin-bottom: 16px;
+}
+
+.no-results h3 {
+    font-size: 20px;
+    color: #1f2937;
+    margin-bottom: 8px;
+}
+
+.no-results p {
+    color: #6b7280;
+    margin-bottom: 24px;
+}
+
+.clear-filters-btn {
+    padding: 12px 28px;
+    background: #0A2463;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.clear-filters-btn:hover {
+    background: #1e3a5f;
+    transform: translateY(-2px);
+}
+
+/* How It Works */
+.how-it-works {
+    margin-bottom: 50px;
+}
+
+.steps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+}
+
+.step-card {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    text-align: center;
+    border: 1px solid #e5e7eb;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.step-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+.step-number {
+    position: absolute;
+    top: -15px;
+    left: 20px;
+    width: 30px;
+    height: 30px;
+    background: #0A2463;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.step-icon {
+    font-size: 48px;
+    color: #0A2463;
+    margin-bottom: 16px;
+}
+
+.step-card h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 8px;
+}
+
+.step-card p {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+/* Testimonials Section */
+.testimonials-section {
+    margin-bottom: 50px;
+}
+
+.testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.testimonial-card {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.testimonial-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+.quote-icon {
+    font-size: 28px;
+    color: #0A2463;
+    opacity: 0.5;
+    margin-bottom: 16px;
+}
+
+.testimonial-card p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #4b5563;
+    margin-bottom: 20px;
+}
+
+.testimonial-author strong {
+    display: block;
+    font-size: 14px;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+.testimonial-author span {
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+/* FAQ Section */
+.faq-section {
+    margin-bottom: 50px;
+}
+
+.faq-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.faq-item {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.faq-item:hover {
+    border-color: #0A2463;
+}
+
+.faq-item h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 8px;
+}
+
+.faq-item h3 i {
+    color: #0A2463;
+    margin-right: 8px;
+}
+
+.faq-item p {
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.5;
+}
+
+/* Newsletter Section */
+.newsletter-section {
+    background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
+    border-radius: 24px;
+    padding: 50px;
+    text-align: center;
+    border: 1px solid #e5e7eb;
+}
+
+.newsletter-icon {
+    width: 70px;
+    height: 70px;
+    background: #0A2463;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+}
+
+.newsletter-icon i {
+    font-size: 32px;
+    color: white;
+}
+
+.newsletter-section h3 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 8px;
+}
+
+.newsletter-section p {
+    color: #6b7280;
+    margin-bottom: 24px;
+}
+
+.newsletter-form {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.newsletter-form input {
+    flex: 1;
+    min-width: 250px;
+    padding: 14px 20px;
+    border: 1px solid #e5e7eb;
+    border-radius: 50px;
+    font-size: 14px;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.newsletter-form input:focus {
+    outline: none;
+    border-color: #0A2463;
+}
+
+.newsletter-form button {
+    padding: 14px 32px;
+    background: #0A2463;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.newsletter-form button:hover {
+    background: #1e3a5f;
+    transform: translateY(-2px);
+}
+
+.newsletter-note {
+    font-size: 12px;
+    color: #9ca3af;
+    margin-top: 16px;
+}
+
+/* Mobile Overlay */
+.mobile-overlay {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1001;
+    animation: fadeIn 0.3s ease;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+@media (max-width: 1024px) {
+    .hire-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .steps-grid,
+    .testimonials-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .faq-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .hire-sidebar {
+        position: fixed;
+        left: -100%;
+        top: 60px;
+        width: 280px;
+        height: calc(100vh - 60px);
+        z-index: 1002;
+        overflow-y: auto;
+    }
+    
+    .hire-sidebar.mobile-open {
+        left: 0;
+    }
+    
+    .hire-main {
+        padding: 16px;
+    }
+    
+    .hire-hero {
+        padding: 40px 20px;
+    }
+    
+    .hire-hero h1 {
+        font-size: 32px;
+    }
+    
+    .steps-grid,
+    .testimonials-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .hero-buttons {
+        flex-direction: column;
+    }
+    
+    .hero-btn {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .filter-group {
+        flex-direction: column;
+    }
+    
+    .filter-group select {
+        width: 100%;
+    }
+    
+    .talents-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .talent-info {
+        text-align: center;
+    }
+    
+    .talent-info div {
+        justify-content: center;
+    }
+    
+    .newsletter-section {
+        padding: 30px 20px;
+    }
+    
+    .newsletter-form {
+        flex-direction: column;
+    }
+    
+    .newsletter-form button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .hire-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .stat-card {
+        padding: 16px;
+    }
+    
+    .talent-card {
+        padding: 16px;
+    }
+    
+    .talent-avatar {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .avatar-placeholder {
+        font-size: 24px;
+    }
+    
+    .talent-actions {
+        flex-direction: column;
+    }
+    
+    .view-profile-btn,
+    .contact-btn {
+        width: 100%;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #0A2463;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #1e3a5f;
+}

@@ -238,4 +238,98 @@ class JobsController extends Controller
         
         return response()->json($recommendedJobs);
     }
+
+    /**
+ * Apply for a job
+ */
+public function apply($jobId)
+{
+    $user = Auth::user();;
+    
+    // Check if job exists
+    $job = DB::table('job_posts')->where('id', $jobId)->first();
+    
+    if (!$job) {
+        return response()->json(['message' => 'Job not found'], 404);
+    }
+    
+    // Check if already applied
+    $existing = DB::table('job_applications')
+        ->where('user_id', $user->id)
+        ->where('job_id', $jobId)
+        ->exists();
+    
+    if ($existing) {
+        return response()->json(['message' => 'You have already applied for this job'], 409);
+    }
+    
+    // Create application
+    DB::table('job_applications')->insert([
+        'user_id' => $user->id,
+        'job_id' => $jobId,
+        'status' => 'pending',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+    
+    return response()->json(['message' => 'Application submitted successfully!']);
+}
+
+/**
+ * Get user's job applications
+ */
+public function myApplications()
+{
+     $user = Auth::user();
+    
+    $applications = \App\Models\JobApplication::where('user_id', $user->id)
+        ->with('job')
+        ->orderBy('created_at', 'desc')
+        ->get()
+        ->map(function($application) {
+            $job = $application->job;
+            return [
+                'id' => $application->id,
+                'job_id' => $application->job_id,
+                'title' => $job->job_title ?? $job->title ?? 'Job Title',
+                'company' => $job->company_name ?? $job->company ?? 'Company',
+                'location' => $job->company_location ?? $job->location ?? 'Location',
+                'status' => $application->status,
+                'applied_at' => $application->created_at,
+                'applied_at_human' => $application->created_at->diffForHumans(),
+            ];
+        });
+    
+    return response()->json([
+        'success' => true,
+        'data' => $applications
+    ]);
+}
+
+public function applicationsPage()
+{
+    $user = Auth::user();
+    
+    $applications = DB::table('job_applications')
+        ->join('job_posts', 'job_applications.job_id', '=', 'job_posts.id')
+        ->where('job_applications.user_id', $user->id)
+        ->select('job_applications.*', 'job_posts.job_title as title', 'job_posts.company_name as company', 'job_posts.company_location as location')
+        ->orderBy('job_applications.created_at', 'desc')
+        ->get()
+        ->map(function($app) {
+            return [
+                'id' => $app->id,
+                'title' => $app->title,
+                'company' => $app->company,
+                'location' => $app->location,
+                'status' => $app->status,
+                'applied_at' => $app->created_at,
+            ];
+        });
+    
+    return Inertia::render('Applications', [
+        'applications' => $applications,
+        'auth' => ['user' => $user],
+    ]);
+}
 }

@@ -35,6 +35,24 @@ export default function Jobs({ jobs = [], auth }) {
     const uniqueTypes = [...new Set(jobs.map(job => job.job_type).filter(Boolean))];
     const uniqueLocations = [...new Set(jobs.map(job => job.company_location).filter(Boolean))];
 
+    // Function to truncate location if more than 4 words
+    const truncateLocation = (location) => {
+        if (!location) return '';
+        const words = location.split(' ');
+        if (words.length > 4) {
+            return words.slice(0, 4).join(' ') + '...';
+        }
+        return location;
+    };
+
+    // Function to get first character of truncated company name
+    const getCompanyInitial = (companyName) => {
+        if (!companyName) return 'C';
+        const words = companyName.split(' ');
+        const firstWord = words[0];
+        return firstWord.charAt(0).toUpperCase();
+    };
+
     const salaryRanges = [
         { value: '', label: 'Any Salary' },
         { value: '0-100k', label: '₦0 - ₦100k' },
@@ -369,7 +387,7 @@ export default function Jobs({ jobs = [], auth }) {
                                             />
                                         ) : (
                                             <div className="company-initial">
-                                                {job.company_name?.charAt(0) || 'C'}
+                                                {getCompanyInitial(job.company_name)}
                                             </div>
                                         )}
                                         <div className="company-header-info">
@@ -377,7 +395,7 @@ export default function Jobs({ jobs = [], auth }) {
                                                 <h2>{job.company_name}</h2>
                                                 <div>
                                                     <img src="/assets/svg/location.svg" alt="" className="location-icon" />
-                                                    <p>{job.company_location}</p>
+                                                    <p>{truncateLocation(job.company_location)}</p>
                                                 </div>
                                             </div>
                                             <p className="job-type" style={getJobTypeColor(job.job_type)}>
@@ -423,6 +441,7 @@ export default function Jobs({ jobs = [], auth }) {
                                                 Apply now
                                             </button>
                                         </div>
+                                        {console.log(job)}
                                     </div>
                                 </div>
                             ))

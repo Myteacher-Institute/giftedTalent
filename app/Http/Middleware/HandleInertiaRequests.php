@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\User;
+use App\Models\Message;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -51,6 +52,12 @@ class HandleInertiaRequests extends Middleware
                         ]),
                 ]
                 : ['unread_count' => 0, 'recent_unread' => []],
+            // Add this line below 👇
+            'unreadMessagesCount' => $request->user()
+                ? Message::where('receiver_id', $request->user()->id)
+                    ->where('is_read', 0)
+                    ->count()
+                : 0,
         ];
     }
 }

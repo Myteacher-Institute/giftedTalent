@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
-import AuthenticatedLayout from '../Layouts/AuthenticatedLayout';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import AppNavbar from '../Components/AppNavbar';
 import '../../css/Dashboard.css';
 import Notification from '../Components/Notification';
 
@@ -8,26 +8,66 @@ import Notification from '../Components/Notification';
 window.alertify = window.alertify || alertify;
 
 // Job Card Component
-function JobCard({ job }) {
+function JobCard({ job, onSave, onUnsave, onApply, isSaved = false }) {
     const [showMenu, setShowMenu] = useState(null);
+    const [saved, setSaved] = useState(isSaved);
+    const [applying, setApplying] = useState(false);
 
     const toggleMenu = (index) => {
         setShowMenu(showMenu === index ? null : index);
     };
 
+    const handleSaveClick = () => {
+        if (saved) {
+            onUnsave(job.id);
+            setSaved(false);
+        } else {
+            onSave(job.id);
+            setSaved(true);
+        }
+        setShowMenu(null);
+    };
+
+    const handleApplyClick = async () => {
+        setApplying(true);
+        await onApply(job.id);
+        setApplying(false);
+    };
+
     return (
-        <div className="job-card">
+        <div className={`job-card ${job.match_score >= 60 ? 'recommended-job' : ''}`}>
             <div className="job-left">
-                <img src={job.image} alt="" />
+                <img src={job.image || job.company_logo_url} alt="" />
             </div>
             <div className="job-right">
-                <h3>{job.company}</h3>
-                <p>{job.title}</p>
-                <span>{job.tags}</span>
-                <p className="time">{job.time}</p>
+                <h3>{job.company_name || job.company}</h3>
+                <p>{job.job_title || job.title}</p>
+                <span>{job.tags || job.job_type}</span>
+                <p className="time">{job.time || job.posted_at}</p>
+                {job.match_score && (
+                    <div className="match-score mt-2">
+                        <div className="flex items-center">
+                            <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
+                                <div
+                                    className="bg-green-500 h-2 rounded-full"
+                                    style={{ width: `${job.match_score}%` }}
+                                ></div>
+                            </div>
+                            <span className="text-xs text-gray-600">
+                                {job.match_score}% Match
+                            </span>
+                        </div>
+                    </div>
+                )}
             </div>
             <div className="job-actions">
-                <button className="apply desktop-only">Apply Now</button>
+                <button 
+                    className="apply desktop-only" 
+                    onClick={handleApplyClick}
+                    disabled={applying}
+                >
+                    {applying ? 'Applying...' : 'Apply Now'}
+                </button>
                 <div className="menu-trigger" onClick={() => toggleMenu(job.id)}>
                     <i className="fa-solid fa-ellipsis"></i>
                 </div>
@@ -36,45 +76,15 @@ function JobCard({ job }) {
                         <button onClick={() => setShowMenu(null)}>
                             <i className="fa-regular fa-eye-slash"></i> Hide Job
                         </button>
-                        <button onClick={() => setShowMenu(null)}>
-                            <i className="fa-regular fa-paper-plane"></i> Apply Now
+                        <button onClick={handleApplyClick} disabled={applying}>
+                            <i className="fa-regular fa-paper-plane"></i> {applying ? 'Applying...' : 'Apply Now'}
                         </button>
-                        <button onClick={() => setShowMenu(null)}>
-                            <i className="fa-regular fa-bookmark"></i> Save Job
+                        <button onClick={handleSaveClick}>
+                            <i className={`fa-regular fa-bookmark`} style={{ color: saved ? '#4F46E5' : '' }}></i>
+                            {saved ? 'Saved' : 'Save Job'}
                         </button>
                     </div>
                 )}
-            </div>
-        </div>
-    );
-}
-
-<<<<<<< HEAD
-// Message Modal Component
-function MessageModal({ isOpen, onClose, messages, loading, onMarkAsRead }) {
-    if (!isOpen) return null;
-
-    return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="message-modal" onClick={(e) => e.stopPropagation()}>
-                <div className="modal-header">
-                    <h3>Messages</h3>
-                    <button className="modal-close" onClick={onClose}>×</button>
-                </div>
-                <div className="modal-body">
-                    {loading ? (
-                        <div className="text-center py-8">Loading...</div>
-                    ) : messages.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">No messages</div>
-                    ) : (
-                        messages.map(msg => (
-                            <div key={msg.id} className="message-item" onClick={() => onMarkAsRead(msg.id)}>
-                                <p><strong>{msg.sender}</strong></p>
-                                <p className="text-sm text-gray-600">{msg.message}</p>
-                            </div>
-                        ))
-                    )}
-                </div>
             </div>
         </div>
     );
@@ -92,63 +102,90 @@ export default function Dashboard({
     flash,
     profileLevel = { message: 'Keep going!' },
     recommendedJobs = [],
-    savedJobs = []  // <-- Now receives full job objects from controller
+    savedJobs = []
 }) {
-=======
-export default function Dashboard({ auth, profileComplete = 75, profileStatus = {}, stats = { applied: 8, review: 3, interview: 1, rejected: 2 }, jobs = [], jobTypes = [], searchParams = {}, notifications }) {
-    const [activeMenu, setActiveMenu] = useState(null);
->>>>>>> 570c33df8fcdd2af22d99b895072e53c9f9a6954
     const [searchQuery, setSearchQuery] = useState(searchParams.q || '');
     const [selectedJobType, setSelectedJobType] = useState(searchParams.job_type || '');
     const [showAdvanced, setShowAdvanced] = useState(false);
     const [loading, setLoading] = useState(false);
-<<<<<<< HEAD
-    const [showAppliedJobs, setShowAppliedJobs] = useState(false);
-    const [appliedJobs, setAppliedJobs] = useState([]);
-    const [loadingApplied, setLoadingApplied] = useState(false);
     const [newJobsCount, setNewJobsCount] = useState(0);
-    const [showMessageModal, setShowMessageModal] = useState(false);
-    const [unreadCount, setUnreadCount] = useState(0);
-    const [messages, setMessages] = useState([]);
-    const [loadingMessages, setLoadingMessages] = useState(false);
-    const [localSavedJobs, setLocalSavedJobs] = useState(savedJobs);  // <-- Use props directly
-    const [savedJobsCount, setSavedJobsCount] = useState(savedJobs.length);  // <-- Use prop length
+    const [localSavedJobs, setLocalSavedJobs] = useState(savedJobs);
+    const [savedJobsCount, setSavedJobsCount] = useState(savedJobs.length);
     const [showSavedJobs, setShowSavedJobs] = useState(false);
     const [loadingSaved, setLoadingSaved] = useState(false);
-    
-    // State for sidebar toggle
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const currentUser = auth?.user;
 
-    // Function to toggle sidebar
     const toggleSidebar = () => {
         setSidebarOpen(!sidebarOpen);
     };
 
-    // Flash message effect
-=======
-    const [clientFilteredJobs, setClientFilteredJobs] = useState(jobs);
-
-    // Debounce search
->>>>>>> 570c33df8fcdd2af22d99b895072e53c9f9a6954
     useEffect(() => {
-        const timer = setTimeout(() => {
-            let filtered = jobs;
-            if (searchQuery) {
-                filtered = filtered.filter(job => 
-                    job.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    job.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    job.tags?.toLowerCase().includes(searchQuery.toLowerCase())
-                );
+        if (flash?.success) {
+            alertify.success(flash.success);
+        }
+        if (flash?.error) {
+            alertify.error(flash.error);
+        }
+    }, [flash]);
+
+    useEffect(() => {
+        const profileUpdated = sessionStorage.getItem('profileUpdated');
+        const profileUpdateTime = sessionStorage.getItem('profileUpdateTime');
+
+        if (profileUpdated === 'true') {
+            const now = Date.now();
+            const updateTime = parseInt(profileUpdateTime);
+
+            if (updateTime && (now - updateTime) < 10000) {
+                alertify.success('Profile updated successfully! Your changes have been saved.');
             }
-            if (selectedJobType) {
-                filtered = filtered.filter(job => job.type === selectedJobType);
+
+            sessionStorage.removeItem('profileUpdated');
+            sessionStorage.removeItem('profileUpdateTime');
+        }
+    }, []);
+
+    const getProfileImageUrl = () => {
+        if (profile?.profile_image_base64) {
+            return profile.profile_image_base64;
+        }
+        if (currentUser?.profile?.profile_image_base64) {
+            return currentUser.profile.profile_image_base64;
+        }
+        if (currentUser?.profile?.avatar_url) {
+            return currentUser.profile.avatar_url;
+        }
+        if (currentUser?.profile?.avatar) {
+            const avatarPath = currentUser.profile.avatar;
+            if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
+                return avatarPath;
             }
-            setClientFilteredJobs(filtered);
-        }, 300);
-        return () => clearTimeout(timer);
-    }, [searchQuery, selectedJobType, jobs]);
+            if (avatarPath.startsWith('data:image')) {
+                return avatarPath;
+            }
+            const cleanPath = avatarPath.replace(/^\/+/, '');
+            return `/storage/${cleanPath}`;
+        }
+        if (profile?.avatar_url) {
+            return profile.avatar_url;
+        }
+        if (profile?.avatar) {
+            if (profile.avatar.startsWith('data:image')) {
+                return profile.avatar;
+            }
+            return `/storage/${profile.avatar}`;
+        }
+        if (currentUser?.avatar) {
+            if (currentUser.avatar.startsWith('data:image')) {
+                return currentUser.avatar;
+            }
+            return currentUser.avatar;
+        }
+        const userName = currentUser?.name || 'User';
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
+    };
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -172,58 +209,31 @@ export default function Dashboard({ auth, profileComplete = 75, profileStatus = 
     };
 
     const toggleAdvanced = () => setShowAdvanced(!showAdvanced);
-<<<<<<< HEAD
-=======
-
-    const handleJobTypeClick = () => {
-        console.log('Job Type clicked');
-    };
->>>>>>> 570c33df8fcdd2af22d99b895072e53c9f9a6954
-
-    const noResults = clientFilteredJobs.length === 0 && jobs.length === 0;
 
     const handleLogout = () => {
         router.post('/logout');
     };
 
-<<<<<<< HEAD
-    const fetchAppliedJobs = () => {
-        setLoadingApplied(true);
-        setTimeout(() => {
-            setAppliedJobs([]);
-            setLoadingApplied(false);
-        }, 500);
-    };
-
-    const handleShowAppliedJobs = () => {
-        setShowAppliedJobs(true);
-        setShowSavedJobs(false);
-        fetchAppliedJobs();
-    };
-
     const handleShowAllJobs = () => {
-        setShowAppliedJobs(false);
         setShowSavedJobs(false);
     };
 
     const handleShowSavedJobs = () => {
-        setShowAppliedJobs(false);
         setShowSavedJobs(true);
     };
 
-    // <-- SIMPLIFIED: Save job to database
     const handleSaveJob = async (jobId) => {
         try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const response = await fetch(`/saved-jobs/${jobId}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-CSRF-TOKEN': csrfToken,
                 },
             });
             
             if (response.ok) {
-                // Find the job from existing lists to add to saved
                 const jobToAdd = [...jobs, ...recommendedJobs].find(job => job.id === jobId);
                 if (jobToAdd) {
                     setLocalSavedJobs([...localSavedJobs, jobToAdd]);
@@ -239,14 +249,14 @@ export default function Dashboard({ auth, profileComplete = 75, profileStatus = 
         }
     };
 
-    // <-- SIMPLIFIED: Unsave job from database
     const handleUnsaveJob = async (jobId) => {
         try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const response = await fetch(`/saved-jobs/${jobId}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-CSRF-TOKEN': csrfToken,
                 },
             });
             
@@ -264,35 +274,31 @@ export default function Dashboard({ auth, profileComplete = 75, profileStatus = 
         }
     };
 
-    const fetchUnreadCount = () => {
-        setUnreadCount(0);
+    const handleApplyJob = async (jobId) => {
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            
+            const response = await fetch(`/jobs/${jobId}/apply`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                alertify.success(data.message || 'Application submitted successfully!');
+            } else {
+                alertify.error(data.message || 'Failed to apply for job');
+            }
+        } catch (error) {
+            console.error('Error applying for job:', error);
+            alertify.error('Network error. Please try again.');
+        }
     };
 
-    const fetchMessages = () => {
-        setLoadingMessages(true);
-        setTimeout(() => {
-            setMessages([]);
-            setLoadingMessages(false);
-        }, 500);
-    };
-
-    const handleOpenMessages = () => {
-        setShowMessageModal(true);
-        fetchMessages();
-    };
-
-    const markMessageAsRead = (messageId) => {
-        console.log('Mark message as read:', messageId);
-    };
-
-    useEffect(() => {
-        fetchUnreadCount();
-        const interval = setInterval(fetchUnreadCount, 30000);
-        return () => clearInterval(interval);
-    }, []);
-
-=======
->>>>>>> 570c33df8fcdd2af22d99b895072e53c9f9a6954
     useEffect(() => {
         const hasShown = localStorage.getItem('profileCompleteShown');
         if (profileComplete === 100 && !hasShown) {
@@ -301,7 +307,6 @@ export default function Dashboard({ auth, profileComplete = 75, profileStatus = 
         }
     }, [profileComplete]);
 
-<<<<<<< HEAD
     const isFieldCompleted = (fieldName) => {
         if (profileStatus.status && profileStatus.status[fieldName]) {
             return true;
@@ -340,19 +345,14 @@ export default function Dashboard({ auth, profileComplete = 75, profileStatus = 
         }
     };
 
-    // Other jobs (regular jobs from the jobs array)
     const otherJobs = jobs.filter(job => !job.match_score || job.match_score < 60);
     const hasCV = currentUser?.resumes?.length > 0;
     const cvCount = currentUser?.resumes?.length || 0;
 
-=======
->>>>>>> 570c33df8fcdd2af22d99b895072e53c9f9a6954
     return (
-        <AuthenticatedLayout user={auth.user}>
+        <>
             <Head title="Dashboard" />
 
-<<<<<<< HEAD
-            {/* AppNavbar Component - With sidebar toggle props */}
             <AppNavbar 
                 user={currentUser} 
                 newJobsCount={newJobsCount}
@@ -360,68 +360,69 @@ export default function Dashboard({ auth, profileComplete = 75, profileStatus = 
                 isMenuOpen={sidebarOpen}
             />
 
-            {/* Mobile Overlay - Shows when sidebar is open on mobile */}
             {sidebarOpen && <div className="mobile-overlay" onClick={toggleSidebar}></div>}
 
             <div className="container">
-                {/* Sidebar - Add mobile-open class for mobile toggle */}
                 <aside className={`sidebar ${sidebarOpen ? 'mobile-open' : ''}`}>
-=======
-            <header className="navbar">
-                <div className="logo">
-                    <span className="blue">GiftedTalents</span>.Online
-                </div>
-
-                <nav>
-                    <Link href="/">Home</Link>
-                    <Link href="/search-jobs">Jobs</Link>
-                    <Link href="#">Explore</Link>
-                    <Link href="#">Hire</Link>
-                </nav>
-
-                <div className="search">
-                    <input type="text" placeholder="search for jobs..." />
-                </div>
-
-                <div className="nav-icons">
-                    <i className="fa-regular fa-comment"></i>
-                    <Notification />
-                    <img src={auth.user.profile?.avatar_url || `https://i.pravatar.cc/40?img=${auth.user.id}`} alt="" />
-                </div>
-            </header>
-
-            <div className="container">
-                <aside className="sidebar">
->>>>>>> 570c33df8fcdd2af22d99b895072e53c9f9a6954
                     <div className="profile">
-                        <img src={auth.user.profile?.avatar_url || `https://i.pravatar.cc/40?img=${auth.user.id}`} alt="" />
-                        <h3>{auth.user.name}</h3>
-                        <p>{auth.user.profile?.position || 'Add position'}</p>
+                        <div className="profile-image-wrapper">
+                            <img
+                                src={getProfileImageUrl()}
+                                alt={currentUser?.name || 'Profile'}
+                                className="profile-image"
+                                onError={(e) => {
+                                    const userName = currentUser?.name || 'User';
+                                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
+                                }}
+                            />
+                            <div className="verified-overlay">
+                                <i className="fa-solid fa-check-circle"></i>
+                            </div>
+                        </div>
+
+                        <h3>{currentUser?.name || 'User'}</h3>
+                        <p>{profile?.position || currentUser?.profile?.position || 'Add position'}</p>
                         <button>
-                            <Link href="/profile" className="profile-button">Edit Profile</Link>
+                            <Link href="/profile/edit" className="profile-button">Edit Profile</Link>
                         </button>
                     </div>
 
                     <ul className="menu">
-                        <li className="active"><i className="fa-solid fa-table"></i>Dashboard</li>
+                        <li className={!showSavedJobs ? 'active' : ''} onClick={handleShowAllJobs}>
+                            <i className="fa-solid fa-table"></i>Dashboard
+                        </li>
                         <li><Link href="/search-jobs"><i className="fa-solid fa-magnifying-glass"></i> Search Job</Link></li>
-                        <li><i className="fa-solid fa-file"></i> Application</li>
-                        <li><i className="fa-regular fa-envelope"></i> Message</li>
-                        <li><i className="fa-regular fa-bookmark"></i> Save Jobs</li>
-                        <li><i className="fa-solid fa-gear"></i> Settings</li>
+                        <li>
+                            <Link href="/my-applications">
+                                <i className="fa-solid fa-file"></i> My Applications
+                            </Link>
+                        </li>
+                        <li>
+                            <Link href="/messages">
+                                <i className="fa-regular fa-envelope"></i> Messages
+                            </Link>
+                        </li>
+                        <li onClick={handleShowSavedJobs} style={{ position: 'relative' }}>
+                            <i className="fa-regular fa-bookmark"></i> Save Jobs
+                            {savedJobsCount > 0 && (
+                                <span className="saved-jobs-badge">
+                                    {savedJobsCount > 99 ? '99+' : savedJobsCount}
+                                </span>
+                            )}
+                        </li>
+                        <li>
+                            <Link href="/settings"><i className="fa-solid fa-gear"></i> Settings</Link>
+                        </li>
                         <li className="logout-item">
                             <a href="/" onClick={(e) => { e.preventDefault(); handleLogout(); }}>
                                 <i className="fa-solid fa-right-from-bracket logout-icon"></i>
                                 Logout
                             </a>
                         </li>
-
-                        
                     </ul>
                 </aside>
 
                 <main className="main">
-<<<<<<< HEAD
                     {showSavedJobs ? (
                         <>
                             <div className="flex justify-between items-center mb-4">
@@ -438,6 +439,7 @@ export default function Dashboard({ auth, profileComplete = 75, profileStatus = 
                                             job={job}
                                             onSave={handleSaveJob}
                                             onUnsave={handleUnsaveJob}
+                                            onApply={handleApplyJob}
                                             isSaved={true}
                                         />
                                     ))}
@@ -451,43 +453,21 @@ export default function Dashboard({ auth, profileComplete = 75, profileStatus = 
                                 </div>
                             )}
                         </>
-                    ) : showAppliedJobs ? (
-                        <>
-                            <h1>My Applications</h1>
-                            {loadingApplied ? (
-                                <div className="flex justify-center py-12">
-                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-                                </div>
-                            ) : appliedJobs.length > 0 ? (
-                                <div className="jobs">
-                                    {appliedJobs.map((job) => (
-                                        <JobCard key={job.id} job={job} onSave={handleSaveJob} onUnsave={handleUnsaveJob} isSaved={false} />
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="empty-state">
-                                    <i className="fa-solid fa-file"></i>
-                                    <h3>No Applications Yet</h3>
-                                    <p>You haven't applied to any jobs yet. Start browsing and apply to your first job!</p>
-                                    <button onClick={handleShowAllJobs} className="btn-primary">Browse Jobs</button>
-                                </div>
-                            )}
-                        </>
                     ) : (
                         <>
                             <h1>Welcome back, {currentUser?.name?.split(' ')[0] || 'User'}</h1>
-=======
-                    <h1>Welcome back, {auth.user.name.split(' ')[0]}</h1>
->>>>>>> 570c33df8fcdd2af22d99b895072e53c9f9a6954
 
-                    <div className="status-bar">
-                        <span className="success">{auth.user.resumes?.length > 0 ? 'CV Uploaded' : 'Upload CV'}</span>
-                        <span>Skills: {auth.user.skills?.slice(0, 2).map(s => s.name).join(', ') || 'No skills added'}</span>
-                        <span>Bio: {auth.user.profile?.bio ? auth.user.profile.bio.substring(0, 50) + '...' : 'Add bio'}</span>
-                        <button><Link href="/cv" className="status-button">Upload Your CV</Link></button>
-                    </div>
+                            <div className="status-bar">
+                                <span className={hasCV ? 'success' : 'warning'}>
+                                    {hasCV ? `CV Uploaded (${cvCount})` : 'Upload CV'}
+                                </span>
+                                <button>
+                                    <Link href="/cv" className="status-button">
+                                        {hasCV ? 'Manage CVs' : 'Upload Your CV'}
+                                    </Link>
+                                </button>
+                            </div>
 
-<<<<<<< HEAD
                             {profileComplete === 100 ? (
                                 <div className="alert-success">
                                     <i className="fa-solid fa-check-circle"></i>
@@ -500,60 +480,38 @@ export default function Dashboard({ auth, profileComplete = 75, profileStatus = 
                                         <Link href="/profile/edit" className="alert-link">Update Profile →</Link>
                                     </p>
                                 </div>
-=======
-                    <div className="search-bar">
-                        <form onSubmit={handleSearch} className="flex gap-2 w-full">
-                            <input 
-                                type="text" 
-                                placeholder="Search for jobs..." 
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            />
-                            <select 
-                                value={selectedJobType} 
-                                onChange={(e) => setSelectedJobType(e.target.value)}
-                                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
-                            >
-                                <option value="">All Types</option>
-                                {jobTypes.map(type => (
-                                    <option key={type} value={type}>{type}</option>
-                                ))}
-                            </select>
-                            <button 
-                                type="button" 
-                                onClick={toggleAdvanced}
-                                className="px-6 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md"
-                            >
-                                Advanced
-                            </button>
-                            <button 
-                                type="submit" 
-                                disabled={loading}
-                                className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all duration-200 shadow-md disabled:opacity-50"
-                            >
-                                {loading ? 'Searching...' : 'Search'}
-                            </button>
-                            {searchQuery || selectedJobType ? (
-                                <button 
-                                    type="button" 
-                                    onClick={clearSearch}
-                                    className="px-4 py-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-all"
-                                >
-                                    Clear
-                                </button>
->>>>>>> 570c33df8fcdd2af22d99b895072e53c9f9a6954
                             ) : null}
-                        </form>
-                    </div>
 
-                    {showAdvanced && (
-                        <div className="advanced-filter-modal bg-white p-6 rounded-xl shadow-2xl border border-gray-200 max-w-md mx-auto mb-6">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-xl font-bold text-gray-800">Advanced Filter</h3>
-                                <button onClick={toggleAdvanced} className="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+                            <div className="search-bar">
+                                <form onSubmit={handleSearch}>
+                                    <input
+                                        type="text"
+                                        placeholder="Search for jobs..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                    />
+                                    <select
+                                        value={selectedJobType}
+                                        onChange={(e) => setSelectedJobType(e.target.value)}
+                                    >
+                                        <option value="">All Types</option>
+                                        {jobTypes.map(type => (
+                                            <option key={type} value={type}>{type}</option>
+                                        ))}
+                                    </select>
+                                    <button type="button" onClick={toggleAdvanced} className="btn-advanced">
+                                        Advanced
+                                    </button>
+                                    <button type="submit" disabled={loading} className="btn-search">
+                                        {loading ? 'Searching...' : 'Search'}
+                                    </button>
+                                    {(searchQuery || selectedJobType) && (
+                                        <button type="button" onClick={clearSearch} className="btn-clear">
+                                            Clear
+                                        </button>
+                                    )}
+                                </form>
                             </div>
-<<<<<<< HEAD
 
                             {showAdvanced && (
                                 <div className="advanced-filter-modal">
@@ -585,6 +543,7 @@ export default function Dashboard({ auth, profileComplete = 75, profileStatus = 
                                                 job={job}
                                                 onSave={handleSaveJob}
                                                 onUnsave={handleUnsaveJob}
+                                                onApply={handleApplyJob}
                                                 isSaved={localSavedJobs.some(saved => saved.id === job.id)}
                                             />
                                         ))}
@@ -603,6 +562,7 @@ export default function Dashboard({ auth, profileComplete = 75, profileStatus = 
                                                 job={job}
                                                 onSave={handleSaveJob}
                                                 onUnsave={handleUnsaveJob}
+                                                onApply={handleApplyJob}
                                                 isSaved={localSavedJobs.some(saved => saved.id === job.id)}
                                             />
                                         ))}
@@ -626,118 +586,119 @@ export default function Dashboard({ auth, profileComplete = 75, profileStatus = 
                                 </div>
                             )}
                         </>
-=======
-                            <div className="space-y-4">
-                                <select className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                    <option>Location</option>
-                                </select>
-                                <input type="range" min="0" max="200" className="w-full" />
-                                <span>$0 - $200k</span>
-                            </div>
-                        </div>
->>>>>>> 570c33df8fcdd2af22d99b895072e53c9f9a6954
                     )}
-
-                    <h2>{searchQuery ? `Search Results for "${searchQuery}"` : 'Recommended Jobs'}</h2>
-
-                    <div className="jobs">
-                        {loading ? (
-                            <div className="flex justify-center py-12">
-                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-                            </div>
-                        ) : noResults ? (
-                            <div className="text-center py-16 px-8">
-                                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-3xl flex items-center justify-center">
-                                    <i className="fa-solid fa-magnifying-glass text-3xl text-yellow-500"></i>
-                                </div>
-                                <h3 className="text-2xl font-bold text-gray-800 mb-2">Sorry, no matching jobs</h3>
-                                <p className="text-lg text-gray-600 mb-6 max-w-md mx-auto">
-                                    No admin-posted jobs match your search. We'll notify you when available. Thanks for your patience!
-                                </p>
-                                <button 
-                                    onClick={clearSearch}
-                                    className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg font-semibold"
-                                >
-                                    Browse All Jobs
-                                </button>
-                            </div>
-                        ) : (
-                            clientFilteredJobs.map((job) => (
-                                <JobCard key={job.id} job={job} />
-                            ))
-                        )}
-                    </div>
                 </main>
 
                 <aside className="right-panel">
                     <div className="progress-card">
                         <h3>Complete Your Profile</h3>
-
-                        <div className="progress-circle" style={{ '--progress': `${profileComplete / 100}` }}>
-                            <div className="flex flex-col items-center">
-                                <h2 className="text-2xl font-bold text-indigo-600 mb-1">{profileComplete}%</h2>
-                                <span className="text-xs text-gray-500 font-medium uppercase tracking-wide">Complete</span>
+                        <div className="progress-circle" style={{ '--progress': `${profileComplete}` }}>
+                            <div className="progress-percent">
+                                <h2>{profileComplete}%</h2>
+                                <span>Complete</span>
                             </div>
                         </div>
-                        <ul>
-                            <li className={profileStatus.status?.portfolio ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
-                                {profileStatus.status?.portfolio ? '✓ Portfolio Added' : '➤ Add Portfolio Link'}
-                            </li>
-                            <li className={profileStatus.status?.experience ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
-                                {profileStatus.status?.experience ? '✓ Experience Added' : '➤ Update Experience'}
-                            </li>
 
-                            <li className={profileStatus.status?.email_verified ? 'done' : ''}>
-                                {profileStatus.status?.email_verified ? '✓ Email Verified' : '➤ Verify Email'}
-                            </li>
-                            <li className={profileStatus.status?.skills ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
-                                {profileStatus.status?.skills ? '✓ Skills Added' : '➤ Add Skills'}
-                            </li>
+                        <p className="text-center text-sm text-gray-600 mt-3 mb-4">
+                            <i className="fas fa-info-circle mr-1 text-indigo-500"></i>
+                            {profileLevel.message || 'Keep going!'}
+                        </p>
 
+                        <div className="progress-steps mt-4">
+                            <div className="flex justify-between text-xs text-gray-500 mb-2">
+                                <span>Starter</span>
+                                <span>Beginner</span>
+                                <span>Intermediate</span>
+                                <span>Advanced</span>
+                                <span>Expert</span>
+                            </div>
+                            <div className="progress-bar">
+                                <div
+                                    className="progress-fill"
+                                    style={{ width: `${profileComplete}%` }}
+                                ></div>
+                            </div>
+                        </div>
+
+                        <ul className="profile-checklist mt-6">
+                            <li className={isFieldCompleted('first_name') && isFieldCompleted('last_name') ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
+                                <i className={`fas ${isFieldCompleted('first_name') && isFieldCompleted('last_name') ? 'fa-check-circle' : 'fa-plus-circle'}`}></i>
+                                Full Name
+                            </li>
+                            <li className={isFieldCompleted('email') ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
+                                <i className={`fas ${isFieldCompleted('email') ? 'fa-check-circle' : 'fa-plus-circle'}`}></i>
+                                Email Address
+                            </li>
+                            <li className={isFieldCompleted('phone') ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
+                                <i className={`fas ${isFieldCompleted('phone') ? 'fa-check-circle' : 'fa-plus-circle'}`}></i>
+                                Phone Number
+                            </li>
+                            <li className={isFieldCompleted('employment_type') ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
+                                <i className={`fas ${isFieldCompleted('employment_type') ? 'fa-check-circle' : 'fa-plus-circle'}`}></i>
+                                Employment Type
+                            </li>
+                            <li className={isFieldCompleted('position') ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
+                                <i className={`fas ${isFieldCompleted('position') ? 'fa-check-circle' : 'fa-plus-circle'}`}></i>
+                                Job Title / Position
+                            </li>
+                            <li className={isFieldCompleted('company') ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
+                                <i className={`fas ${isFieldCompleted('company') ? 'fa-check-circle' : 'fa-plus-circle'}`}></i>
+                                Company
+                            </li>
+                            <li className={isFieldCompleted('education') ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
+                                <i className={`fas ${isFieldCompleted('education') ? 'fa-check-circle' : 'fa-plus-circle'}`}></i>
+                                Education
+                            </li>
+                            <li className={isFieldCompleted('bio') ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
+                                <i className={`fas ${isFieldCompleted('bio') ? 'fa-check-circle' : 'fa-plus-circle'}`}></i>
+                                Professional Bio
+                            </li>
+                            <li className={isFieldCompleted('location') ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
+                                <i className={`fas ${isFieldCompleted('location') ? 'fa-check-circle' : 'fa-plus-circle'}`}></i>
+                                Location (City/Address)
+                            </li>
+                            <li className={isFieldCompleted('linkedin') ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
+                                <i className={`fas ${isFieldCompleted('linkedin') ? 'fa-check-circle' : 'fa-plus-circle'}`}></i>
+                                LinkedIn Profile
+                            </li>
+                            <li className={isFieldCompleted('github') ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
+                                <i className={`fas ${isFieldCompleted('github') ? 'fa-check-circle' : 'fa-plus-circle'}`}></i>
+                                GitHub Profile
+                            </li>
+                            <li className={isFieldCompleted('portfolio') ? 'done' : ''} onClick={() => router.visit('/profile/edit')}>
+                                <i className={`fas ${isFieldCompleted('portfolio') ? 'fa-check-circle' : 'fa-plus-circle'}`}></i>
+                                Portfolio / Website
+                            </li>
+                            <li className={hasCV ? 'done' : ''} onClick={() => router.visit('/cv')}>
+                                <i className={`fas ${hasCV ? 'fa-check-circle' : 'fa-plus-circle'}`}></i>
+                                CV / Resume Uploaded
+                            </li>
                         </ul>
                     </div>
 
                     <div className="tracker">
                         <h3>Application Tracker</h3>
-
-                        <div className="grid">
-                            <div className="box blue">
-                                <h2>{stats.applied}</h2>
+                        <div className="tracker-grid">
+                            <div className="tracker-box blue">
+                                <h2>{stats.applied || 0}</h2>
                                 <p>Applied</p>
                             </div>
-
-                            <div className="box orange">
-                                <h2>{stats.review}</h2>
+                            <div className="tracker-box orange">
+                                <h2>{stats.review || 0}</h2>
                                 <p>Under Review</p>
                             </div>
-
-                            <div className="box green">
-                                <h2>{stats.interview}</h2>
+                            <div className="tracker-box green">
+                                <h2>{stats.interview || 0}</h2>
                                 <p>Interview</p>
                             </div>
-
-                            <div className="box red">
-                                <h2>{stats.rejected}</h2>
+                            <div className="tracker-box red">
+                                <h2>{stats.rejected || 0}</h2>
                                 <p>Rejected</p>
                             </div>
                         </div>
                     </div>
                 </aside>
             </div>
-<<<<<<< HEAD
-
-            {/* Message Modal */}
-            <MessageModal
-                isOpen={showMessageModal}
-                onClose={() => setShowMessageModal(false)}
-                messages={messages}
-                loading={loadingMessages}
-                onMarkAsRead={markMessageAsRead}
-            />
         </>
-=======
-        </AuthenticatedLayout>
->>>>>>> 570c33df8fcdd2af22d99b895072e53c9f9a6954
     );
 }
-

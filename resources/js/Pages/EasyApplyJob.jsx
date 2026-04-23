@@ -1,12 +1,31 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import '../../css/EasyApplyJob.css';
 import '../../css/nav.css';
 import AppNavbar from '../Components/AppNavbar';
 
-export default function EasyApplyJob({ auth, profile }) {
+export default function EasyApplyJob({ auth, profile, job, hasApplied }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [isApplying, setIsApplying] = useState(false);
+    const [showApplicationForm, setShowApplicationForm] = useState(false);
+    const [applicationData, setApplicationData] = useState({
+        cover_letter: '',
+        expected_salary: '',
+        start_date: 'immediate',
+        resume_id: ''
+    });
+    const [resumes, setResumes] = useState([]);
+    const [errors, setErrors] = useState({});
+    const [successMessage, setSuccessMessage] = useState('');
+    
     const currentUser = auth?.user;
+
+    // Fetch user's resumes on load
+    useEffect(() => {
+        if (currentUser?.resumes) {
+            setResumes(currentUser.resumes);
+        }
+    }, [currentUser]);
 
     const toggleSidebar = () => {
         setSidebarOpen(!sidebarOpen);
@@ -45,221 +64,306 @@ export default function EasyApplyJob({ auth, profile }) {
         router.post('/logout');
     };
 
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setApplicationData(prev => ({ ...prev, [name]: value }));
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: '' }));
+        }
+    };
+
+    const handleSubmitApplication = async (e) => {
+        e.preventDefault();
+        setIsApplying(true);
+        setErrors({});
+        setSuccessMessage('');
+
+        // Validate required fields
+        const newErrors = {};
+        if (!applicationData.cover_letter.trim()) {
+            newErrors.cover_letter = 'Please write a cover letter';
+        }
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            setIsApplying(false);
+            return;
+        }
+
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            
+            const response = await fetch(`/jobs/${job?.id}/apply`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+                body: JSON.stringify({
+                    job_id: job?.id,
+                    cover_letter: applicationData.cover_letter,
+                    expected_salary: applicationData.expected_salary,
+                    start_date: applicationData.start_date,
+                    resume_id: applicationData.resume_id
+                }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setSuccessMessage('Application submitted successfully!');
+                setShowApplicationForm(false);
+                setApplicationData({
+                    cover_letter: '',
+                    expected_salary: '',
+                    start_date: 'immediate',
+                    resume_id: ''
+                });
+                // Show success alert
+                if (window.alertify) {
+                    alertify.success('Application submitted successfully!');
+                } else {
+                    alert('Application submitted successfully!');
+                }
+                // Redirect after 2 seconds
+                setTimeout(() => {
+                    router.visit('/my-applications');
+                }, 2000);
+            } else {
+                setErrors({ submit: data.message || 'Failed to submit application' });
+                if (window.alertify) {
+                    alertify.error(data.message || 'Failed to submit application');
+                }
+            }
+        } catch (error) {
+            console.error('Error submitting application:', error);
+            setErrors({ submit: 'Network error. Please try again.' });
+            if (window.alertify) {
+                alertify.error('Network error. Please try again.');
+            }
+        } finally {
+            setIsApplying(false);
+        }
+    };
+
+    // If already applied, show message
+    if (hasApplied) {
+        return (
+            <>
+                <Head title="Already Applied" />
+                <AppNavbar user={currentUser} onMenuToggle={toggleSidebar} isMenuOpen={sidebarOpen} />
+                {sidebarOpen && <div className="mobile-overlay" onClick={closeSidebar}></div>}
+                <div className="easy-apply-container">
+                    <aside className={`easy-apply-sidebar ${sidebarOpen ? 'mobile-open' : ''}`}>
+                        {/* Sidebar content same as dashboard */}
+                        <div className="profile">
+                            <div className="profile-image-wrapper">
+                                <img src={getProfileImageUrl()} alt={currentUser?.name || 'Profile'} className="profile-image" />
+                                <div className="verified-overlay"><i className="fa-solid fa-check-circle"></i></div>
+                            </div>
+                            <h3>{currentUser?.name || 'User'}</h3>
+                            <p>{profile?.position || currentUser?.profile?.position || 'Add position'}</p>
+                            <button><Link href="/profile/edit" className="profile-button">Edit Profile</Link></button>
+                        </div>
+                        <ul className="menu">
+                            <li><Link href="/dashboard"><i className="fa-solid fa-table"></i>Dashboard</Link></li>
+                            <li><Link href="/search-jobs"><i className="fa-solid fa-magnifying-glass"></i> Search Job</Link></li>
+                            <li><Link href="/my-applications"><i className="fa-solid fa-file"></i> My Applications</Link></li>
+                            <li><Link href="/messages"><i className="fa-regular fa-envelope"></i> Message</Link></li>
+                            <li><Link href="/settings"><i className="fa-solid fa-gear"></i> Settings</Link></li>
+                            <li className="logout-item"><a href="/" onClick={(e) => { e.preventDefault(); handleLogout(); }}><i className="fa-solid fa-right-from-bracket logout-icon"></i>Logout</a></li>
+                        </ul>
+                    </aside>
+                    <div className="easy-apply-main">
+                        <div className="already-applied-container">
+                            <i className="fa-solid fa-check-circle"></i>
+                            <h2>You've Already Applied</h2>
+                            <p>You have already submitted an application for this position.</p>
+                            <Link href="/my-applications" className="view-applications-btn">View My Applications</Link>
+                        </div>
+                    </div>
+                </div>
+            </>
+        );
+    }
+
     return (
         <>
-            <Head title="Easy Apply Job" />
+            <Head title={`Apply for ${job?.title || 'Job'} - GiftedTalent`} />
             
-            {/* AppNavbar with sidebar toggle */}
-            <AppNavbar 
-                user={currentUser} 
-                onMenuToggle={toggleSidebar} 
-                isMenuOpen={sidebarOpen} 
-            />
+            <AppNavbar user={currentUser} onMenuToggle={toggleSidebar} isMenuOpen={sidebarOpen} />
 
-            {/* Mobile Overlay */}
             {sidebarOpen && <div className="mobile-overlay" onClick={closeSidebar}></div>}
 
             <div className="easy-apply-container">
-                {/* Sidebar - Same as Dashboard */}
+                {/* Sidebar */}
                 <aside className={`easy-apply-sidebar ${sidebarOpen ? 'mobile-open' : ''}`}>
                     <div className="profile">
                         <div className="profile-image-wrapper">
-                            <img
-                                src={getProfileImageUrl()}
-                                alt={currentUser?.name || 'Profile'}
-                                className="profile-image"
-                                onError={(e) => {
-                                    const userName = currentUser?.name || 'User';
-                                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
-                                }}
-                            />
-                            <div className="verified-overlay">
-                                <i className="fa-solid fa-check-circle"></i>
-                            </div>
+                            <img src={getProfileImageUrl()} alt={currentUser?.name || 'Profile'} className="profile-image" onError={(e) => {
+                                const userName = currentUser?.name || 'User';
+                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
+                            }} />
+                            <div className="verified-overlay"><i className="fa-solid fa-check-circle"></i></div>
                         </div>
-
                         <h3>{currentUser?.name || 'User'}</h3>
                         <p>{profile?.position || currentUser?.profile?.position || 'Add position'}</p>
-                        <button>
-                            <Link href="/profile/edit" className="profile-button">Edit Profile</Link>
-                        </button>
+                        <button><Link href="/profile/edit" className="profile-button">Edit Profile</Link></button>
                     </div>
-
                     <ul className="menu">
                         <li><Link href="/dashboard"><i className="fa-solid fa-table"></i>Dashboard</Link></li>
                         <li><Link href="/search-jobs"><i className="fa-solid fa-magnifying-glass"></i> Search Job</Link></li>
-                        <li><Link href="/applications"><i className="fa-solid fa-file"></i> My Applications</Link></li>
+                        <li><Link href="/my-applications"><i className="fa-solid fa-file"></i> My Applications</Link></li>
                         <li><Link href="/messages"><i className="fa-regular fa-envelope"></i> Message</Link></li>
-                        <li><Link href="/saved-jobs"><i className="fa-regular fa-bookmark"></i> Save Jobs</Link></li>
                         <li><Link href="/settings"><i className="fa-solid fa-gear"></i> Settings</Link></li>
-                        <li className="logout-item">
-                            <a href="/" onClick={(e) => { e.preventDefault(); handleLogout(); }}>
-                                <i className="fa-solid fa-right-from-bracket logout-icon"></i>
-                                Logout
-                            </a>
-                        </li>
+                        <li className="logout-item"><a href="/" onClick={(e) => { e.preventDefault(); handleLogout(); }}><i className="fa-solid fa-right-from-bracket logout-icon"></i>Logout</a></li>
                     </ul>
                 </aside>
 
                 {/* Main Content */}
                 <div className="easy-apply-main">
-                    <div className="container">
-                        <div className="card">
-                            <div className="company-header">
-                                <div className="company-logo"></div>
-                                <div className="company-name">Brand Hive</div>
-                            </div>
-
-                            <div className="job-title">UI/UX PRODUCT DESIGNER <i className="fa-solid fa-check-circle verified-icon"></i></div>
-
-                            <div className="location">
-                                <i className="fa-solid fa-location-dot"></i> Port Harcourt, Rivers State, Nigeria &bull; <i className="fa-regular fa-clock"></i> 4 months ago
-                            </div>
-
-                            <div className="tags">
-                                <div className="tag"><i className="fa-solid fa-naira-sign"></i> NGN150k/month – 200k/month</div>
-                                <div className="tag"><i className="fa-solid fa-house-laptop"></i> Remote</div>
-                                <div className="tag"><i className="fa-regular fa-clock"></i> Full-Time</div>
-                            </div>
-
-                            <div className="actions">
-                                <button className="apply-btn"><i className="fa-regular fa-paper-plane"></i> Easy Apply</button>
-                                <button className="save-btn"><i className="fa-regular fa-bookmark"></i> Save</button>
-                            </div>
-
-                            <div className="section-title"><i className="fa-solid fa-circle-info"></i> About the Job</div>
-
-                            <p>
-                                We are looking for a Web-Focused E-Commerce Designer who bridges the gap between high-end modern aesthetics and high-conversion performance.
-                            </p>
-
-                            <p>
-                                While you have a strong graphic design foundation, your primary expertise lies in crafting digital experiences—specifically Shopify stores,
-                                high-converting landing pages, and interactive web elements.
-                            </p>
-
-                            <p>
-                                In this role, you will leverage AI tools to accelerate your workflow, allowing you to focus on the strategic UX/UI decisions that drive measurable
-                                growth for our e-commerce partners.
-                            </p>
-
-                            <p><i className="fa-solid fa-location-dot"></i> <strong>Location:</strong> Remote</p>
-                            <p><i className="fa-solid fa-handshake"></i> <strong>Engagement:</strong> Part-Time (20 hrs/week) → Potential to scale to Full-Time</p>
-                            <p><i className="fa-regular fa-calendar"></i> <strong>Schedule:</strong> Flexible, with overlap in CET</p>
-                            <p><i className="fa-solid fa-sack-dollar"></i> <strong>Monthly Budget:</strong> $900</p>
-
-                            <div className="sub-heading"><i className="fa-solid fa-list-check"></i> What You'll Do</div>
-
-                            <div className="sub-heading"><i className="fa-solid fa-paintbrush"></i> Web & UI/UX Design</div>
-
-                            <ul>
-                                <li>Design high-performing Shopify layouts focusing on product pages and collections.</li>
-                                <li>Create wireframes and prototypes in Figma with a focus on CRO.</li>
-                                <li>Ensure mobile-first design optimization.</li>
-                                <li>Build scalable design systems and component libraries.</li>
-                            </ul>
-
-                            <div className="sub-heading"><i className="fa-solid fa-palette"></i> Brand & Digital Identity</div>
-
-                            <ul>
-                                <li>Translate brand guidelines into digital-first visual languages.</li>
-                                <li>Create variations of web elements for A/B testing.</li>
-                            </ul>
-
-                            <div className="sub-heading"><i className="fa-solid fa-robot"></i> AI-Enhanced Workflow</div>
-
-                            <ul>
-                                <li>Use AI tools (Midjourney, Adobe Firefly) to generate assets.</li>
-                                <li>Integrate AI to speed up layout exploration and content variation.</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div className="container">
-                        <div className="card">
-                            <h2><i className="fa-solid fa-user-search"></i> What We're Looking For</h2>
-
-                            <h3><i className="fa-solid fa-star"></i> Must-Haves</h3>
-
-                            <ul>
-                                <li><i className="fa-solid fa-briefcase"></i> Proven experience as a UI/UX Product Designer with a strong portfolio</li>
-                                <li><i className="fa-solid fa-toolbox"></i> Technical Stack: Mastery of Figma (Auto-layout, components, prototyping) and Adobe Creative Suite</li>
-                                <li><i className="fa-solid fa-brain"></i> Strong understanding of user-centered design principles and best practices</li>
-                                <li><i className="fa-solid fa-microchip"></i> Experience designing for web and mobile platforms</li>
-                                <li><i className="fa-solid fa-shop"></i> Knowledge of e-commerce design patterns and conversion optimization</li>
-                            </ul>
-
-                            <h3><i className="fa-solid fa-heart"></i> Nice-to-Haves</h3>
-
-                            <ul>
-                                <li><i className="fa-solid fa-store"></i> Experience working with Shopify or Shopify Plus</li>
-                                <li><i className="fa-solid fa-film"></i> Basic motion design skills</li>
-                            </ul>
-
-                            <h3><i className="fa-solid fa-trophy"></i> What Success Looks Like</h3>
-
-                            <ul>
-                                <li><i className="fa-solid fa-chart-line"></i> High-Performing Layouts: Launching landing pages and store sections that show a measurable lift in conversion rates</li>
-                                <li><i className="fa-solid fa-folder-tree"></i> Figma Excellence: Delivery of organized, developer-ready files that follow modern web standards</li>
-                                <li><i className="fa-solid fa-bolt"></i> Speed & Quality: Leveraging AI to maintain a fast-paced output without sacrificing the "premium" feel of the brands</li>
-                                <li><i className="fa-solid fa-compass"></i> Self-Direction: Taking a project from a rough wireframe to a polished, live-ready web design with minimal hand-holding</li>
-                            </ul>
-
-                            <h3><i className="fa-solid fa-clipboard-list"></i> Recruitment Process</h3>
-
-                            <ul>
-                                <li><i className="fa-regular fa-comment-dots"></i> Initial Interview</li>
-                                <li><i className="fa-solid fa-folder-open"></i> Portfolio Review / Design Assessment</li>
-                                <li><i className="fa-solid fa-user-tie"></i> Final Interview</li>
-                                <li><i className="fa-solid fa-handshake-simple"></i> Offer & Onboarding</li>
-                            </ul>
-
-                            <p style={{ marginTop: '20px', fontSize: '14px', color: '#666' }}>
-                                <i className="fa-solid fa-bolt"></i> Powered by GiftedTalent
-                            </p>
-
-                            <div className="apply-wrapper">
-                                <button className="apply-btn"><i className="fa-regular fa-paper-plane"></i> Easy Apply</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="container">
-                        <div className="card">
-                            <h2><i className="fa-solid fa-building"></i> About the Company</h2>
-
-                            <div className="company-header">
-                                <div className="company-info">
-                                    <div className="company-logo"></div>
-                                    <div>
-                                        <div className="company-name">Brand Hive</div>
-                                        <div style={{ fontSize: '13px', color: '#777' }}><i className="fa-solid fa-users"></i> 74,867 Followers</div>
+                    {!showApplicationForm ? (
+                        // Job Details View
+                        <>
+                            <div className="container">
+                                <div className="card">
+                                    <div className="company-header">
+                                        <div className="company-logo">
+                                            {job?.company_logo ? (
+                                                <img src={job.company_logo} alt={job.company_name} />
+                                            ) : (
+                                                <div className="logo-placeholder">{job?.company_name?.charAt(0) || 'C'}</div>
+                                            )}
+                                        </div>
+                                        <div className="company-name">{job?.company_name || 'Company Name'}</div>
                                     </div>
+
+                                    <div className="job-title">{job?.title || job?.job_title || 'Job Title'} <i className="fa-solid fa-check-circle verified-icon"></i></div>
+
+                                    <div className="location">
+                                        <i className="fa-solid fa-location-dot"></i> {job?.location || job?.company_location || 'Location'} &bull; <i className="fa-regular fa-clock"></i> {job?.posted_at || 'Recently'}
+                                    </div>
+
+                                    <div className="tags">
+                                        <div className="tag"><i className="fa-solid fa-money-bill-wave"></i> {job?.salary_range || 'Salary not specified'}</div>
+                                        <div className="tag"><i className="fa-solid fa-house-laptop"></i> {job?.job_type || 'Full-time'}</div>
+                                        <div className="tag"><i className="fa-regular fa-clock"></i> {job?.employment_type || 'Full-Time'}</div>
+                                    </div>
+
+                                    <div className="actions">
+                                        <button className="apply-btn" onClick={() => setShowApplicationForm(true)}>
+                                            <i className="fa-regular fa-paper-plane"></i> Easy Apply
+                                        </button>
+                                        <button className="save-btn"><i className="fa-regular fa-bookmark"></i> Save</button>
+                                    </div>
+
+                                    <div className="section-title"><i className="fa-solid fa-circle-info"></i> About the Job</div>
+                                    <p>{job?.description || 'No description available.'}</p>
+
+                                    {job?.requirements && (
+                                        <>
+                                            <div className="sub-heading"><i className="fa-solid fa-list-check"></i> Requirements</div>
+                                            <p>{job.requirements}</p>
+                                        </>
+                                    )}
                                 </div>
-                                <button className="follow-btn"><i className="fa-solid fa-plus"></i> Follow</button>
                             </div>
 
-                            <div className="company-meta">
-                                <i className="fa-solid fa-briefcase"></i> Digital Branding Company &bull; <i className="fa-solid fa-users"></i> 501-1000 employees
+                            <div className="container">
+                                <div className="card">
+                                    <h2><i className="fa-solid fa-building"></i> About the Company</h2>
+                                    <div className="company-meta">
+                                        <i className="fa-solid fa-briefcase"></i> {job?.industry || 'Digital Company'} &bull; 
+                                        <i className="fa-solid fa-users"></i> {job?.company_size || 'Information not available'}
+                                    </div>
+                                    <p className="company-text">{job?.company_description || 'No company description available.'}</p>
+                                </div>
                             </div>
+                        </>
+                    ) : (
+                        // Application Form View
+                        <div className="container">
+                            <div className="card application-form-card">
+                                <div className="form-header">
+                                    <button className="back-btn" onClick={() => setShowApplicationForm(false)}>
+                                        <i className="fa-solid fa-arrow-left"></i> Back to Job
+                                    </button>
+                                    <h2>Apply for {job?.title || job?.job_title}</h2>
+                                    <p>{job?.company_name}</p>
+                                </div>
 
-                            <p className="company-text">
-                                <i className="fa-solid fa-quote-left"></i> Brand Hive is an indigenously owned ICT company headquartered in Port Harcourt, Nigeria.
-                                Here at Brand Hive we are dedicated to the improvement of the education sector using ICT
-                                as our core tool. We aim to be a leading player in the Information Technology Industry
-                                with our focus on taking the education sector to the next level using knowledge,
-                                creativity and innovation.
-                            </p>
+                                {successMessage && (
+                                    <div className="success-message">
+                                        <i className="fa-solid fa-check-circle"></i> {successMessage}
+                                    </div>
+                                )}
 
-                            <p className="company-text">
-                                Our product portfolio has several software solutions: SAF School Management Software
-                                (SAFSMS), Brand Hive Students' Records Management System (SRMS), FlexiSAF Online
-                                Application System, School Websites, E-Learning Solution and E-Test Solution.
-                            </p>
+                                {errors.submit && (
+                                    <div className="error-message">
+                                        <i className="fa-solid fa-exclamation-triangle"></i> {errors.submit}
+                                    </div>
+                                )}
 
-                            <div className="show-more"><i className="fa-solid fa-chevron-down"></i> SHOW MORE</div>
+                                <form onSubmit={handleSubmitApplication}>
+                                    <div className="form-group">
+                                        <label><i className="fa-regular fa-file-lines"></i> Cover Letter <span className="required">*</span></label>
+                                        <textarea
+                                            name="cover_letter"
+                                            rows="6"
+                                            placeholder="Tell us why you're the perfect fit for this role..."
+                                            value={applicationData.cover_letter}
+                                            onChange={handleInputChange}
+                                            className={errors.cover_letter ? 'error' : ''}
+                                        ></textarea>
+                                        {errors.cover_letter && <span className="error-text">{errors.cover_letter}</span>}
+                                    </div>
+
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label><i className="fa-solid fa-money-bill-wave"></i> Expected Salary</label>
+                                            <input
+                                                type="text"
+                                                name="expected_salary"
+                                                placeholder="e.g., NGN 300,000/month or $900/month"
+                                                value={applicationData.expected_salary}
+                                                onChange={handleInputChange}
+                                            />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label><i className="fa-regular fa-calendar"></i> Available to Start</label>
+                                            <select name="start_date" value={applicationData.start_date} onChange={handleInputChange}>
+                                                <option value="immediate">Immediately</option>
+                                                <option value="1_week">Within 1 week</option>
+                                                <option value="2_weeks">Within 2 weeks</option>
+                                                <option value="1_month">Within 1 month</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {resumes.length > 0 && (
+                                        <div className="form-group">
+                                            <label><i className="fa-regular fa-file-pdf"></i> Select Resume/CV</label>
+                                            <select name="resume_id" value={applicationData.resume_id} onChange={handleInputChange}>
+                                                <option value="">Select a resume</option>
+                                                {resumes.map(resume => (
+                                                    <option key={resume.id} value={resume.id}>{resume.title || resume.file_name}</option>
+                                                ))}
+                                            </select>
+                                            <Link href="/cv" className="upload-resume-link">+ Upload new resume</Link>
+                                        </div>
+                                    )}
+
+                                    <div className="form-actions">
+                                        <button type="button" className="cancel-btn" onClick={() => setShowApplicationForm(false)}>Cancel</button>
+                                        <button type="submit" className="submit-btn" disabled={isApplying}>
+                                            {isApplying ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-regular fa-paper-plane"></i>}
+                                            {isApplying ? ' Submitting...' : ' Submit Application'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             </div>
         </>

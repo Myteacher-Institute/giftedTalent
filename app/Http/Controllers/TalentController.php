@@ -159,10 +159,11 @@ class TalentController extends Controller
         }
         
         // Get resume URL
-        $resumeUrl = null;
-        if ($user->profile && $user->profile->resume_path) {
-            $resumeUrl = asset('storage/' . $user->profile->resume_path);
-        }
+    $resumeUrl = null;
+    $primaryResume = $user->resumes()->where('status', 'approved')->first();
+    if ($primaryResume && $primaryResume->file_path) {
+        $resumeUrl = asset('storage/' . $primaryResume->file_path);
+    }
         
         // Calculate rating based on profile completion
         $rating = 4.0;

@@ -497,7 +497,7 @@ $profile->update(['avatar' => 'avatars/' . $filename]);
                 'file_size' => $file->getSize(),
                 'file_mime_type' => $file->getMimeType(),
                 'is_primary' => $user->resumes()->count() === 0,
-                'status' => 'pending',
+                'status' => 'Approved',
             ]);
 
             // Update profile completion
