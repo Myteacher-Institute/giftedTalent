@@ -9,6 +9,7 @@ use App\Models\Resume;
 use App\Models\Skill;
 use Inertia\Response as InertiaResponse;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -84,12 +85,6 @@ class ProfileController extends Controller
             $user = $request->user();
             $profile = $user->profile;
 
-            // Create profile if it doesn't exist
-            if (!$profile) {
-                $profile = Profile::create(['user_id' => $user->id]);
-                $user->setRelation('profile', $profile);
-            }
-
             // Validate all fields including profile_image
             $validated = $request->validate([
                 'first_name' => 'nullable|string|max:100',
@@ -113,15 +108,10 @@ class ProfileController extends Controller
                 'availability_status' => 'nullable|string|max:255',
             ]);
 
-            // Update user email if changed
-            if (isset($validated['email']) && $validated['email'] !== $user->email) {
-                $user->email = $validated['email'];
-                $user->email_verified_at = null;
-                $user->save();
-            }
-
-            // Handle base64 profile image if present
-            $avatarUpdated = false;
+        Profile::updateOrCreate(
+            ['user_id' => $user->id],
+            Arr::except($validated, ['first_name', 'last_name', 'email'])
+        );
 
             if (array_key_exists('profile_image', $validated)) {
                 $base64Image = $validated['profile_image'];
@@ -273,16 +263,25 @@ class ProfileController extends Controller
         } catch (\Exception $e) {
             return Redirect::back()->withErrors(['error' => 'Failed to update profile. Please try again.']);
         }
+
+        $file = $request->file('avatar');
+        $filename = $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+        
+        Storage::disk('public')->putFileAs('avatars', $file, $filename);
+        
+$profile->update(['avatar' => 'avatars/' . $filename]);
+
+        return Redirect::route('profile.editExtended')->with('success', 'Avatar uploaded successfully.');
     }
 
     /**
      * Remove user avatar.
      */
-    public function removeAvatar(Request $request)
+    public function removeAvatar(Request $request): JsonResponse
     {
         try {
-            $user = Auth::user();
-            $profile = Profile::where('user_id', $user->id)->first();
+            $user = $request->user();
+            $profile = $user->profile;
 
             if ($profile) {
                 $profile->profile_image_base64 = null;
@@ -349,9 +348,9 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update user job preferences
+     * Add a skill to the user's profile.
      */
-    public function updateJobPreferences(Request $request)
+    public function addSkill(Request $request): JsonResponse
     {
         try {
             $user = Auth::user();
@@ -393,52 +392,29 @@ class ProfileController extends Controller
     }
 
     /**
-     * Get user notification preferences
+     * Remove a skill from the user's profile.
      */
-    public function getNotificationPreferences(Request $request)
+    public function removeSkill(Request $request, int $skillId): RedirectResponse
     {
         try {
             $user = Auth::user();
             
-            $defaultPreferences = [
-                'email_job_alerts' => true,
-                'email_application_updates' => true,
-                'email_message_notifications' => true,
-                'email_marketing' => false,
-                'email_newsletter' => false,
-                'in_app_job_alerts' => true,
-                'in_app_application_updates' => true,
-                'in_app_messages' => true,
-                'push_enabled' => false,
-                'push_job_alerts' => true,
-                'push_messages' => true,
-                'digest_frequency' => 'daily',
-                'quiet_hours_enabled' => false,
-                'quiet_hours_start' => '22:00',
-                'quiet_hours_end' => '08:00',
-                'desktop_enabled' => true,
-                'sound_enabled' => true,
-            ];
+            // Detach the skill from the user
+            $user->skills()->detach($skillId);
             
-            $preferences = $user->notification_preferences ?? $defaultPreferences;
-            
-            return response()->json([
-                'success' => true,
-                'preferences' => $preferences
-            ]);
+            return redirect()->back()
+                ->with('success', 'Skill removed successfully!');
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch notification preferences'
-            ], 500);
+            return redirect()->back()
+                ->with('error', 'Failed to remove skill. Please try again.');
         }
     }
 
     /**
-     * Update user notification preferences
+     * Add work experience.
      */
-    public function updateNotificationPreferences(Request $request)
+    public function addExperience(Request $request): JsonResponse
     {
         try {
             $user = Auth::user();

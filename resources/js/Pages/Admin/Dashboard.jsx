@@ -5,12 +5,10 @@ import '/resources/css/admindashboard.css';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 
 export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filters: initialFilters, auth, unreadNotifications }) {
-    console.log('Initial Jobs from server:', initialJobs);
-    console.log('Job Stats from server:', jobStats);
-    console.log('Initial Filters from server:', initialFilters);
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [filteredJobs, setFilteredJobs] = useState(initialJobs || []);
+    const [openMenuId, setOpenMenuId] = useState(null);
 
     // Add logout function
     const handleLogout = () => {
@@ -18,6 +16,7 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
             router.post('/logout');
         }
     }
+
     // Filter state
     const [filters, setFilters] = useState({
         jobType: '',
@@ -27,6 +26,17 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
         datePosted: '',
         status: ''
     });
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (!event.target.closest('.menu-container')) {
+                setOpenMenuId(null);
+            }
+        };
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, []);
 
     // Update filtered jobs when filters change or initialJobs change
     useEffect(() => {
@@ -99,7 +109,6 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
         }
 
         setFilteredJobs(filtered);
-        console.log('Filtered jobs:', filtered);
     };
 
     // Handle filter changes
@@ -153,7 +162,7 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
                     </button>
 
                     <a className="logo">
-                        <ApplicationLogo className="w-20 h-10 mr-2" />
+                        <ApplicationLogo className="w-30 h-10 ml-8" />
                     </a>
 
                     <nav className="sidebar-nav">
@@ -212,11 +221,14 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
                             </div>
                             <div className="nav-links">
                                 <a href="/" className='home' onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>Home</a>
+
                                 <a href="/jobs" onClick={(e) => { e.preventDefault(); navigateTo('/jobs'); }}>Jobs</a>
-                                <a href="#" onClick={(e) => { e.preventDefault(); navigateTo('/explore'); }}>Explore</a>
+
+                                <a href="explore" onClick={(e) => { e.preventDefault(); navigateTo('/explore'); }}>Explore</a>
+
                                 <div>
-                                    <a href="#" className='hire' onClick={(e) => { e.preventDefault(); navigateTo('/hire'); }}>Hire</a>
-                                    <img src="/assets/svg/arrow-down.svg" alt="" className="arrow-down-icon" />
+                                    <a href="/Admin/candidates" className='hire' onClick={(e) => { e.preventDefault(); navigateTo('/Admin/candidates'); }}>Hire</a>
+                                    {/* <img src="/assets/svg/arrow-down.svg" alt="" className="arrow-down-icon" /> */}
                                 </div>
                             </div>
                         </div>
@@ -249,11 +261,11 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
                                 )}
                             </div>
 
-                            <div className="user-profile" onClick={() => navigateTo('/admin/profile')} style={{ cursor: 'pointer' }}>
+                            <div className="user-profile" onClick={() => navigateTo('/Admin/settings')} style={{ cursor: 'pointer' }}>
                                 <div className="avatar">
-                                    {auth?.user?.avatar ? (
+                                    {auth?.user?.profile?.avatar ? (
                                         <img
-                                            src={auth.user.avatar}
+                                            src={auth.user.profile.avatar}
                                             alt={auth.user.name}
                                             className="avatar-img"
                                         />
@@ -273,19 +285,68 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
                         <div className="stat-card">
                             <h3>Your Job Posts</h3>
                             <div className="stat-numbers">
-                                <div id='stat-item-1' className="stat-item">
+                                <div
+                                    id='stat-item-1'
+                                    className="stat-item"
+                                    onClick={() => {
+                                        setFilters(prev => ({ ...prev, status: 'active' }));
+                                        applyFilters();
+                                        // Scroll to recent jobs section
+                                        document.querySelector('.recent-jobs')?.scrollIntoView({
+                                            behavior: 'smooth',
+                                            block: 'start'
+                                        });
+                                    }}
+                                    style={{ cursor: 'pointer' }}
+                                >
                                     <span className="stat-value">{jobStats?.active || 0}</span>
                                     <span className="stat-label">Active Jobs</span>
                                 </div>
-                                <div id='stat-item-2' className="stat-item">
+                                <div
+                                    id='stat-item-2'
+                                    className="stat-item"
+                                    onClick={() => {
+                                        setFilters(prev => ({ ...prev, status: 'passed' }));
+                                        applyFilters();
+                                        document.querySelector('.recent-jobs')?.scrollIntoView({
+                                            behavior: 'smooth',
+                                            block: 'start'
+                                        });
+                                    }}
+                                    style={{ cursor: 'pointer' }}
+                                >
                                     <span className="stat-value">{jobStats?.passed || 0}</span>
                                     <span className="stat-label">Passed</span>
                                 </div>
-                                <div id='stat-item-3' className="stat-item">
+                                <div
+                                    id='stat-item-3'
+                                    className="stat-item"
+                                    onClick={() => {
+                                        setFilters(prev => ({ ...prev, status: 'under_review' }));
+                                        applyFilters();
+                                        document.querySelector('.recent-jobs')?.scrollIntoView({
+                                            behavior: 'smooth',
+                                            block: 'start'
+                                        });
+                                    }}
+                                    style={{ cursor: 'pointer' }}
+                                >
                                     <span className="stat-value">{jobStats?.under_review || 0}</span>
                                     <span className="stat-label">Under Review</span>
                                 </div>
-                                <div id='stat-item-4' className="stat-item">
+                                <div
+                                    id='stat-item-4'
+                                    className="stat-item"
+                                    onClick={() => {
+                                        setFilters(prev => ({ ...prev, status: 'hired' }));
+                                        applyFilters();
+                                        document.querySelector('.recent-jobs')?.scrollIntoView({
+                                            behavior: 'smooth',
+                                            block: 'start'
+                                        });
+                                    }}
+                                    style={{ cursor: 'pointer' }}
+                                >
                                     <span className="stat-value">{jobStats?.hired || 0}</span>
                                     <span className="stat-label">Hired</span>
                                 </div>
@@ -398,7 +459,6 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
                         <div className="section-header">
                             <h3>Recent Job Posts ({filteredJobs.length})</h3>
                         </div>
-                        
 
                         <div className="jobs-list">
                             {filteredJobs.length > 0 ? (
@@ -426,8 +486,6 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
                                                                 <path fill="#4B5563" d="M463 448.2C440.9 409.8 399.4 384 352 384L288 384C240.6 384 199.1 409.8 177 448.2C212.2 487.4 263.2 512 320 512C376.8 512 427.8 487.3 463 448.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320zM320 336C359.8 336 392 303.8 392 264C392 224.2 359.8 192 320 192C280.2 192 248 224.2 248 264C248 303.8 280.2 336 320 336z" />
                                                             </svg>
                                                         )}
-
-
                                                     </div>
                                                 </div>
                                                 <div className="company-info-header">
@@ -448,11 +506,55 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
                                                         <div className='job-details-container'>
                                                             <p className="time">{new Date(job.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
                                                             <div className="applicants">
-                                                                <img src="/assets/svg/message.svg" alt="" className="message-icon" />
+                                                                <a
+                                                                    onClick={(e) => {
+                                                                        e.preventDefault();
+                                                                        navigateTo(`/Admin/jobs/${job.id}/applicants`);
+                                                                    }}
+                                                                    style={{ cursor: 'pointer' }}
+                                                                >
+                                                                    <img src="/assets/svg/message.svg" alt="" className="message-icon" />
+                                                                </a>
                                                                 <p>{job.applicants || 0}</p>
                                                             </div>
-                                                            <button className="view-applicants">View Applicants</button>
-                                                            <img src="/assets/svg/menu.svg" alt="" id="menu-icon" />
+                                                            <button
+                                                                className="view-applicants"
+                                                                onClick={() => {
+                                                                    navigateTo(`/Admin/jobs/${job.id}/applicants`);
+                                                                }}
+                                                            >
+                                                                View Applicants
+                                                            </button>
+                                                            {/* Menu Dropdown */}
+                                                            <div className="menu-container">
+                                                                <img
+                                                                    src="/assets/svg/menu.svg"
+                                                                    alt="Menu"
+                                                                    className="menu-trigger"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setOpenMenuId(openMenuId === job.id ? null : job.id);
+                                                                    }}
+                                                                />
+                                                                {openMenuId === job.id && (
+                                                                    <div className="dropdown-content show">
+                                                                        <button onClick={() => navigateTo(`/jobs/${job.id}`)}>
+                                                                            View Details
+                                                                        </button>
+                                                                        <button onClick={() => navigateTo(`/Admin/jobs/${job.id}/edit`)}>
+                                                                            Edit Job
+                                                                        </button>
+                                                                        <button onClick={() => {
+                                                                            if (confirm('Are you sure you want to delete this job?')) {
+                                                                                router.delete(`/Admin/jobs/${job.id}`);
+                                                                                setOpenMenuId(null);
+                                                                            }
+                                                                        }}>
+                                                                            Delete Job
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -475,7 +577,7 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
                     <footer>
                         <div className="footer-top">
                             <div className="footer-left">
-                                <a href="#" className="brand" onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
+                                <a href="/" className="brand" onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
                                     <ApplicationLogo className="logo" />
                                 </a>
                             </div>
@@ -493,12 +595,10 @@ export default function AdminDashboard({ jobStats, recentJobs: initialJobs, filt
                                 <p>©</p>
                                 <span>2026</span>
                             </div>
-
                             <p>
                                 <span>Powered by:</span> MyTeacher Institute. All rights reserved.
                             </p>
                         </div>
-
                     </footer>
                 </main>
             </div>

@@ -1,74 +1,45 @@
 <?php
 
-use App\Http\Controllers\AdminController;
+use \App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\NotificationController;
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\ContactController;
-use App\Http\Controllers\PageController;
-use App\Http\Controllers\PrivacySettingsController;
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\JobsController;
+use App\Http\Controllers\PageController;
+use App\Http\Controllers\ProfileController;
 use App\Models\Job;
-use App\Models\User;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+
 
 Route::get('/', function () {
     $jobs = Job::latest()->take(10)->get();
+    
+    // Get featured talents - users with profiles and high completion
+    $featuredTalents = \App\Models\User::with('profile', 'skills')
+        ->where('is_admin', false)
+        ->whereHas('profile')
+        ->get()
+        ->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'avatar' => $user->profile?->avatar_url,
+                'position' => $user->profile?->position,
+                'bio' => $user->profile?->bio,
+                'skills' => $user->skills->pluck('name')->take(3)->toArray(),
+                'profile_completion' => $user->calculateProfileCompletion(),
+            ];
+        })
+        ->sortByDesc('profile_completion')
+        ->take(6)
+        ->values();
 
-    $featuredTalents = User::where('profile_completed', '>=', 50)
-                            ->with('profile')
-                            ->orderBy('profile_completed', 'desc')
-                            ->take(6)
-                            ->get()
-                            ->map(function($user) {
-                                $skills = [];
-                                if ($user->skills) {
-                                    $skills = is_string($user->skills) ? json_decode($user->skills, true) : $user->skills;
-                                }
-                                if (empty($skills)) {
-                                    $skills = ['Available for work'];
-                                }
-                                
-                                $rating = 3.5;
-                                if ($user->profile_completed >= 90) $rating = 5.0;
-                                elseif ($user->profile_completed >= 80) $rating = 4.8;
-                                elseif ($user->profile_completed >= 70) $rating = 4.5;
-                                elseif ($user->profile_completed >= 60) $rating = 4.2;
-                                elseif ($user->profile_completed >= 50) $rating = 4.0;
-                                
-                                $avatar = null;
-                                if ($user->profile && $user->profile->profile_image_base64) {
-                                    $avatar = $user->profile->profile_image_base64;
-                                } elseif ($user->profile && $user->profile->avatar_url) {
-                                    $avatar = $user->profile->avatar_url;
-                                }
-                                
-                                $title = $user->title;
-                                if (!$title && $user->profile && $user->profile->title) {
-                                    $title = $user->profile->title;
-                                }
-                                if (!$title && $user->profile && $user->profile->position) {
-                                    $title = $user->profile->position;
-                                }
-                                
-                                return [
-                                    'id' => $user->id,
-                                    'name' => $user->name,
-                                    'title' => $title ?? 'Professional',
-                                    'avatar' => $avatar,
-                                    'avatar_url' => $avatar,
-                                    'profile_image_base64' => $avatar,
-                                    'skills' => $skills,
-                                    'rating' => $rating,
-                                    'profile_completed' => $user->profile_completed,
-                                ];
-                            });
-     
     return Inertia::render('Welcome', [
         'canLogin'       => Route::has('login'),
         'canRegister'    => Route::has('register'),
@@ -110,23 +81,19 @@ Route::get('/guidelines', function () {
     return Inertia::render('Guidelines');
 })->name('guidelines');
 
+// Explore Route
+Route::get('/explore', function () {
+    $jobs = App\Models\Job::where('status', 'active')->latest()->get();
+    return Inertia::render('Explore', ['jobs' => $jobs]);
+})->name('explore');
+
 // User Dashboard (non-admin)
-Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])
+Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'not_admin'])
     ->name('dashboard');
 
 // Authenticated User Routes
 Route::middleware(['auth', 'not_admin'])->group(function () {
-    // ========== SETTINGS ROUTE ==========
-    Route::get('/settings', function () {
-        return Inertia::render('Settings', [
-            'user' => Auth::user(),
-            'profile' => Auth::user()->profile,
-            'auth' => ['user' => Auth::user()],
-        ]);
-    })->name('settings');
-    // ====================================
-
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'read'])->name('notifications.read');
     Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'readAll'])->name('notifications.readAll');
@@ -153,12 +120,12 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     Route::put('/user/job-preferences', [ProfileController::class, 'updateJobPreferences'])->name('user.job-preferences.update');
     
     // Privacy Settings Routes
-    Route::get('/user/privacy-settings', [PrivacySettingsController::class, 'getSettings'])->name('user.privacy-settings.get');
-    Route::put('/user/privacy-settings', [PrivacySettingsController::class, 'updateSettings'])->name('user.privacy-settings.update');
+    // Route::get('/user/privacy-settings', [PrivacySettingsController::class, 'getSettings'])->name('user.privacy-settings.get');
+    // Route::put('/user/privacy-settings', [PrivacySettingsController::class, 'updateSettings'])->name('user.privacy-settings.update');
 
     // Saved Jobs Routes
     Route::post('/saved-jobs/{jobId}', function ($jobId) {
-        $user = auth()->user();
+        $user = Auth::user();
         
         $exists = DB::table('saved_jobs')
             ->where('user_id', $user->id)
@@ -179,7 +146,7 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     })->name('saved-jobs.store');
 
     Route::delete('/saved-jobs/{jobId}', function ($jobId) {
-        $user = auth()->user();
+        $user = Auth::user();
         
         DB::table('saved_jobs')
             ->where('user_id', $user->id)
@@ -192,11 +159,21 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
 
 // Admin Routes - Protected by IsAdmin middleware
 Route::middleware(['auth', 'admin'])->prefix('Admin')->name('admin.')->group(function () {
+
+    // Admin Dashboard & Management Routes
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/users', [AdminController::class, 'users'])->name('users');
     Route::get('/jobs', [AdminController::class, 'jobs'])->name('jobs');
     Route::get('/jobs/create', [AdminController::class, 'createJob'])->name('jobs.create');
     Route::post('/jobs', [AdminController::class, 'storeJob'])->name('jobs.store');
+    Route::get('/jobs/{id}/edit', [AdminController::class, 'editJob'])->name('jobs.edit');
+    Route::patch('/jobs/{id}', [AdminController::class, 'updateJob'])->name('jobs.update');
+    Route::delete('/jobs/{id}', [AdminController::class, 'deleteJob'])->name('jobs.delete');
+    Route::get('/jobs/{id}/applicants', [AdminController::class, 'jobApplicants'])->name('admin.jobs.applicants');
+
+    // Profile Management Routes
+    Route::post('/profile/avatar', [AdminController::class, 'uploadAvatar'])->name('profile.avatar.upload');
+    Route::delete('/profile/avatar', [AdminController::class, 'removeAvatar'])->name('profile.avatar.remove');
 
     // Notification Routes
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications');
@@ -211,10 +188,18 @@ Route::middleware(['auth', 'admin'])->prefix('Admin')->name('admin.')->group(fun
     Route::delete('/messages/{id}', [AdminController::class, 'deleteMessage'])->name('messages.delete');
     Route::patch('/messages/{id}/read', [AdminController::class, 'markAsRead'])->name('messages.read');
 
+    // Settings Route
     Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
 
+    // Profile Management Routes
     Route::patch('/profile', [AdminController::class, 'updateProfile'])->name('profile.update');
     Route::put('/password', [AdminController::class, 'updatePassword'])->name('password.update');
+
+    // Candidate Management Routes
+    Route::get('/candidates', [AdminController::class, 'candidates'])->name('candidates');
+    Route::patch('/candidates/{applicationId}/status', [AdminController::class, 'updateCandidateStatus'])->name('candidates.status'); // Keep only this one
+    Route::get('/candidates/{id}', [AdminController::class, 'viewCandidate'])->name('candidates.show');
+    Route::delete('/candidates/{id}', [AdminController::class, 'deleteCandidate'])->name('candidates.delete');
 
     // CV Review Routes
     Route::resource('cv-review', \App\Http\Controllers\Admin\CvReviewController::class)->only(['index', 'show']);
