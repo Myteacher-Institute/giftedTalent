@@ -228,8 +228,8 @@ export default function EasyApplyJob({ auth, profile, job, hasApplied }) {
                                 <div className="card">
                                     <div className="company-header">
                                         <div className="company-logo">
-                                            {job?.company_logo ? (
-                                                <img src={job.company_logo} alt={job.company_name} />
+                                            {(job?.company_logo || job?.company_logo_url) ? (
+                                                <img src={job.company_logo || job.company_logo_url} alt={job.company_name} />
                                             ) : (
                                                 <div className="logo-placeholder">{job?.company_name?.charAt(0) || 'C'}</div>
                                             )}

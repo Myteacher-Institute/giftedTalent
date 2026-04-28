@@ -4,6 +4,7 @@ import Notification from './Notification';
 
 const AppNavbar = ({ user, newJobsCount, onMenuToggle, isMenuOpen }) => {
     const [scrolled, setScrolled] = useState(false);
+    const [mobileNavOpen, setMobileNavOpen] = useState(false);
     const { unreadMessagesCount } = usePage().props;
 
     useEffect(() => {
@@ -19,9 +20,14 @@ const AppNavbar = ({ user, newJobsCount, onMenuToggle, isMenuOpen }) => {
     }, []);
 
     const toggleMenu = () => {
+        setMobileNavOpen(!mobileNavOpen);
         if (onMenuToggle) {
             onMenuToggle();
         }
+    };
+
+    const handleNavClick = () => {
+        setMobileNavOpen(false);
     };
 
     const getProfileImageUrl = () => {
@@ -50,10 +56,10 @@ const AppNavbar = ({ user, newJobsCount, onMenuToggle, isMenuOpen }) => {
                     <span className="blue">GiftedTalents</span>.Online
                 </Link>
 
-                <div className="nav-links">
-                    <Link href="/">Home</Link>
-                    <Link href="/search-jobs">Jobs</Link>
-                    <Link href="/explore">Explore</Link>
+                <div className={`nav-links ${mobileNavOpen ? 'mobile-open' : ''}`}>
+                    <Link href="/" onClick={handleNavClick}>Home</Link>
+                    <Link href="/search-jobs" onClick={handleNavClick}>Jobs</Link>
+                    <Link href="/explore" onClick={handleNavClick}>Explore</Link>
                     {/* <Link href="/hire">Hire</Link> */}
                 </div>
 
@@ -89,16 +95,21 @@ const AppNavbar = ({ user, newJobsCount, onMenuToggle, isMenuOpen }) => {
                 </div>
 
                 <div className="hamburger-container">
-                    <div
-                        className={`hamburger ${isMenuOpen ? 'active' : ''}`}
+                    <button
+                        className={`hamburger ${mobileNavOpen ? 'active' : ''}`}
                         onClick={toggleMenu}
+                        type="button"
+                        aria-label="Toggle navigation menu"
                     >
                         <span></span>
                         <span></span>
                         <span></span>
-                    </div>
+                    </button>
                 </div>
             </nav>
+            {mobileNavOpen && (
+                <div className="mobile-nav-overlay active" onClick={() => setMobileNavOpen(false)}></div>
+            )}
         </>
     );
 };

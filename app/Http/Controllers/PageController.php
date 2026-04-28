@@ -159,9 +159,30 @@ class PageController extends Controller
     /**
      * Display the Easy Apply Job page.
      */
-    public function easyApplyJob(): Response
+    public function easyApplyJob($id = null): Response
     {
-        return Inertia::render('EasyApplyJob');
+        if (!$id) {
+            $id = request()->query('job_id');
+        }
+
+        if (!$id) {
+            abort(404);
+        }
+
+        $job = Job::findOrFail($id);
+        $user = Auth::user();
+        
+        // Check if user has already applied
+        $hasApplied = \DB::table('job_applications')->where('user_id', $user->id)->where('job_id', $id)->exists();
+        
+        return Inertia::render('EasyApplyJob', [
+            'job' => array_merge($job->toArray(), [
+                'company_logo' => $job->company_logo_url,
+            ]),
+            'hasApplied' => $hasApplied,
+            'auth' => ['user' => $user],
+            'profile' => $user->profile,
+        ]);
     }
 
     /**

@@ -160,7 +160,13 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
     // Close mobile sidebar when clicking outside
     useEffect(() => {
         const handleClickOutside = (e) => {
-            if (mobileSidebarOpen && !e.target.closest('.left') && !e.target.closest('.mobile-menu-toggle')) {
+            if (
+                mobileSidebarOpen &&
+                !e.target.closest('.left') &&
+                !e.target.closest('.mobile-menu-toggle') &&
+                !e.target.closest('.hamburger') &&
+                !e.target.closest('.hamburger-container')
+            ) {
                 setMobileSidebarOpen(false);
             }
         };
@@ -290,8 +296,20 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
     };
 
     const handleEasyApply = (job) => {
-        setSelectedJob(job);
-        setShowApplyModal(true);
+        router.visit(`/easy-apply-job/${job.id}`);
+    };
+
+    const handleApplyNow = (job) => {
+        if (job.application_link) {
+            const url = job.application_link.startsWith('http')
+                ? job.application_link
+                : `https://${job.application_link}`;
+            window.open(url, '_blank', 'noopener,noreferrer');
+            return;
+        }
+
+        showToast('No external apply link available, opening job details instead.', 'info');
+        router.visit(`/jobs/${job.id}`);
     };
 
     const handleSubmitApplication = (e) => {
@@ -792,28 +810,37 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
                                                 {job.salary_range && (
                                                     <span className="salary-tag">{job.salary_range}</span>
                                                 )}
-                                                {job.easy_apply && (
-                                                    <span 
-                                                        className="easy-apply-span" 
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleEasyApply(job);
-                                                        }}
-                                                    >
-                                                        Easy Apply <i className="fa-solid fa-paper-plane"></i>
-                                                    </span>
-                                                )}
-                                                <span 
-                                                    className={`save-job-span ${savedJobs.includes(job.id) ? 'saved' : ''}`}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleSaveJob(job.id);
-                                                    }}
-                                                >
-                                                    {savedJobs.includes(job.id) ? 'Saved' : 'Save Job'} 
-                                                    <i className="fa-regular fa-bookmark"></i>
-                                                </span>
                                             </div>
+                                            <span 
+                                                className={`save-job-span ${savedJobs.includes(job.id) ? 'saved' : ''}`}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleSaveJob(job.id);
+                                                }}
+                                            >
+                                                {savedJobs.includes(job.id) ? 'Saved' : 'Save Job'} 
+                                                <i className="fa-regular fa-bookmark"></i>
+                                            </span>
+                                        </div>
+                                        <div className="job-actions-row">
+                                            <button
+                                                className="apply-now-btn"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleApplyNow(job);
+                                                }}
+                                            >
+                                                Apply Now
+                                            </button>
+                                            <button
+                                                className="easy-apply-btn"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleEasyApply(job);
+                                                }}
+                                            >
+                                                Easy Apply <i className="fa-solid fa-paper-plane"></i>
+                                            </button>
                                         </div>
                                         <i 
                                             className="fa-solid fa-times-circle close" 
@@ -872,18 +899,27 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
                                             <span className="job-tags">{job.tags?.join(' • ') || job.job_type}</span>
                                             <div className="job-meta">
                                                 <span>{job.posted_at}</span>
-                                                {job.easy_apply && (
-                                                    <span 
-                                                        className="easy-apply-span"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleEasyApply(job);
-                                                        }}
-                                                    >
-                                                        Easy Apply <i className="fa-solid fa-paper-plane"></i>
-                                                    </span>
-                                                )}
                                             </div>
+                                        </div>
+                                        <div className="job-actions-row">
+                                            <button
+                                                className="apply-now-btn"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleApplyNow(job);
+                                                }}
+                                            >
+                                                Apply Now
+                                            </button>
+                                            <button
+                                                className="easy-apply-btn"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleEasyApply(job);
+                                                }}
+                                            >
+                                                Easy Apply <i className="fa-solid fa-paper-plane"></i>
+                                            </button>
                                         </div>
                                         <i 
                                             className="fa-solid fa-times-circle close"

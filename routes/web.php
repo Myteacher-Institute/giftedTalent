@@ -120,6 +120,7 @@ Route::middleware(['auth'])->group(function () {
     // User Profile Routes
     Route::get('/user-profile', [ProfileController::class, 'show'])->name('pages.userProfile');
     Route::get('/easy-apply-job', [PageController::class, 'easyApplyJob'])->name('pages.easyApplyJob');
+    Route::get('/easy-apply-job/{id}', [PageController::class, 'easyApplyJob']);
     Route::get('/search-jobs', [JobsController::class, 'searchJobs'])->name('search-jobs');
 
     // Contact Routes
