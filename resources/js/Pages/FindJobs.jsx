@@ -50,7 +50,7 @@ export default function FindJobs({ auth, jobs: initialJobs, jobTypes: initialJob
     };
 
     const handleApplyClick = (jobId) => {
-        router.visit(`/easy-apply-job?job_id=${jobId}`);
+        router.visit(`/easy-apply-job/${jobId}`);
     };
 
     return (
