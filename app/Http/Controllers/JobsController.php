@@ -245,7 +245,7 @@ class JobsController extends Controller
  */
 public function apply($jobId)
 {
-    $user = auth()->user();
+    $user = Auth::user();;
     
     // Check if job exists
     $job = DB::table('job_posts')->where('id', $jobId)->first();
@@ -281,7 +281,7 @@ public function apply($jobId)
  */
 public function myApplications()
 {
-    $user = auth()->user();
+     $user = Auth::user();
     
     $applications = \App\Models\JobApplication::where('user_id', $user->id)
         ->with('job')

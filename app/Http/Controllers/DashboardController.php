@@ -33,7 +33,8 @@ class DashboardController extends Controller
             'experiences', 
             'applications', 
             'resumes', 
-            'notifications'
+            'notifications',
+            'educations'
         ]);
         
         $profile = $user->profile;
@@ -139,29 +140,26 @@ class DashboardController extends Controller
             $jobsQuery->where('company_location', 'like', '%' . $location . '%');
         }
 
-        // Recommended jobs (now filtered admin jobs)
+        // Get user skills safely
+        $userSkills = $user->skills ? $user->skills->pluck('name') : collect();
+
+        // Get jobs with proper variable assignment
         $adminJobs = $jobsQuery->limit(10)->get();
-        
-        // No fallback jobs - skip skill matching for now
-        $fallbackJobs = collect();
 
-        $jobs = $adminJobs->merge($fallbackJobs);
+        if ($adminJobs->isEmpty() && $userSkills->isNotEmpty()) {
+            $jobs = Job::where('status', 'active')
+                ->where(function($q) use ($userSkills) {
+                    foreach ($userSkills as $skill) {
+                        $q->orWhere('required_skills', 'like', '%' . $skill . '%')
+                          ->orWhere('job_title', 'like', '%' . $skill . '%');
+                    }
+                })->limit(5)->get();
+        } else {
+            $jobs = $adminJobs;
+        }
 
-        // Profile completion status from user model
-        $profileComplete = $user->profile_completed;
-        
-        // Get profile status for checklist items
-        $profileStatus = [
-            'status' => [
-                'portfolio' => !empty($profile->portfolio_url),
-                'experience' => $user->experiences()->count() > 0,
-                'email_verified' => !is_null($user->email_verified_at),
-                'skills' => $user->skills()->count() > 0,
-                'cv_uploaded' => $user->resumes()->count() > 0,
-            ]
-        ];
-
-        // Job types for filter
+        // Notifications data for bell/navbar
+        // Extract job types before return
         $jobTypes = Job::whereHas('user', fn($q) => $q->where('is_admin', true))
                           ->distinct()
                           ->pluck('job_type')
@@ -215,6 +213,12 @@ class DashboardController extends Controller
         }
         // =======================================================
 
+        // ========== CALCULATE PROFILE COMPLETION ==========
+        $completionData = $this->calculateProfileCompletion($profile);
+        $profileComplete = $completionData['percent'];
+        $profileStatus = $completionData['status'];
+        // =================================================
+
         return Inertia::render('Dashboard', [
             'auth' => [
                 'user' => $user,
@@ -238,7 +242,6 @@ class DashboardController extends Controller
                 'image' => $job->logo_url ?? 'https://i.pravatar.cc/40?img=' . $job->id,
                 'type' => $job->job_type,
                 'location' => $job->company_location,
-                'match_score' => $this->calculateMatchScore($user, $job),
             ]),
             'searchParams' => [
                 'q' => $query,
@@ -252,18 +255,27 @@ class DashboardController extends Controller
         ]);
     }
 
-    private function calculateMatchScore($user, $job)
+    private function calculateProfileCompletion(Profile $profile): array
     {
-        $userSkills = $user->skills->pluck('name')->toArray();
-        $jobSkills = $job->required_skills ?? [];
+        $user = $profile->user;
         
-        if (empty($jobSkills)) {
-            return 0;
-        }
+        $status = [
+            'email_verified' => $user->email_verified_at !== null,
+            'bio' => !empty($profile->bio) && strlen(trim($profile->bio)) > 20,
+            'skills' => $user->skills()->count() >= 3,
+            'experience' => $user->experiences()->count() > 0,
+            'education' => $user->educations()->count() > 0, // Fixed: Get education count if relation exists
+            'portfolio' => !empty($profile->portfolio_url),
+            'position' => !empty($profile->position),
+            'cv_uploaded' => $user->resumes()->count() > 0,
+        ];
+
+        $total = count($status);
+        $complete = array_sum(array_map(fn($v) => $v ? 1 : 0, $status));
         
-        $matchingSkills = array_intersect($userSkills, $jobSkills);
-        $score = (count($matchingSkills) / count($jobSkills)) * 100;
-        
-        return round($score);
+        return [
+            'percent' => round(($complete / $total) * 100),
+            'status' => $status
+        ];
     }
 }

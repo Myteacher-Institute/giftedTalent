@@ -1,7 +1,19 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import '../../css/jobdetails.css';
 
-export default function JobDetails({ job }) {
+export default function JobDetails({ job, auth }) {
+    // Handle apply button click
+    const handleApplyClick = () => {
+        if (!auth?.user) {
+            // Redirect to login page if not authenticated
+            router.visit('/login');
+            return;
+        }
+        
+        // Open application link if authenticated
+        window.open(job.application_link, '_blank');
+    };
+
     // Map database fields to display fields
     const displayData = {
         title: job.job_title || job.title || 'Job Title',
@@ -97,9 +109,9 @@ export default function JobDetails({ job }) {
                     <div className="job-details-actions">
                         <button
                             className="apply-now-btn"
-                            onClick={() => window.open(job.application_link, '_blank')}
+                            onClick={handleApplyClick}
                         >
-                            Apply Now
+                            {auth?.user ? 'Apply Now' : 'Login to Apply'}
                         </button>
                         <Link href="/jobs" className="back-to-jobs-btn">Back to Jobs</Link>
                     </div>

@@ -3,10 +3,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Job;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Http\Request;
 
 class PageController extends Controller
 {
@@ -195,155 +195,96 @@ class PageController extends Controller
         ]);
     }
 
-    /**
-     * Display all jobs.
-     */
-    public function jobs()
+    public function jobs(Request $request)
     {
-        $jobs = Job::latest()->get();
+        $query = Job::query();
+
+        // Filter by category if provided
+        if ($request->has('category') && $request->category) {
+            $category = $request->category;
+
+            // Define keywords for each category
+            $keywords = match ($category) {
+                'technology' => ['developer', 'engineer', 'programmer', 'software', 'full-stack', 'frontend', 'backend', 'php', 'javascript', 'react', 'laravel', 'web developer', 'full stack', 'senior frontend'],
+                'design'     => ['designer', 'ui', 'ux', 'graphic', 'creative', 'figma', 'web designer', 'tailwind css'],
+                'marketing'  => ['marketing', 'seo', 'social media', 'digital marketing', 'content', 'digital marketer'],
+                'finance'    => ['finance', 'accounting', 'banking', 'financial', 'audit'],
+                'sales'      => ['sales', 'business development', 'account manager', 'client relations'],
+                'support'    => ['support', 'customer service', 'help desk', 'customer care', 'technical support'],
+                'other'      => ['administrative', 'operations', 'coordinator', 'assistant', 'hr', 'project manager'],
+                default      => []
+            };
+
+            if (! empty($keywords)) {
+                $query->where(function ($q) use ($keywords) {
+                    foreach ($keywords as $keyword) {
+                        $q->orWhere('job_title', 'like', "%{$keyword}%")
+                            ->orWhere('description', 'like', "%{$keyword}%");
+                    }
+                });
+            }
+        }
+
+        $jobs = $query->latest()->get();
+
         return Inertia::render('Jobs', [
-            'jobs' => $jobs,
+            'jobs'     => $jobs,
+            'category' => $request->category,
         ]);
     }
 
-    /**
-     * Display a single talent profile.
-     */
-    public function showTalent($id)
+    public function index($request)
     {
-        // Load user with profile relationship
-        $user = User::with('profile')->findOrFail($id);
-        $authUser = Auth::user();
-        
-        // Get user's privacy settings - decode if it's a string
-        $privacySettings = $user->privacy_settings;
-        
-        // If it's a string, decode it; if null, use defaults
-        if (is_string($privacySettings)) {
-            $privacySettings = json_decode($privacySettings, true);
+        $query = Job::query();
+
+        // Search - works for ANY text
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('job_title', 'like', "%{$search}%")
+                    ->orWhere('company_name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('company_location', 'like', "%{$search}%")
+                    ->orWhere('job_type', 'like', "%{$search}%");
+            });
         }
-        
-        // Default settings if null or empty
-        if (empty($privacySettings) || !is_array($privacySettings)) {
-            $privacySettings = [
-                'profile_visibility' => 'public',
-                'show_email' => true,
-                'show_phone' => false,
-                'show_experience' => true,
-                'show_education' => true,
-                'show_skills' => true,
-                'show_rating' => true,
-                'appear_in_search' => true,
-                'appear_in_talent_listings' => true,
-                'allow_download_resume' => true,
-                'allow_contact_requests' => true,
-                'show_read_receipts' => false,
-                'show_last_active' => true,
-                'share_analytics' => true,
-                'share_for_recommendations' => true,
-            ];
+
+        // Job Type filter - multiple selections
+        if ($request->has('type') && is_array($request->type) && count($request->type) > 0) {
+            $query->whereIn('job_type', $request->type);
         }
-        
-        // Check if user is admin
-        $isAdmin = $authUser && ($authUser->is_admin == 1 || $authUser->role === 'admin');
-        
-        // Check profile visibility
-        $canViewProfile = false;
-        $isOwner = ($authUser && $authUser->id === $user->id);
-        
-        // Get profile visibility value safely
-        $profileVisibility = $privacySettings['profile_visibility'] ?? 'public';
-        
-        // Admin can view any profile
-        if ($isAdmin) {
-            $canViewProfile = true;
-        } elseif ($profileVisibility === 'public') {
-            $canViewProfile = true;
-        } elseif ($profileVisibility === 'registered_only') {
-            $canViewProfile = $authUser !== null;
-        } elseif ($profileVisibility === 'private') {
-            // Only the profile owner can view
-            $canViewProfile = $isOwner;
-        } else {
-            $canViewProfile = true; // Default to public
+
+        // Location filter - multiple selections
+        if ($request->has('location') && is_array($request->location) && count($request->location) > 0) {
+            $query->whereIn('company_location', $request->location);
         }
-        
-        // If cannot view profile, show restricted view
-        if (!$canViewProfile) {
-            return Inertia::render('ProfileRestricted', [
-                'user' => $user,
-                'auth' => [
-                    'user' => $authUser,
-                ],
-                'message' => 'This profile is private',
-            ]);
+
+        // Company filter - multiple selections
+        if ($request->has('company') && is_array($request->company) && count($request->company) > 0) {
+            $query->whereIn('company_name', $request->company);
         }
-        
-        // Get avatar from profile
-        $avatar = null;
-        if ($user->profile && $user->profile->avatar_url) {
-            $avatar = $user->profile->avatar_url;
-        } elseif ($user->profile && $user->profile->profile_image_base64) {
-            $avatar = $user->profile->profile_image_base64;
+
+        // Remote filter
+        if ($request->has('remote') && $request->remote == 'true') {
+            $query->where('job_type', 'Remote');
         }
-        
-        // Get skills - respect privacy settings (admin can see everything)
-        $skills = [];
-        $showSkills = $privacySettings['show_skills'] ?? true;
-        
-        if ($showSkills || $isOwner || $isAdmin) {
-            if ($user->skills) {
-                $skills = is_string($user->skills) ? json_decode($user->skills, true) : $user->skills;
-            }
-            if (empty($skills) && $user->profile && $user->profile->skills) {
-                $skills = is_string($user->profile->skills) ? json_decode($user->profile->skills, true) : $user->profile->skills;
-            }
+
+        // Experience filter
+        if ($request->has('experience') && is_array($request->experience) && count($request->experience) > 0) {
+            $query->where(function ($q) use ($request) {
+                foreach ($request->experience as $level) {
+                    $q->orWhere('job_title', 'like', "%{$level}%")
+                        ->orWhere('description', 'like', "%{$level}%");
+                }
+            });
         }
-        if (empty($skills)) {
-            $skills = ($showSkills || $isAdmin) ? ['Available for work'] : ['Skills hidden'];
-        }
-        
-        // Format the talent data with privacy applied (admin can see everything)
-        $talent = [
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => (($privacySettings['show_email'] ?? true) || $isOwner || $isAdmin) ? ($user->email ?? ($user->profile->email ?? null)) : null,
-            'phone' => (($privacySettings['show_phone'] ?? false) || $isOwner || $isAdmin) ? ($user->phone ?? ($user->profile->phone ?? null)) : null,
-            'title' => $user->title ?? ($user->profile->title ?? 'Professional'),
-            'bio' => $user->bio ?? ($user->profile->bio ?? null),
-            'company' => $user->company ?? ($user->profile->company ?? null),
-            'location' => $user->location ?? ($user->profile->city ?? null),
-            'avatar' => $avatar,
-            'skills' => $skills,
-            'availability_status' => $user->availability_status ?? ($user->profile->availability_status ?? 'Open to work'),
-            'employment_type' => $user->employment_type ?? ($user->profile->employment_type ?? 'Full-Time, Remote'),
-            'start_date' => $user->start_date ?? ($user->profile->start_date ?? 'Available Immediately'),
-            'resume_url' => null,
-            'is_owner' => $isOwner,
-            'is_admin' => $isAdmin,
-            'can_contact' => ($privacySettings['allow_contact_requests'] ?? true) && $authUser && $authUser->id !== $user->id,
-            'privacy' => $privacySettings,
-        ];
-        
-        // DEBUG: Log what's being sent
-        \Log::info('Talent Profile Data:', [
-            'user_id' => $user->id,
-            'user_name' => $user->name,
-            'is_admin' => $isAdmin,
-            'privacy_settings' => $privacySettings,
-            'show_email_setting' => $privacySettings['show_email'] ?? 'not set',
-            'show_phone_setting' => $privacySettings['show_phone'] ?? 'not set',
-            'email_sent' => $talent['email'],
-            'phone_sent' => $talent['phone'],
-            'is_owner' => $isOwner,
-            'auth_user_id' => $authUser ? $authUser->id : 'not logged in',
-        ]);
-        
-        return Inertia::render('TalentProfile', [
-            'talent' => $talent,
-            'auth' => [
-                'user' => $authUser,
-            ],
+
+        $jobs = $query->latest()->get();
+
+        return Inertia::render('Jobs', [
+            'jobs' => $jobs,
+            'auth' => ['user' => Auth::user()],
         ]);
     }
+
 }

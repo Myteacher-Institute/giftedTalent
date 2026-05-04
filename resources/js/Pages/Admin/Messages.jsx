@@ -183,7 +183,20 @@ export default function Messages({ messages: initialMessages, stats: initialStat
 
             <div className="admin-messages-container">
                 <div className="messages-header">
-                    <h1>Contact Messages</h1>
+                    <div>
+                        <button
+                            className="back-btn"
+                            onClick={() => router.get('/Admin/dashboard')}
+                            title="Back to Dashboard"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M19 12H5M12 19l-7-7 7-7" />
+                            </svg>
+                            Back to Dashboard
+                        </button>
+
+                        <h1>Contact Messages</h1>
+                    </div>
                     <div className="header-controls">
                         <div className="auto-refresh-toggle">
                             <label>

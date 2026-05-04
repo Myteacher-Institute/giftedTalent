@@ -8,10 +8,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: url('../assets/img/g_auth_bg.png');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+    background-color: #0636a7;
     padding: 20px;
 }
 
@@ -126,6 +123,7 @@
     background: #0A2463;
     color: white;
     border: none;
+    width: 100%;
     padding: 12px 24px;
     border-radius: 8px;
     font-size: 16px;
@@ -156,7 +154,7 @@
 /* Form Actions */
 .form-actions {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
     margin-top: 24px;
 }
@@ -241,6 +239,12 @@
     height: 20px;
     margin-right: 12px;
     flex-shrink: 0;
+}
+
+.down-link{
+    padding-top: 10px;
+    text-decoration: underline;
+    color: #0b328f;
 }
 
 /* Responsive Design */
