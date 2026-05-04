@@ -45,7 +45,10 @@ function Nav({ auth }) {
         <>
             <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
                 <Link href="/" className="logo">
-                    <ApplicationLogo className="w-10 h-10 mr-2" />
+                    <ApplicationLogo style={{
+                        width: '100%',
+                        maxWidth: '100px'
+                    }} />
                 </Link>
                 
                 {/* Desktop Navigation */}
