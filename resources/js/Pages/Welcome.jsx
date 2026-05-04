@@ -386,7 +386,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
     // Handle apply button click
     const handleApplyClick = (job, event) => {
         if (requireAuthWithModal('apply_job', event, job)) {
-            router.visit(`/easy-apply-job?job_id=${job.id}`);
+            router.visit(`/easy-apply-job/${job.id}`);
         }
     };
 

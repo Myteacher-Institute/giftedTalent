@@ -38,6 +38,10 @@ class MessageController extends Controller
 
         $message = Message::create($messageData);
 
+        if ($request->header('X-Inertia')) {
+            return back(303)->with('success', 'Message sent successfully');
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Message sent successfully',
@@ -63,6 +67,10 @@ class MessageController extends Controller
             'message' => $request->message,
             'is_read' => false,
         ]);
+
+        if ($request->header('X-Inertia')) {
+            return back(303)->with('success', 'Admin message sent successfully');
+        }
 
         return response()->json([
             'success' => true,
