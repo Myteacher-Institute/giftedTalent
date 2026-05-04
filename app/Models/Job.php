@@ -24,6 +24,8 @@ class Job extends Model
         'status',
         'applicants_count',
         'posted_at',
+        'application_link',
+        'tags',
     ];
 
     protected function casts(): array
@@ -61,5 +63,14 @@ class Job extends Model
         }
 
         return [];
+    }
+
+    public function setTagsAttribute($value)
+    {
+        if (is_array($value)) {
+            $this->attributes['tags'] = json_encode($value);
+        } else {
+            $this->attributes['tags'] = $value;
+        }
     }
 }
