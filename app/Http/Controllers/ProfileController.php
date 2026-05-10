@@ -12,10 +12,10 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
-use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
 
 class ProfileController extends Controller
@@ -84,12 +84,6 @@ class ProfileController extends Controller
             $user = $request->user();
             $profile = $user->profile;
 
-            // Create profile if it doesn't exist
-            if (!$profile) {
-                $profile = Profile::create(['user_id' => $user->id]);
-                $user->setRelation('profile', $profile);
-            }
-
             // Validate all fields including profile_image
             $validated = $request->validate([
                 'first_name' => 'nullable|string|max:100',
@@ -113,27 +107,7 @@ class ProfileController extends Controller
                 'availability_status' => 'nullable|string|max:255',
             ]);
 
-            // Update user email if changed
-            if (isset($validated['email']) && $validated['email'] !== $user->email) {
-                $user->email = $validated['email'];
-                $user->email_verified_at = null;
-                $user->save();
-            }
-
-            // Handle base64 profile image if present
-            $avatarUpdated = false;
-
-            if (array_key_exists('profile_image', $validated)) {
-                $base64Image = $validated['profile_image'];
-                
-                if ($base64Image === '') {
-                    $profile->profile_image_base64 = null;
-                    $avatarUpdated = true;
-                } elseif ($base64Image && preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
-                    $profile->profile_image_base64 = $base64Image;
-                    $avatarUpdated = true;
-                }
-            }
+            Log::info('Profile data validated', ['validated' => $validated]);
 
             // Update user basic info
             $userUpdated = false;
@@ -149,6 +123,12 @@ class ProfileController extends Controller
                     $user->name = $newName;
                     $userUpdated = true;
                 }
+            }
+            
+            if (isset($validated['email']) && $user->email !== $validated['email']) {
+                $user->email = $validated['email'];
+                $user->email_verified_at = null;
+                $userUpdated = true;
             }
             
             if ($userUpdated) {
@@ -170,10 +150,20 @@ class ProfileController extends Controller
                 foreach ($filteredProfileData as $key => $value) {
                     $profile->$key = $value;
                 }
-                $profile->save();
-            } elseif ($avatarUpdated) {
-                $profile->save();
             }
+
+            // Handle profile image
+            if (array_key_exists('profile_image', $validated)) {
+                $base64Image = $validated['profile_image'];
+                
+                if ($base64Image === '') {
+                    $profile->profile_image_base64 = null;
+                } elseif ($base64Image && preg_match('/^data:image\/(\w+);base64,/', $base64Image)) {
+                    $profile->profile_image_base64 = $base64Image;
+                }
+            }
+            
+            $profile->save();
 
             // Refresh the user and profile
             $user->refresh();
@@ -189,74 +179,33 @@ class ProfileController extends Controller
             return Redirect::route('dashboard');
             
         } catch (\Exception $e) {
+            Log::error('Profile update failed', ['error' => $e->getMessage()]);
             session()->flash('error', 'An error occurred while updating profile.');
             return Redirect::route('profile.editExtended')->withErrors(['error' => 'Update failed. Please try again.']);
         }
     }
 
     /**
-     * Update user profile (for settings page)
+     * Upload user avatar
      */
     public function uploadAvatar(Request $request): RedirectResponse
     {
         try {
             $user = Auth::user();
+            $profile = $user->profile;
             
-            $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|email|unique:users,email,' . $user->id,
-                'title' => 'nullable|string|max:255',
-                'company' => 'nullable|string|max:255',
-                'position' => 'nullable|string|max:255',
-                'bio' => 'nullable|string|max:500',
-                'phone' => 'nullable|string|max:20',
-                'location' => 'nullable|string|max:255',
-                'availability_status' => 'nullable|string|max:255',
-                'employment_type' => 'nullable|string|max:255',
-                'start_date' => 'nullable|date',
-                'portfolio_url' => 'nullable|url|max:255',
-                'github_url' => 'nullable|url|max:255',
-                'linkedin_url' => 'nullable|url|max:255',
-                'twitter_url' => 'nullable|url|max:255',
-                'skills' => 'nullable|array',
-            ]);
-            
-            // Update user directly in users table
-            $user->update([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'title' => $validated['title'] ?? $user->title,
-                'company' => $validated['company'] ?? $user->company,
-                'position' => $validated['position'] ?? $user->position,
-                'bio' => $validated['bio'] ?? $user->bio,
-                'phone' => $validated['phone'] ?? $user->phone,
-                'location' => $validated['location'] ?? $user->location,
-                'availability_status' => $validated['availability_status'] ?? $user->availability_status,
-                'employment_type' => $validated['employment_type'] ?? $user->employment_type,
-                'start_date' => $validated['start_date'] ?? $user->start_date,
-                'portfolio_url' => $validated['portfolio_url'] ?? $user->portfolio_url,
-                'github_url' => $validated['github_url'] ?? $user->github_url,
-                'linkedin_url' => $validated['linkedin_url'] ?? $user->linkedin_url,
-                'twitter_url' => $validated['twitter_url'] ?? $user->twitter_url,
-            ]);
-            
-            // Handle skills if provided
-            if ($request->has('skills') && is_array($request->skills)) {
-                $user->skills = json_encode($request->skills);
-                $user->save();
+            if (!$profile) {
+                $profile = Profile::create(['user_id' => $user->id]);
             }
             
-            // Handle avatar upload if file exists
             if ($request->hasFile('avatar')) {
                 $file = $request->file('avatar');
                 $filename = $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
                 
                 Storage::disk('public')->putFileAs('avatars', $file, $filename);
                 
-                $profile = Profile::where('user_id', $user->id)->first();
-                if ($profile) {
-                    $profile->update(['avatar' => 'avatars/' . $filename]);
-                }
+                $profile->avatar = 'avatars/' . $filename;
+                $profile->save();
             }
             
             // Update profile completion percentage
@@ -264,25 +213,21 @@ class ProfileController extends Controller
                 $user->updateProfileCompletion();
             }
             
-            $user->refresh();
+            return Redirect::route('profile.editExtended')->with('success', 'Avatar uploaded successfully.');
             
-            return Redirect::back()->with('success', 'Profile updated successfully!');
-            
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return Redirect::back()->withErrors($e->errors());
         } catch (\Exception $e) {
-            return Redirect::back()->withErrors(['error' => 'Failed to update profile. Please try again.']);
+            return Redirect::back()->withErrors(['error' => 'Failed to upload avatar. Please try again.']);
         }
     }
 
     /**
      * Remove user avatar.
      */
-    public function removeAvatar(Request $request)
+    public function removeAvatar(Request $request): RedirectResponse
     {
         try {
-            $user = Auth::user();
-            $profile = Profile::where('user_id', $user->id)->first();
+            $user = $request->user();
+            $profile = $user->profile;
 
             if ($profile) {
                 $profile->profile_image_base64 = null;
@@ -295,16 +240,10 @@ class ProfileController extends Controller
                 $profile->save();
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Profile picture removed successfully'
-            ]);
+            return redirect()->back()->with('success', 'Profile picture removed successfully');
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to remove profile picture'
-            ], 500);
+            return redirect()->back()->with('error', 'Failed to remove profile picture');
         }
     }
     
@@ -349,9 +288,9 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update user job preferences
+     * Update job preferences
      */
-    public function updateJobPreferences(Request $request)
+    public function updateJobPreferences(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
             $user = Auth::user();
@@ -387,96 +326,167 @@ class ProfileController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to save preferences'
+                'message' => 'Failed to save preferences: ' . $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Get user notification preferences
+     * Add a skill to the user's profile.
      */
-    public function getNotificationPreferences(Request $request)
-    {
-        try {
-            $user = Auth::user();
-            
-            $defaultPreferences = [
-                'email_job_alerts' => true,
-                'email_application_updates' => true,
-                'email_message_notifications' => true,
-                'email_marketing' => false,
-                'email_newsletter' => false,
-                'in_app_job_alerts' => true,
-                'in_app_application_updates' => true,
-                'in_app_messages' => true,
-                'push_enabled' => false,
-                'push_job_alerts' => true,
-                'push_messages' => true,
-                'digest_frequency' => 'daily',
-                'quiet_hours_enabled' => false,
-                'quiet_hours_start' => '22:00',
-                'quiet_hours_end' => '08:00',
-                'desktop_enabled' => true,
-                'sound_enabled' => true,
-            ];
-            
-            $preferences = $user->notification_preferences ?? $defaultPreferences;
-            
-            return response()->json([
-                'success' => true,
-                'preferences' => $preferences
-            ]);
-            
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch notification preferences'
-            ], 500);
-        }
-    }
-
-    /**
-     * Update user notification preferences
-     */
-    public function updateNotificationPreferences(Request $request)
+    public function addSkill(Request $request): RedirectResponse
     {
         try {
             $user = Auth::user();
             
             $validated = $request->validate([
-                'email_job_alerts' => 'boolean',
-                'email_application_updates' => 'boolean',
-                'email_message_notifications' => 'boolean',
-                'email_marketing' => 'boolean',
-                'email_newsletter' => 'boolean',
-                'in_app_job_alerts' => 'boolean',
-                'in_app_application_updates' => 'boolean',
-                'in_app_messages' => 'boolean',
-                'push_enabled' => 'boolean',
-                'push_job_alerts' => 'boolean',
-                'push_messages' => 'boolean',
-                'digest_frequency' => 'nullable|in:instant,daily,weekly',
-                'quiet_hours_enabled' => 'boolean',
-                'quiet_hours_start' => 'nullable|string',
-                'quiet_hours_end' => 'nullable|string',
-                'desktop_enabled' => 'boolean',
-                'sound_enabled' => 'boolean',
+                'name' => 'required|string|max:255',
+                'proficiency_level' => 'nullable|string|in:beginner,intermediate,advanced,expert',
+                'years_experience' => 'nullable|integer|min:0|max:50',
             ]);
             
-            $user->notification_preferences = $validated;
-            $user->save();
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Notification preferences saved successfully!',
-                'preferences' => $validated
+            // Create or get existing skill
+            $skill = Skill::firstOrCreate([
+                'name' => $validated['name']
+            ], [
+                'is_active' => true
             ]);
+            
+            // Attach skill to user with pivot data
+            $user->skills()->attach($skill->id, [
+                'proficiency_level' => $validated['proficiency_level'] ?? 'intermediate',
+                'years_experience' => $validated['years_experience'] ?? 0
+            ]);
+            
+            // Update profile completion
+            if (method_exists($user, 'updateProfileCompletion')) {
+                $user->updateProfileCompletion();
+            }
+            
+            return redirect()->back()->with('success', 'Skill added successfully!');
             
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to save notification preferences'
-            ], 500);
+            return redirect()->back()->withErrors(['error' => 'Failed to add skill: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Remove a skill from the user's profile.
+     */
+    public function removeSkill(Request $request, int $skillId): RedirectResponse
+    {
+        try {
+            $user = Auth::user();
+            
+            // Detach the skill from user
+            $user->skills()->detach($skillId);
+            
+            // Update profile completion
+            if (method_exists($user, 'updateProfileCompletion')) {
+                $user->updateProfileCompletion();
+            }
+            
+            return redirect()->back()->with('success', 'Skill removed successfully!');
+            
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Failed to remove skill']);
+        }
+    }
+
+    /**
+     * Add work experience.
+     */
+    public function addExperience(Request $request): RedirectResponse
+    {
+        try {
+            $user = Auth::user();
+            
+            $validated = $request->validate([
+                'company' => 'required|string|max:255',
+                'position' => 'required|string|max:255',
+                'location' => 'nullable|string|max:255',
+                'start_date' => 'required|date',
+                'end_date' => 'nullable|date|after:start_date',
+                'is_current' => 'boolean',
+                'description' => 'nullable|string',
+            ]);
+            
+            Experience::create([
+                'user_id' => $user->id,
+                'company' => $validated['company'],
+                'position' => $validated['position'],
+                'location' => $validated['location'] ?? null,
+                'start_date' => $validated['start_date'],
+                'end_date' => $validated['end_date'] ?? null,
+                'is_current' => $validated['is_current'] ?? false,
+                'description' => $validated['description'] ?? null,
+            ]);
+            
+            // Update profile completion
+            if (method_exists($user, 'updateProfileCompletion')) {
+                $user->updateProfileCompletion();
+            }
+            
+            return redirect()->back()->with('success', 'Experience added successfully!');
+            
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Failed to add experience: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Update work experience.
+     */
+    public function updateExperience(Request $request, Experience $experience): RedirectResponse
+    {
+        try {
+            // Check ownership
+            if ($experience->user_id !== Auth::id()) {
+                return redirect()->back()->withErrors(['error' => 'Unauthorized action']);
+            }
+            
+            $validated = $request->validate([
+                'company' => 'required|string|max:255',
+                'position' => 'required|string|max:255',
+                'location' => 'nullable|string|max:255',
+                'start_date' => 'required|date',
+                'end_date' => 'nullable|date|after:start_date',
+                'is_current' => 'boolean',
+                'description' => 'nullable|string',
+            ]);
+            
+            $experience->update($validated);
+            
+            return redirect()->back()->with('success', 'Experience updated successfully!');
+            
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Failed to update experience']);
+        }
+    }
+
+    /**
+     * Delete work experience.
+     */
+    public function deleteExperience(Experience $experience): RedirectResponse
+    {
+        try {
+            // Check ownership
+            if ($experience->user_id !== Auth::id()) {
+                return redirect()->back()->withErrors(['error' => 'Unauthorized action']);
+            }
+            
+            $experience->delete();
+            
+            // Update profile completion
+            $user = Auth::user();
+            if (method_exists($user, 'updateProfileCompletion')) {
+                $user->updateProfileCompletion();
+            }
+            
+            return redirect()->back()->with('success', 'Experience deleted successfully!');
+            
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors(['error' => 'Failed to delete experience']);
         }
     }
 
@@ -521,7 +531,7 @@ class ProfileController extends Controller
                 'file_size' => $file->getSize(),
                 'file_mime_type' => $file->getMimeType(),
                 'is_primary' => $user->resumes()->count() === 0,
-                'status' => 'Approved',
+                'status' => 'pending', // Should be pending review
             ]);
 
             // Update profile completion
@@ -532,7 +542,7 @@ class ProfileController extends Controller
             return redirect()->back()->with('success', 'CV uploaded successfully! It will be reviewed by admin.');
             
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Failed to upload CV. Please try again.']);
+            return redirect()->back()->withErrors(['error' => 'Failed to upload CV: ' . $e->getMessage()]);
         }
     }
 
@@ -560,7 +570,7 @@ class ProfileController extends Controller
             return redirect()->back()->with('success', 'CV deleted successfully!');
             
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Failed to delete CV. Please try again.']);
+            return redirect()->back()->withErrors(['error' => 'Failed to delete CV']);
         }
     }
 }

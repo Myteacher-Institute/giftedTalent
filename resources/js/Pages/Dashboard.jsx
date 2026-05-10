@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import AppNavbar from '../Components/AppNavbar';
+import AuthenticatedLayout from '../Layouts/AuthenticatedLayout';
 import '../../css/Dashboard.css';
 import Notification from '../Components/Notification';
+import AppNavbar from '../Components/AppNavbar';
 
 
 window.alertify = window.alertify || alertify;
 
-// Job Card Component
+// Job Card Component - UPDATED VERSION
+// Job Card Component - Professional Design with View More Toggle
 function JobCard({ job, onSave, onUnsave, onApply, isSaved = false }) {
     const [showMenu, setShowMenu] = useState(null);
     const [saved, setSaved] = useState(isSaved);
     const [applying, setApplying] = useState(false);
+    const [expanded, setExpanded] = useState(false);
 
     const toggleMenu = (index) => {
         setShowMenu(showMenu === index ? null : index);
@@ -34,57 +37,149 @@ function JobCard({ job, onSave, onUnsave, onApply, isSaved = false }) {
         setApplying(false);
     };
 
+    // Get company logo with fallback
+    const getCompanyLogo = () => {
+        if (job.company_logo_url) {
+            return job.company_logo_url;
+        }
+        if (job.image) {
+            return job.image;
+        }
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(job.company_name || job.company || 'Company')}&background=4F46E5&color=fff&size=80&bold=true`;
+    };
+
+    // Format salary range
+    const formatSalary = (salary) => {
+        if (!salary) return null;
+        if (typeof salary === 'string') return salary;
+        return null;
+    };
+
+    const getMatchColor = (score) => {
+        if (score >= 80) return '#10B981';
+        if (score >= 60) return '#3B82F6';
+        if (score >= 40) return '#F59E0B';
+        return '#6B7280';
+    };
+
+    const salaryDisplay = formatSalary(job.salary_range);
+    const matchScore = job.match_score || 0;
+
+    // Truncate description for collapsed view
+    const truncatedDescription = job.description && job.description.length > 100 
+        ? job.description.substring(0, 100) + '...' 
+        : job.description;
+
     return (
-        <div className={`job-card ${job.match_score >= 60 ? 'recommended-job' : ''}`}>
-            <div className="job-left">
-                <img src={job.image || job.company_logo_url} alt="" />
-            </div>
-            <div className="job-right">
-                <h3>{job.company_name || job.company}</h3>
-                <p>{job.job_title || job.title}</p>
-                <span>{job.tags || job.job_type}</span>
-                <p className="time">{job.time || job.posted_at}</p>
-                {job.match_score && (
-                    <div className="match-score mt-2">
-                        <div className="flex items-center">
-                            <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
-                                <div
-                                    className="bg-green-500 h-2 rounded-full"
-                                    style={{ width: `${job.match_score}%` }}
-                                ></div>
-                            </div>
-                            <span className="text-xs text-gray-600">
-                                {job.match_score}% Match
-                            </span>
-                        </div>
-                    </div>
-                )}
-            </div>
-            <div className="job-actions">
-                <button 
-                    className="apply desktop-only" 
-                    onClick={handleApplyClick}
-                    disabled={applying}
-                >
-                    {applying ? 'Applying...' : 'Apply Now'}
-                </button>
-                <div className="menu-trigger" onClick={() => toggleMenu(job.id)}>
-                    <i className="fa-solid fa-ellipsis"></i>
+        <div className={`professional-job-card ${matchScore >= 60 ? 'premium-job' : ''}`}>
+            {/* Card Top Section - Logo, Company, Match Score */}
+            <div className="job-card-top">
+                <div className="job-company-logo">
+                    <img 
+                        src={getCompanyLogo()} 
+                        alt={job.company_name || job.company}
+                        onError={(e) => {
+                            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(job.company_name || job.company || 'Company')}&background=4F46E5&color=fff&size=80&bold=true`;
+                        }}
+                    />
                 </div>
-                {showMenu === job.id && (
-                    <div className="dropdown-menu">
-                        <button onClick={() => setShowMenu(null)}>
-                            <i className="fa-regular fa-eye-slash"></i> Hide Job
-                        </button>
-                        <button onClick={handleApplyClick} disabled={applying}>
-                            <i className="fa-regular fa-paper-plane"></i> {applying ? 'Applying...' : 'Apply Now'}
-                        </button>
-                        <button onClick={handleSaveClick}>
-                            <i className={`fa-regular fa-bookmark`} style={{ color: saved ? '#4F46E5' : '' }}></i>
-                            {saved ? 'Saved' : 'Save Job'}
-                        </button>
+                <div className="job-company-info">
+                    <h3 className="job-company-name">{job.company_name || job.company}</h3>
+                    <h4 className="job-position-title">{job.job_title || job.title}</h4>
+                </div>
+                {matchScore > 0 && (
+                    <div className="job-match-score" style={{ backgroundColor: getMatchColor(matchScore) }}>
+                        <i className="fas fa-chart-line"></i> {matchScore}%
                     </div>
                 )}
+            </div>
+
+            {/* Card Middle Section - Key Details (Always Visible) */}
+            <div className="job-card-details">
+                <div className="job-detail-item">
+                    <i className="fas fa-map-marker-alt"></i>
+                    <span>{job.company_location || job.location || 'Remote'}</span>
+                </div>
+                <div className="job-detail-item">
+                    <i className="fas fa-briefcase"></i>
+                    <span>{job.job_type || 'Full-time'}</span>
+                </div>
+                {salaryDisplay && (
+                    <div className="job-detail-item">
+                        <i className="fas fa-dollar-sign"></i>
+                        <span>{salaryDisplay}</span>
+                    </div>
+                )}
+                <div className="job-detail-item">
+                    <i className="far fa-clock"></i>
+                    <span>{job.posted_at || 'Recently'}</span>
+                </div>
+                {job.applicants_count > 0 && (
+                    <div className="job-detail-item">
+                        <i className="fas fa-users"></i>
+                        <span>{job.applicants_count} applicants</span>
+                    </div>
+                )}
+            </div>
+
+            {/* Expandable Section - View More Toggle */}
+            {expanded && (
+                <div className="job-expanded-content">
+                    {job.description && (
+                        <div className="job-description-section">
+                            <h5>About this position:</h5>
+                            <p>{job.description}</p>
+                        </div>
+                    )}
+                    {job.tags && typeof job.tags === 'string' && job.tags !== job.job_type && (
+                        <div className="job-skills-section">
+                            <h5>Required Skills:</h5>
+                            <div className="job-skills-tags">
+                                {job.tags.split(' • ').map((tag, idx) => (
+                                    <span key={idx} className="skill-tag">{tag}</span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Card Footer - View More & Action Buttons */}
+            <div className="job-card-footer">
+                <button 
+                    className="view-more-btn"
+                    onClick={() => setExpanded(!expanded)}
+                >
+                    <i className={`fas ${expanded ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
+                    {expanded ? 'View Less' : 'View More'}
+                </button>
+                <div className="job-action-buttons">
+                    <button 
+                        className={`easy-apply-btn ${job.easy_apply ? 'premium-easy' : ''}`}
+                        onClick={handleApplyClick}
+                        disabled={applying}
+                    >
+                        <i className="fas fa-paper-plane"></i>
+                        {applying ? 'Applying...' : (job.easy_apply ? 'Easy Apply' : 'Apply Now')}
+                    </button>
+                    <div className="job-menu-trigger" onClick={() => toggleMenu(job.id)}>
+                        <i className="fas fa-ellipsis-v"></i>
+                    </div>
+                    {showMenu === job.id && (
+                        <div className="job-dropdown-menu">
+                            <button onClick={handleApplyClick} disabled={applying}>
+                                <i className="fas fa-paper-plane"></i> Apply Now
+                            </button>
+                            <button onClick={handleSaveClick}>
+                                <i className={`fas ${saved ? 'fa-bookmark' : 'fa-bookmark'}`} style={{ color: saved ? '#4F46E5' : '' }}></i>
+                                {saved ? 'Saved' : 'Save Job'}
+                            </button>
+                            <button onClick={() => setExpanded(true)}>
+                                <i className="fas fa-info-circle"></i> View Details
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -410,9 +505,9 @@ export default function Dashboard({
                                 </span>
                             )}
                         </li>
-                        <li>
-                            <Link href="/settings"><i className="fa-solid fa-gear"></i> Settings</Link>
-                        </li>
+                        <li onClick={() => router.visit('/settings')}>
+    <i className="fa-solid fa-gear"></i> Settings
+</li>
                         <li className="logout-item">
                             <a href="/" onClick={(e) => { e.preventDefault(); handleLogout(); }}>
                                 <i className="fa-solid fa-right-from-bracket logout-icon"></i>
@@ -482,74 +577,179 @@ export default function Dashboard({
                                 </div>
                             ) : null}
 
-                            <div className="search-bar">
-                                <form onSubmit={handleSearch}>
-                                    <input
-                                        type="text"
-                                        placeholder="Search for jobs..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                    />
-                                    <select
-                                        value={selectedJobType}
-                                        onChange={(e) => setSelectedJobType(e.target.value)}
-                                    >
-                                        <option value="">All Types</option>
-                                        {jobTypes.map(type => (
-                                            <option key={type} value={type}>{type}</option>
-                                        ))}
-                                    </select>
-                                    <button type="button" onClick={toggleAdvanced} className="btn-advanced">
-                                        Advanced
-                                    </button>
-                                    <button type="submit" disabled={loading} className="btn-search">
-                                        {loading ? 'Searching...' : 'Search'}
-                                    </button>
-                                    {(searchQuery || selectedJobType) && (
-                                        <button type="button" onClick={clearSearch} className="btn-clear">
-                                            Clear
-                                        </button>
-                                    )}
-                                </form>
-                            </div>
+                            {/* Professional Search Section */}
+<div className="search-section">
+    <div className="search-header">
+        <h2>Find Your Next Opportunity</h2>
+        <p>Discover jobs that match your skills and career goals</p>
+    </div>
+    
+    <div className="search-container">
+        <div className="search-main">
+            <div className="search-input-wrapper">
+                <i className="fas fa-search search-icon-left"></i>
+                <input 
+                    type="text" 
+                    placeholder="Job title, keywords, or company..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch(e)}
+                />
+                {searchQuery && (
+                    <button className="clear-input" onClick={() => setSearchQuery('')}>
+                        <i className="fas fa-times-circle"></i>
+                    </button>
+                )}
+            </div>
+            
+            <div className="search-filters">
+                <div className="filter-select-wrapper">
+                    <i className="fas fa-briefcase filter-icon"></i>
+                    <select
+                        value={selectedJobType}
+                        onChange={(e) => setSelectedJobType(e.target.value)}
+                    >
+                        <option value="">All Job Types</option>
+                        {jobTypes.map(type => (
+                            <option key={type} value={type}>{type}</option>
+                        ))}
+                    </select>
+                </div>
+                
+                <button className="advanced-filter-btn" onClick={toggleAdvanced}>
+                    <i className="fas fa-sliders-h"></i>
+                    <span>Advanced</span>
+                </button>
+                
+                <button className="search-submit-btn" onClick={handleSearch} disabled={loading}>
+                    {loading ? (
+                        <i className="fas fa-spinner fa-spin"></i>
+                    ) : (
+                        <>
+                            <i className="fas fa-search"></i>
+                            <span>Search</span>
+                        </>
+                    )}
+                </button>
+                
+                {(searchQuery || selectedJobType) && (
+                    <button className="clear-all-btn" onClick={clearSearch}>
+                        <i className="fas fa-times"></i>
+                        <span>Clear</span>
+                    </button>
+                )}
+            </div>
+        </div>
+    </div>
+</div>
 
-                            {showAdvanced && (
-                                <div className="advanced-filter-modal">
-                                    <div className="advanced-filter-content">
-                                        <div className="flex justify-between items-center mb-4">
-                                            <h3>Advanced Filter</h3>
-                                            <button onClick={toggleAdvanced} className="close-btn">×</button>
-                                        </div>
-                                        <select className="filter-select">
-                                            <option>Location</option>
-                                        </select>
-                                        <input type="range" min="0" max="200" className="w-full" />
-                                        <span>$0 - $200k</span>
-                                    </div>
-                                </div>
-                            )}
+{/* Advanced Filter Modal */}
+{showAdvanced && (
+    <div className="advanced-modal-overlay" onClick={toggleAdvanced}>
+        <div className="advanced-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="advanced-modal-header">
+                <h3>
+                    <i className="fas fa-sliders-h"></i>
+                    Advanced Filters
+                </h3>
+                <button className="modal-close-btn" onClick={toggleAdvanced}>
+                    <i className="fas fa-times"></i>
+                </button>
+            </div>
+            <div className="advanced-modal-body">
+                <div className="filter-group">
+                    <label>Location</label>
+                    <div className="filter-input-wrapper">
+                        <i className="fas fa-map-marker-alt"></i>
+                        <input type="text" placeholder="City, state, or remote" />
+                    </div>
+                </div>
+                <div className="filter-group">
+                    <label>Salary Range</label>
+                    <div className="salary-range">
+                        <input type="number" placeholder="Min" />
+                        <span>-</span>
+                        <input type="number" placeholder="Max" />
+                    </div>
+                </div>
+                <div className="filter-group">
+                    <label>Experience Level</label>
+                    <div className="filter-options">
+                        <button className="filter-option">Entry Level</button>
+                        <button className="filter-option">Mid Level</button>
+                        <button className="filter-option">Senior</button>
+                        <button className="filter-option">Lead</button>
+                        <button className="filter-option">Manager</button>
+                    </div>
+                </div>
+                <div className="filter-group">
+                    <label>Remote Options</label>
+                    <div className="filter-options">
+                        <button className="filter-option">On-site</button>
+                        <button className="filter-option">Hybrid</button>
+                        <button className="filter-option active">Remote</button>
+                    </div>
+                </div>
+            </div>
+            <div className="advanced-modal-footer">
+                <button className="reset-filters-btn">Reset All</button>
+                <button className="apply-filters-btn" onClick={toggleAdvanced}>Apply Filters</button>
+            </div>
+        </div>
+    </div>
+)}
 
-                            {/* Recommended Jobs Section */}
-                            {recommendedJobs && recommendedJobs.length > 0 && (
-                                <div className="jobs-section">
-                                    <div className="section-header">
-                                        <h2><i className="fa-solid fa-bullseye"></i> Recommended for You</h2>
-                                        <span>Based on your profile and skills</span>
-                                    </div>
-                                    <div className="jobs">
-                                        {recommendedJobs.map((job) => (
-                                            <JobCard
-                                                key={job.id}
-                                                job={job}
-                                                onSave={handleSaveJob}
-                                                onUnsave={handleUnsaveJob}
-                                                onApply={handleApplyJob}
-                                                isSaved={localSavedJobs.some(saved => saved.id === job.id)}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
+                            {/* Professional Alert System */}
+<div className="alerts-container">
+    {profileComplete === 100 ? (
+        <div className="alert alert-success">
+            <div className="alert-icon">
+                <i className="fas fa-trophy"></i>
+            </div>
+            <div className="alert-content">
+                <h4>Profile Complete! 🎉</h4>
+                <p>Your profile is 100% complete. You're getting the best job matches!</p>
+            </div>
+            <button className="alert-close">
+                <i className="fas fa-times"></i>
+            </button>
+        </div>
+    ) : profileComplete > 0 && profileComplete < 100 ? (
+        <div className="alert alert-warning">
+            <div className="alert-icon">
+                <i className="fas fa-chart-line"></i>
+            </div>
+            <div className="alert-content">
+                <h4>Complete Your Profile</h4>
+                <p>Your profile is {profileComplete}% complete. Add more details to get better job matches.</p>
+                <Link href="/profile/edit" className="alert-action">
+                    Update Now <i className="fas fa-arrow-right"></i>
+                </Link>
+            </div>
+            <button className="alert-close">
+                <i className="fas fa-times"></i>
+            </button>
+        </div>
+    ) : null}
+    
+    {!hasCV && (
+        <div className="alert alert-info">
+            <div className="alert-icon">
+                <i className="fas fa-file-upload"></i>
+            </div>
+            <div className="alert-content">
+                <h4>Upload Your CV</h4>
+                <p>Employers are more likely to notice you when you have a CV uploaded.</p>
+                <Link href="/cv" className="alert-action">
+                    Upload CV <i className="fas fa-arrow-right"></i>
+                </Link>
+            </div>
+            <button className="alert-close">
+                <i className="fas fa-times"></i>
+            </button>
+        </div>
+    )}
+</div>
 
                             {/* Other Jobs Section */}
                             {otherJobs.length > 0 && (
@@ -592,11 +792,13 @@ export default function Dashboard({
                 <aside className="right-panel">
                     <div className="progress-card">
                         <h3>Complete Your Profile</h3>
-                        <div className="progress-circle" style={{ '--progress': `${profileComplete}` }}>
-                            <div className="progress-percent">
-                                <h2>{profileComplete}%</h2>
-                                <span>Complete</span>
-                            </div>
+                        <div className="progress-container">
+                           <div className="progress-circle" data-progress={Math.floor(profileComplete / 10)} style={{ '--progress': `${profileComplete}` }}>
+    <div className="progress-percent">
+        <h2>{profileComplete}%</h2>
+        <span>Complete</span>
+    </div>
+</div>
                         </div>
 
                         <p className="text-center text-sm text-gray-600 mt-3 mb-4">
@@ -677,26 +879,33 @@ export default function Dashboard({
                     </div>
 
                     <div className="tracker">
-                        <h3>Application Tracker</h3>
-                        <div className="tracker-grid">
-                            <div className="tracker-box blue">
-                                <h2>{stats.applied || 0}</h2>
-                                <p>Applied</p>
-                            </div>
-                            <div className="tracker-box orange">
-                                <h2>{stats.review || 0}</h2>
-                                <p>Under Review</p>
-                            </div>
-                            <div className="tracker-box green">
-                                <h2>{stats.interview || 0}</h2>
-                                <p>Interview</p>
-                            </div>
-                            <div className="tracker-box red">
-                                <h2>{stats.rejected || 0}</h2>
-                                <p>Rejected</p>
-                            </div>
-                        </div>
-                    </div>
+    <h3>
+        <i className="fas fa-chart-line"></i>
+        Application Tracker
+    </h3>
+    <div className="tracker-grid">
+        <div className="tracker-box blue">
+            <i className="fas fa-file-alt"></i>
+            <h2>{stats.applied || 0}</h2>
+            <p>Applied</p>
+        </div>
+        <div className="tracker-box orange">
+            <i className="fas fa-clock"></i>
+            <h2>{stats.review || 0}</h2>
+            <p>Under Review</p>
+        </div>
+        <div className="tracker-box green">
+            <i className="fas fa-calendar-check"></i>
+            <h2>{stats.interview || 0}</h2>
+            <p>Interview</p>
+        </div>
+        <div className="tracker-box red">
+            <i className="fas fa-times-circle"></i>
+            <h2>{stats.rejected || 0}</h2>
+            <p>Rejected</p>
+        </div>
+    </div>
+</div>
                 </aside>
             </div>
         </>

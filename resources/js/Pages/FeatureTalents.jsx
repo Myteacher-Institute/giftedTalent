@@ -6,20 +6,51 @@ import '../../css/welcome.css';
 
 export default function FeatureTalents({ auth, featuredTalents = [] }) {
     const [searchTerm, setSearchTerm] = useState('');
-    const [filteredTalents, setFilteredTalents] = useState(featuredTalents);
+    const [filteredTalents, setFilteredTalents] = useState([]);
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [intendedTalent, setIntendedTalent] = useState(null);
 
     // Filter talents based on search term
     useEffect(() => {
+        // SAFETY: Ensure featuredTalents is an array and filter out null/undefined
+        const safeTalents = Array.isArray(featuredTalents) 
+            ? featuredTalents.filter(talent => talent !== null && talent !== undefined)
+            : [];
+        
         if (searchTerm.trim() === '') {
-            setFilteredTalents(featuredTalents);
+            setFilteredTalents(safeTalents);
         } else {
-            const filtered = featuredTalents.filter(talent => 
-                talent.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (talent.title && talent.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                (talent.skills && talent.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase())))
-            );
+            const filtered = safeTalents.filter(talent => {
+                // SAFETY: Check if talent exists
+                if (!talent) return false;
+                
+                const searchLower = searchTerm.toLowerCase();
+                
+                // SAFETY: Check name with optional chaining
+                const nameMatch = talent.name?.toLowerCase().includes(searchLower) || false;
+                
+                // SAFETY: Check title
+                const titleMatch = talent.title && talent.title.toLowerCase().includes(searchLower);
+                
+                // SAFETY: Check skills with proper validation
+                let skillsMatch = false;
+                // FIX: Check if skills is a string and parse it first
+                let skillsArray = talent.skills;
+                if (typeof skillsArray === 'string') {
+                    try {
+                        skillsArray = JSON.parse(skillsArray);
+                    } catch(e) {
+                        skillsArray = [];
+                    }
+                }
+                if (skillsArray && Array.isArray(skillsArray)) {
+                    skillsMatch = skillsArray.some(skill => 
+                        skill && skill.toLowerCase().includes(searchLower)
+                    );
+                }
+                
+                return nameMatch || titleMatch || skillsMatch;
+            });
             setFilteredTalents(filtered);
         }
     }, [searchTerm, featuredTalents]);
@@ -42,6 +73,8 @@ export default function FeatureTalents({ auth, featuredTalents = [] }) {
 
     // Handle view profile with auth check
     const handleViewProfile = (talent, event) => {
+        if (!talent) return;
+        
         if (!isAuthenticated()) {
             event.preventDefault();
             setIntendedTalent(talent);
@@ -51,28 +84,38 @@ export default function FeatureTalents({ auth, featuredTalents = [] }) {
         router.visit(`/talent/${talent.id}`);
     };
 
-    // Get skills array safely
+    // Get skills array safely - FIXED to handle string skills
     const getSkills = (talent) => {
-        // Check multiple possible field names for skills
-        if (talent.skills && Array.isArray(talent.skills)) return talent.skills;
-        if (talent.tech && Array.isArray(talent.tech)) return talent.tech;
+        // SAFETY: Check if talent exists
+        if (!talent) return ['Available for work'];
+        
+        // FIX: If skills is a string, parse it first
         if (talent.skills && typeof talent.skills === 'string') {
             try {
                 const parsed = JSON.parse(talent.skills);
                 if (Array.isArray(parsed)) return parsed;
-            } catch(e) {}
-            return [talent.skills];
+                return [talent.skills];
+            } catch(e) {
+                return [talent.skills];
+            }
         }
+        
+        // Check multiple possible field names for skills
+        if (talent.skills && Array.isArray(talent.skills)) return talent.skills;
+        if (talent.tech && Array.isArray(talent.tech)) return talent.tech;
+        
         return ['Available for work'];
     };
 
     // Get display title safely
     const getDisplayTitle = (talent) => {
+        if (!talent) return 'Professional';
         return talent.title || talent.role || 'Professional';
     };
 
     // Get rating safely
     const getRating = (talent) => {
+        if (!talent) return 4.0;
         return talent.rating || 4.0;
     };
 
@@ -144,6 +187,9 @@ export default function FeatureTalents({ auth, featuredTalents = [] }) {
                 <div className="feature-talent-content">
                     {filteredTalents && filteredTalents.length > 0 ? (
                         filteredTalents.map((talent) => {
+                            // SAFETY: Skip if talent is null/undefined
+                            if (!talent) return null;
+                            
                             const skills = getSkills(talent);
                             const rating = getRating(talent);
                             const fullStars = Math.floor(rating);
@@ -155,10 +201,12 @@ export default function FeatureTalents({ auth, featuredTalents = [] }) {
                                         {talent.profile_image_base64 || talent.avatar_url || talent.avatar ? (
                                             <img 
                                                 src={talent.profile_image_base64 || talent.avatar_url || talent.avatar} 
-                                                alt={talent.name}
+                                                alt={talent.name || 'Talent'}
                                                 onError={(e) => {
                                                     e.target.style.display = 'none';
-                                                    e.target.parentElement.innerHTML = `<div class="feature-talent-avatar-initials">${getInitials(talent.name)}</div>`;
+                                                    if (e.target.parentElement) {
+                                                        e.target.parentElement.innerHTML = `<div class="feature-talent-avatar-initials">${getInitials(talent.name)}</div>`;
+                                                    }
                                                 }}
                                             />
                                         ) : (

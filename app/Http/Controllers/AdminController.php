@@ -2,9 +2,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Application;
 use App\Models\Contact;
 use App\Models\Job;
 use App\Models\Notification;
+use App\Models\Profile;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +20,7 @@ class AdminController extends Controller
 {
     public function dashboard(Request $request): Response
     {
-        $adminUser = Auth::user();
+        $adminUser = Auth::user()->load('profile');
 
         // Start with base query for recent jobs
         $query = Job::with('user');
@@ -391,9 +393,8 @@ class AdminController extends Controller
                 'location' => $request->location,
             ]);
         } else {
-            // When creating a new profile, include user_id
             $user->profile()->create([
-                'user_id'  => $user->id, // Add this line
+                'user_id'  => $user->id,
                 'bio'      => $request->bio,
                 'phone'    => $request->phone,
                 'location' => $request->location,
@@ -403,9 +404,9 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Profile updated successfully!');
     }
 
-/**
- * Update admin password
- */
+    /**
+     * Update admin password
+     */
     public function updatePassword(Request $request)
     {
         $request->validate([
@@ -418,5 +419,161 @@ class AdminController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Password updated successfully!');
+    }
+
+    /**
+     * Display candidates (users who applied for jobs)
+     */
+    public function candidates(Request $request)
+    {
+        // Get users who have applications
+        $users = User::where('is_admin', false)
+            ->whereHas('applications')
+            ->with(['applications.job', 'profile'])
+            ->get();
+
+        // Transform the data
+        $candidatesData = [];
+        foreach ($users as $candidate) {
+            $application = $candidate->applications->first();
+            if ($application) {
+                $job = $application->job;
+
+                $candidatesData[] = [
+                    'id'           => $candidate->id,
+                    'name'         => $candidate->name,
+                    'email'        => $candidate->email,
+                    'avatar'       => $candidate->profile?->avatar ?? null,
+                    'status'       => $application->status ?? 'applied',
+                    'created_at'   => $candidate->created_at,
+                    'job_title'    => $job->job_title ?? 'N/A',
+                    'company_name' => $job->company_name ?? 'N/A',
+                    'applications' => $candidate->applications->map(function ($app) {
+                        return [
+                            'id'           => $app->id,
+                            'job_id'       => $app->job_id,
+                            'job_title'    => $app->job->job_title ?? 'N/A',
+                            'company_name' => $app->job->company_name ?? 'N/A',
+                            'applied_at'   => $app->applied_at ?? $app->created_at,
+                            'status'       => $app->status,
+                        ];
+                    }),
+                ];
+            }
+        }
+
+        // Paginate manually
+        $perPage       = 15;
+        $currentPage   = request()->get('page', 1);
+        $offset        = ($currentPage - 1) * $perPage;
+        $paginatedData = array_slice($candidatesData, $offset, $perPage);
+
+        $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
+            $paginatedData,
+            count($candidatesData),
+            $perPage,
+            $currentPage,
+            ['path' => request()->url()]
+        );
+
+        $stats = [
+            'total'    => count($candidatesData),
+            'pending'  => collect($candidatesData)->where('status', 'applied')->count(),
+            'approved' => collect($candidatesData)->whereIn('status', ['review', 'interview', 'offered'])->count(),
+            'rejected' => collect($candidatesData)->where('status', 'rejected')->count(),
+        ];
+
+        return Inertia::render('Admin/Candidates', [
+            'candidates' => $paginator,
+            'stats'      => $stats,
+        ]);
+    }
+
+    /**
+     * Update candidate status
+     */
+    public function updateCandidateStatus(Request $request, $applicationId)
+    {
+        $application = Application::findOrFail($applicationId);
+        $application->update(['status' => $request->status]);
+
+        return redirect()->back()->with('success', 'Application status updated successfully');
+    }
+
+    /**
+     * View candidate details with their applications
+     */
+    public function viewCandidate($id)
+    {
+        $candidate = User::with(['profile', 'skills', 'experiences', 'resumes', 'applications.job'])
+            ->findOrFail($id);
+
+        return Inertia::render('Admin/CandidateDetails', [
+            'candidate' => $candidate,
+        ]);
+    }
+
+    /**
+     * Delete candidate
+     */
+    public function deleteCandidate($id)
+    {
+        $candidate = User::findOrFail($id);
+
+        // Also delete their applications
+        $candidate->applications()->delete();
+        $candidate->delete();
+
+        return redirect()->back()->with('success', 'Candidate deleted successfully');
+    }
+
+    public function jobApplicants($id)
+    {
+        $job = Job::findOrFail($id);
+
+        // Get all applicants for this job
+        $applicants = Application::where('job_id', $id)
+            ->with('user')
+            ->latest()
+            ->paginate(15);
+
+        return Inertia::render('Admin/JobApplicants', [
+            'job'        => $job,
+            'applicants' => $applicants,
+        ]);
+    }
+
+    public function removeAvatar()
+    {
+        $user = Auth::user();
+
+        if ($user->profile) {
+            $user->profile->update(['avatar' => null]);
+        }
+
+        return redirect()->back()->with('success', 'Avatar removed successfully');
+    }
+
+    public function uploadAvatar(Request $request)
+    {
+        $request->validate([
+            'avatar' => 'required|string',
+        ]);
+
+        $user = Auth::user();
+
+        // Find or create profile
+        $profile = Profile::where('user_id', $user->id)->first();
+
+        if ($profile) {
+            $profile->update(['avatar' => $request->avatar]);
+        } else {
+            $profile = Profile::create([
+                'user_id' => $user->id,
+                'avatar'  => $request->avatar,
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Avatar updated successfully');
     }
 }

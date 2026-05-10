@@ -43,7 +43,7 @@ nav {
 }
 
 .logo {
-    margin: 0;
+    margin: 0 0 4px 0;
     padding: 0;
 }
 
@@ -57,6 +57,8 @@ nav {
 }
 
 .logo a {
+    display: flex;
+    justify-content: flex-start;
     color: #4B5563;
     font-size: 16px;
     text-align: center;
@@ -64,23 +66,29 @@ nav {
     margin-right: 0;
 }
 
+@media (min-width: 353px) and (max-width: 480px) {
+    .logo {
+        font-size: 18px;
+        margin-bottom: 1.4rem;
+    }
+}
+
 @media (min-width: 768px) {
-    .logo a {
+    .logo {
         font-size: 18px;
         margin-right: 5rem;
+        margin-bottom: 1rem;
     }
 }
 
-@media (min-width: 1024px) {
-    .logo a {
+@media (min-width: 1024px) and (max-width: 1600px) {
+    .logo {
         font-size: 20px;
-        margin-right: 10rem;
+        margin-right: 12rem;
+        margin-bottom: 1.4rem;
     }
 }
 
-/* .logo a span {
-    color: #3B82F6;
-} */
 
 .logo-search {
     display: flex;
@@ -141,6 +149,7 @@ nav {
 @media (min-width: 1024px) {
     .nav-buttons {
         width: auto;
+        margin-left: 2.2rem;
     }
 }
 
@@ -691,7 +700,7 @@ nav {
     }
 }
 
-@media (min-width: 393px) {
+@media (min-width: 353px) {
     .job-tag {
         padding: 0;
     }
@@ -746,6 +755,55 @@ nav {
     }
 }
 
+.job-footer-left {
+    display: flex;
+    flex-direction: column;
+    margin-top: 5px;
+    gap: 5px;
+}
+
+.job-salary {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0A2463;
+}
+
+.job-footer-left a {
+    font-size: 13px;
+    color: #3B82F6;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.job-footer-left a:hover {
+    color: #0A2463;
+    text-decoration: underline;
+}
+
+.job-details-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #3B82F6;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.details-arrow {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.2s ease;
+}
+
+.job-details-link:hover {
+    color: #0A2463;
+}
+
+.job-details-link:hover .details-arrow {
+    transform: translateX(3px);
+}
+
 .job-footer span {
     font-size: 12px;
     color: #4B5563;
@@ -781,7 +839,6 @@ footer {
     width: 100%;
     display: flex;
     flex-direction: column;
-    /* padding: 1.5rem 1.5rem; */
     margin-top: 1rem;
     gap: 2rem;
     align-items: center;
@@ -836,6 +893,17 @@ footer {
 }
 
 @media (min-width: 1024px) {
+
+    .logo-search {
+        display: flex;
+        justify-content: space-evenly;
+    }
+
+    .job-card {
+        padding: 0 auto;
+        margin: 0 auto;
+    }
+
     .footer-top {
         display: flex;
         flex-direction: column;
@@ -877,7 +945,6 @@ footer {
     color: #000;
     font-weight: 600;
     font-size: 14px;
-    /* margin-top: 6rem; */
     margin-left: 0;
     white-space: nowrap;
 }
@@ -923,7 +990,6 @@ footer {
     color: #000;
 }
 
-
 @media (max-width: 480px) {
     .home-screen {
         padding-top: 0;
@@ -934,10 +1000,87 @@ footer {
         padding: 40px 12px;
     }
 
+    .job-card {
+        padding: 0 1.5rem;
+        margin: 0 auto;
+    }
+
     .footer-right {
         display: flex;
         flex-direction: row;
         gap: 1.2rem !important;
         margin-top: 2.2rem;
+    }
+}
+
+@media (min-width: 820px) and (max-width: 1024px) {
+    .home-screen {
+        padding-top: 0;
+    }
+
+    .logo-search {
+        display: flex;
+        justify-content: space-between;
+
+    }
+
+    .feature-jobs,
+    .featured-talents {
+        padding: 40px auto;
+    }
+
+    .job-grid {
+        width: 100%;
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .job-card {
+        width: 100%;
+        max-width: 370px;
+        padding: 40px auto;
+        margin: 0 auto;
+    }
+
+    .footer-right {
+        display: flex;
+        flex-direction: row;
+        gap: 8rem !important;
+        margin-top: 2.2rem;
+    }
+}
+
+
+
+/* Small Tablet (between 600px and 820px) */
+/* @media (min-width: 600px) and (max-width: 820px) {
+    .search-bar {
+        width: 280px;
+    }
+
+    .hero h1 {
+        font-size: 26px;
+    }
+
+    .job-card {
+        padding: 12px;
+    }
+
+    .job-description {
+        font-size: 13px;
+    }
+} */
+
+/* Landscape orientation for tablet */
+@media (min-width: 820px) and (max-width: 1024px) and (orientation: landscape) {
+    .job-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .search-bar {
+        width: 300px;
+    }
+
+    .hero h1 {
+        font-size: 30px;
     }
 }

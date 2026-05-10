@@ -1,8 +1,8 @@
+import React, { useState, useEffect } from 'react';
+import AppNavbar from '../Components/AppNavbar';
 import '../../css/Dashboard.css';
 import '../../css/search-job.css';
-import { useState, useEffect } from 'react';
-import { Head, router, Link } from '@inertiajs/react';
-import AppNavbar from '../Components/AppNavbar';
+import { Head, router } from '@inertiajs/react';
 
 export default function SearchJob({ auth, profile, recommendedJobs = [], exploreJobs = [], savedJobs: initialSavedJobs = [] }) {
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -18,22 +18,22 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
         explore: 4
     });
     const [notificationCount, setNotificationCount] = useState(0);
-    
+
     // Job Type Filter
     const [activeFilter, setActiveFilter] = useState('all');
     const [jobTypes] = useState(['All', 'Full-time', 'Remote', 'Contract', 'Part-time', 'Internship']);
-    
+
     // Quick Filters
     const [quickFilters, setQuickFilters] = useState({
         remoteOnly: false,
         easyApply: false,
         urgentFeatured: false
     });
-    
+
     // Experience Level
     const [experienceLevel, setExperienceLevel] = useState('all');
     const [experienceLevels] = useState(['All', 'Entry Level', 'Mid Level', 'Senior Level', 'Lead', 'Manager']);
-    
+
     // Sorting
     const [sortBy, setSortBy] = useState('relevance');
     const [sortOptions] = useState([
@@ -41,21 +41,20 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
         { value: 'newest', label: 'Newest' },
         { value: 'highest_salary', label: 'Highest Salary' }
     ]);
-    
+
     // Match Percentage State
     const [matchPercentages, setMatchPercentages] = useState({});
-    
+
     // Salary Range Filter
     const [salaryRange, setSalaryRange] = useState([0, 200000]);
-    const [showSalaryFilter, setShowSalaryFilter] = useState(false);
-    
+
     // Quick Apply Modal
     const [showApplyModal, setShowApplyModal] = useState(false);
     const [selectedJob, setSelectedJob] = useState(null);
     const [coverLetter, setCoverLetter] = useState('');
     const [selectedResume, setSelectedResume] = useState(null);
     const [submitting, setSubmitting] = useState(false);
-    
+
     // Job Alert Modal
     const [showAlertModal, setShowAlertModal] = useState(false);
     const [alertSettings, setAlertSettings] = useState({
@@ -63,12 +62,12 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
         weekly: false,
         instant: false
     });
-    
+
     // Toast notification state
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
     const currentUser = auth?.user;
-    
+
     // Get profile data - prioritize the passed profile prop
     const userProfile = profile || currentUser?.profile || {};
 
@@ -88,22 +87,22 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
     // Get profile image URL with base64 support
     const getProfileImageUrl = () => {
         // FIRST: Check for base64 in the profile prop
-        if (profile?.profile_image_base64) {
+        if (profile?.profile_image_base64 && typeof profile.profile_image_base64 === 'string') {
             return profile.profile_image_base64;
         }
-        
+
         // SECOND: Check for base64 in user's profile
-        if (currentUser?.profile?.profile_image_base64) {
+        if (currentUser?.profile?.profile_image_base64 && typeof currentUser.profile.profile_image_base64 === 'string') {
             return currentUser.profile.profile_image_base64;
         }
-        
+
         // THIRD: Check for avatar_url
-        if (currentUser?.profile?.avatar_url) {
+        if (currentUser?.profile?.avatar_url && typeof currentUser.profile.avatar_url === 'string') {
             return currentUser.profile.avatar_url;
         }
-        
+
         // FOURTH: Check for avatar path
-        if (currentUser?.profile?.avatar) {
+        if (currentUser?.profile?.avatar && typeof currentUser.profile.avatar === 'string') {
             const avatarPath = currentUser.profile.avatar;
             if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
                 return avatarPath;
@@ -114,8 +113,8 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
             const cleanPath = avatarPath.replace(/^\/+/, '');
             return `/storage/${cleanPath}`;
         }
-        
-        // FIFTH: Default avatar
+
+        // FIFTH: Default avatar - ALWAYS return a string
         const userName = currentUser?.name || 'User';
         return `https://ui-avatars.com/api/?background=667eea&color=fff&size=100&name=${encodeURIComponent(userName)}`;
     };
@@ -127,21 +126,19 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
 
     // Get user position/title
     const getUserPosition = () => {
-        // Check various possible locations for position data
-        return userProfile?.position || 
-               userProfile?.title || 
-               currentUser?.headline || 
-               currentUser?.position || 
-               'Software Engineer';
+        return userProfile?.position ||
+            userProfile?.title ||
+            currentUser?.headline ||
+            currentUser?.position ||
+            'Software Engineer';
     };
 
     // Get user location
     const getUserLocation = () => {
-        // Check various possible locations for location data
-        return userProfile?.city || 
-               userProfile?.address || 
-               currentUser?.location || 
-               'Location not set';
+        return userProfile?.city ||
+            userProfile?.address ||
+            currentUser?.location ||
+            'Location not set';
     };
 
     useEffect(() => {
@@ -195,16 +192,16 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
         if (currentUser?.skills && jobs.length > 0) {
             const percentages = {};
             const userSkills = currentUser.skills.map(s => s.toLowerCase());
-            
+
             jobs.forEach(job => {
                 const jobSkills = job.tags?.map(t => t.toLowerCase()) || [];
                 const matchingSkills = jobSkills.filter(skill => userSkills.includes(skill));
-                const percentage = jobSkills.length > 0 
+                const percentage = jobSkills.length > 0
                     ? Math.round((matchingSkills.length / jobSkills.length) * 100)
                     : job.match_score || 0;
                 percentages[job.id] = percentage;
             });
-            
+
             setMatchPercentages(percentages);
         }
     }, [jobs, currentUser?.skills]);
@@ -212,51 +209,51 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
     // Filter and Sort jobs
     useEffect(() => {
         let filtered = [...jobs];
-        
+
         if (searchTerm.trim() !== '') {
-            filtered = filtered.filter(job => 
+            filtered = filtered.filter(job =>
                 job.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 job.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 job.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 job.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
             );
         }
-        
+
         if (activeFilter !== 'all' && activeFilter !== 'All') {
-            filtered = filtered.filter(job => 
-                job.job_type === activeFilter || 
+            filtered = filtered.filter(job =>
+                job.job_type === activeFilter ||
                 job.tags?.includes(activeFilter)
             );
         }
-        
+
         if (quickFilters.remoteOnly) {
-            filtered = filtered.filter(job => 
+            filtered = filtered.filter(job =>
                 job.location?.toLowerCase().includes('remote') ||
                 job.job_type === 'Remote'
             );
         }
-        
+
         if (quickFilters.easyApply) {
             filtered = filtered.filter(job => job.easy_apply === true);
         }
-        
+
         if (quickFilters.urgentFeatured) {
             filtered = filtered.filter(job => job.urgent === true || job.featured === true);
         }
-        
+
         if (experienceLevel !== 'all' && experienceLevel !== 'All') {
-            filtered = filtered.filter(job => 
+            filtered = filtered.filter(job =>
                 job.experience_level === experienceLevel
             );
         }
-        
+
         filtered = filtered.filter(job => {
             const salary = job.salary_range || job.salary;
             if (!salary) return true;
             const numericSalary = parseInt(salary.replace(/[^0-9]/g, ''));
             return numericSalary >= salaryRange[0] && numericSalary <= salaryRange[1];
         });
-        
+
         if (sortBy === 'newest') {
             filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         } else if (sortBy === 'highest_salary') {
@@ -268,7 +265,7 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
         } else if (sortBy === 'relevance') {
             filtered.sort((a, b) => (b.match_score || 0) - (a.match_score || 0));
         }
-        
+
         setFilteredJobs(filtered);
     }, [searchTerm, jobs, activeFilter, salaryRange, quickFilters, experienceLevel, sortBy]);
 
@@ -315,7 +312,7 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
     const handleSubmitApplication = (e) => {
         e.preventDefault();
         setSubmitting(true);
-        
+
         setTimeout(() => {
             showToast(`Successfully applied to ${selectedJob.title}!`, 'success');
             setShowApplyModal(false);
@@ -411,139 +408,22 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
         <>
             <Head title="Search Jobs" />
 
-            {/* Toast Notification */}
-            {toast.show && (
-                <div className={`toast-notification toast-${toast.type}`}>
-                    <div className="toast-content">
-                        {toast.type === 'success' && <i className="fas fa-check-circle"></i>}
-                        {toast.type === 'error' && <i className="fas fa-exclamation-circle"></i>}
-                        {toast.type === 'info' && <i className="fas fa-info-circle"></i>}
-                        <span>{toast.message}</span>
-                        <button onClick={() => setToast({ ...toast, show: false })} className="toast-close">
-                            <i className="fas fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* AppNavbar - Hamburger button is here */}
             <AppNavbar user={currentUser} newJobsCount={notificationCount} onMenuToggle={toggleMobileSidebar} isMenuOpen={mobileSidebarOpen} />
 
-            {/* Quick Apply Modal */}
-            {showApplyModal && selectedJob && (
-                <div className="modal-overlay" onClick={() => setShowApplyModal(false)}>
-                    <div className="apply-modal" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h3>Apply for {selectedJob.title}</h3>
-                            <button className="modal-close" onClick={() => setShowApplyModal(false)}>
-                                <i className="fas fa-times"></i>
-                            </button>
-                        </div>
-                        <div className="modal-body">
-                            <div className="job-summary">
-                                <p><strong>{selectedJob.company}</strong> • {selectedJob.location}</p>
-                                <p className="job-salary">{selectedJob.salary_range || selectedJob.salary || 'Salary not specified'}</p>
-                            </div>
-                            <form onSubmit={handleSubmitApplication}>
-                                <div className="form-group">
-                                    <label>Cover Letter</label>
-                                    <textarea 
-                                        rows="6" 
-                                        placeholder="Why are you a good fit for this position?"
-                                        value={coverLetter}
-                                        onChange={(e) => setCoverLetter(e.target.value)}
-                                        required
-                                    ></textarea>
-                                </div>
-                                <div className="form-group">
-                                    <label>Resume/CV</label>
-                                    <input 
-                                        type="file" 
-                                        accept=".pdf,.doc,.docx" 
-                                        onChange={(e) => setSelectedResume(e.target.files[0])}
-                                        required
-                                    />
-                                    <small>Accepted formats: PDF, DOC, DOCX (Max 5MB)</small>
-                                </div>
-                                <div className="modal-actions">
-                                    <button type="button" className="btn-cancel" onClick={() => setShowApplyModal(false)}>
-                                        Cancel
-                                    </button>
-                                    <button type="submit" className="btn-submit" disabled={submitting}>
-                                        {submitting ? 'Submitting...' : 'Submit Application'}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Job Alert Modal */}
-            {showAlertModal && (
-                <div className="modal-overlay" onClick={() => setShowAlertModal(false)}>
-                    <div className="alert-modal" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h3><i className="fas fa-bell"></i> Job Alerts</h3>
-                            <button className="modal-close" onClick={() => setShowAlertModal(false)}>
-                                <i className="fas fa-times"></i>
-                            </button>
-                        </div>
-                        <div className="modal-body">
-                            <p>Get notified when new jobs match your criteria</p>
-                            <div className="alert-options">
-                                <label className="alert-option">
-                                    <input 
-                                        type="checkbox" 
-                                        checked={alertSettings.daily}
-                                        onChange={(e) => setAlertSettings({...alertSettings, daily: e.target.checked})}
-                                    />
-                                    <span>Daily Digest</span>
-                                </label>
-                                <label className="alert-option">
-                                    <input 
-                                        type="checkbox" 
-                                        checked={alertSettings.weekly}
-                                        onChange={(e) => setAlertSettings({...alertSettings, weekly: e.target.checked})}
-                                    />
-                                    <span>Weekly Roundup</span>
-                                </label>
-                                <label className="alert-option">
-                                    <input 
-                                        type="checkbox" 
-                                        checked={alertSettings.instant}
-                                        onChange={(e) => setAlertSettings({...alertSettings, instant: e.target.checked})}
-                                    />
-                                    <span>Instant Alerts</span>
-                                </label>
-                            </div>
-                            <div className="modal-actions">
-                                <button type="button" className="btn-cancel" onClick={() => setShowAlertModal(false)}>
-                                    Cancel
-                                </button>
-                                <button type="button" className="btn-subscribe" onClick={handleSubscribeAlerts}>
-                                    Subscribe
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
             <div className="container">
-                {/* LEFT SIDEBAR - Filter button is here */}
+                {/* LEFT SIDEBAR */}
                 <div className={`left ${mobileSidebarOpen ? 'mobile-open' : ''}`}>
-                    <div className="sidebar-card">
+                    <div className="sidebar-single-container">
                         <button className="sidebar-close" onClick={toggleMobileSidebar}>
                             <i className="fas fa-times"></i>
                         </button>
 
                         {/* Profile Section */}
-                        <div className="profile-section">
+                        <div className="sidebar-profile">
                             <div className="profile-image-wrapper">
-                                <img 
-                                    src={getProfileImageUrl()} 
-                                    alt={currentUser?.name || 'Profile'} 
+                                <img
+                                    src={getProfileImageUrl()}
+                                    alt="Profile"
                                     className="profile-img"
                                     onError={(e) => {
                                         const userName = currentUser?.name || 'User';
@@ -564,130 +444,111 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
                             </button>
                         </div>
 
-                        {/* Mobile Navigation Links */}
-                        <div className="mobile-nav-section">
-                            <div className="mobile-nav-item" onClick={() => handleMenuClick('/dashboard')}>
+                        {/* Menu Items */}
+                        {/* Menu Items - Navigation Links */}
+                        <div className="sidebar-menu">
+                            <div className="menu-item" onClick={() => router.visit('/')}>
                                 <i className="fas fa-home"></i> Home
                             </div>
-                            <div className="mobile-nav-item active" onClick={() => handleMenuClick('/search-jobs')}>
-                                <i className="fas fa-search"></i> Jobs
+                            <div className="menu-item" onClick={() => router.visit('/dashboard')}>
+                                <i className="fas fa-envelope"></i> Dashboard
                             </div>
-                            <div className="mobile-nav-item" onClick={() => handleMenuClick('/explore')}>
+                            <div className="menu-item active" onClick={() => router.visit('/jobs')}>
+                                <i className="fas fa-briefcase"></i> Jobs
+                            </div>
+                            <div className="menu-item" onClick={() => router.visit('/explore')}>
                                 <i className="fas fa-compass"></i> Explore
                             </div>
-                            <div className="mobile-nav-item" onClick={() => handleMenuClick('/hire')}>
-                                <i className="fas fa-user-tie"></i> Hire
+                            <div className="menu-item" onClick={() => router.visit('/settings')}>
+                                <i className="fas fa-gear"></i> Settings
                             </div>
+                            <div className="menu-divider"></div>
                         </div>
 
-                        {/* Filter Button in Sidebar */}
-                        <div className="filter-sidebar-header">
-                            <button 
-                                className="filter-sidebar-btn"
-                                onClick={() => setShowSalaryFilter(!showSalaryFilter)}
-                            >
-                                <i className="fas fa-sliders-h"></i> Filters
-                                <i className={`fas fa-chevron-${showSalaryFilter ? 'up' : 'down'}`}></i>
-                            </button>
-                        </div>
-
-                        {/* Filters Container */}
-                        <div className="filters-container" style={{ display: showSalaryFilter ? 'block' : 'none' }}>
-                            <div className="filter-group">
-                                <h4 className="filter-title"><i className="fas fa-briefcase"></i> Job Type</h4>
-                                <div className="job-type-buttons">
-                                    {jobTypes.map(type => (
-                                        <button
-                                            key={type}
-                                            className={`job-type-btn ${activeFilter === type ? 'active' : ''}`}
-                                            onClick={() => setActiveFilter(type === 'All' ? 'all' : type)}
-                                        >
-                                            {type}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="filter-group">
-                                <h4 className="filter-title"><i className="fas fa-filter"></i> Quick Filters</h4>
-                                <div className="quick-filters">
-                                    <label className="checkbox-item">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={quickFilters.remoteOnly}
-                                            onChange={() => handleQuickFilterChange('remoteOnly')}
-                                        />
-                                        <span>Remote Only</span>
-                                    </label>
-                                    <label className="checkbox-item">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={quickFilters.easyApply}
-                                            onChange={() => handleQuickFilterChange('easyApply')}
-                                        />
-                                        <span>Easy Apply</span>
-                                    </label>
-                                    <label className="checkbox-item">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={quickFilters.urgentFeatured}
-                                            onChange={() => handleQuickFilterChange('urgentFeatured')}
-                                        />
-                                        <span>Urgent/Featured</span>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div className="filter-group">
-                                <h4 className="filter-title"><i className="fas fa-chart-line"></i> Experience Level</h4>
-                                <div className="experience-buttons">
-                                    {experienceLevels.map(level => (
-                                        <button
-                                            key={level}
-                                            className={`experience-btn ${experienceLevel === level ? 'active' : ''}`}
-                                            onClick={() => setExperienceLevel(level === 'All' ? 'all' : level)}
-                                        >
-                                            {level}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="filter-group">
-                                <div className="salary-range">
-                                    <div className="salary-header">
-                                        <span><i className="fas fa-dollar-sign"></i> Salary Range</span>
+                        {/* Filter Section - ALWAYS OPEN, NO TOGGLE BUTTON */}
+                        <div className="filter-section">
+                            <div className="filters-container">
+                                <div className="filter-group">
+                                    <h4 className="filter-title"><i className="fas fa-briefcase"></i> Job Type</h4>
+                                    <div className="job-type-buttons">
+                                        {jobTypes.map(type => (
+                                            <button
+                                                key={type}
+                                                className={`job-type-btn ${activeFilter === type ? 'active' : ''}`}
+                                                onClick={() => setActiveFilter(type === 'All' ? 'all' : type)}
+                                            >
+                                                {type}
+                                            </button>
+                                        ))}
                                     </div>
-                                    <div className="salary-slider">
-                                        <input 
-                                            type="range" 
-                                            min="0" 
-                                            max="200000" 
-                                            step="5000"
-                                            value={salaryRange[1]}
-                                            onChange={(e) => setSalaryRange([0, parseInt(e.target.value)])}
-                                        />
-                                        <div className="salary-values">
-                                            <span>₦{salaryRange[0].toLocaleString()}</span>
-                                            <span>₦{salaryRange[1].toLocaleString()}</span>
+                                </div>
+
+                                <div className="filter-group">
+                                    <h4 className="filter-title"><i className="fas fa-filter"></i> Quick Filters</h4>
+                                    <div className="quick-filters">
+                                        <label className="checkbox-item">
+                                            <input
+                                                type="checkbox"
+                                                checked={quickFilters.remoteOnly}
+                                                onChange={() => handleQuickFilterChange('remoteOnly')}
+                                            />
+                                            <span>Remote Only</span>
+                                        </label>
+                                        <label className="checkbox-item">
+                                            <input
+                                                type="checkbox"
+                                                checked={quickFilters.easyApply}
+                                                onChange={() => handleQuickFilterChange('easyApply')}
+                                            />
+                                            <span>Easy Apply</span>
+                                        </label>
+                                        <label className="checkbox-item">
+                                            <input
+                                                type="checkbox"
+                                                checked={quickFilters.urgentFeatured}
+                                                onChange={() => handleQuickFilterChange('urgentFeatured')}
+                                            />
+                                            <span>Urgent/Featured</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div className="filter-group">
+                                    <h4 className="filter-title"><i className="fas fa-chart-line"></i> Experience Level</h4>
+                                    <div className="experience-buttons">
+                                        {experienceLevels.map(level => (
+                                            <button
+                                                key={level}
+                                                className={`experience-btn ${experienceLevel === level ? 'active' : ''}`}
+                                                onClick={() => setExperienceLevel(level === 'All' ? 'all' : level)}
+                                            >
+                                                {level}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="filter-group">
+                                    <div className="salary-range">
+                                        <div className="salary-header">
+                                            <span><i className="fas fa-dollar-sign"></i> Salary Range</span>
+                                        </div>
+                                        <div className="salary-slider">
+                                            <input
+                                                type="range"
+                                                min="0"
+                                                max="200000"
+                                                step="5000"
+                                                value={salaryRange[1]}
+                                                onChange={(e) => setSalaryRange([0, parseInt(e.target.value)])}
+                                            />
+                                            <div className="salary-values">
+                                                <span>₦{salaryRange[0].toLocaleString()}</span>
+                                                <span>₦{salaryRange[1].toLocaleString()}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-
-                        <div className="menu-items">
-                            <div className="menu-item" onClick={() => handleMenuClick('/references')}>
-                                <i className="fa-solid fa-file-lines"></i> References
-                            </div>
-                            <div className="menu-item" onClick={() => handleMenuClick('/job-tracker')}>
-                                <i className="fa-solid fa-bookmark"></i> Job Tracker
-                            </div>
-                            <div className="menu-item" onClick={() => handleMenuClick('/career-insight')}>
-                                <i className="fa-solid fa-chart-line"></i> Career Insight
-                            </div>
-                            <div className="menu-item" onClick={() => setShowAlertModal(true)}>
-                                <i className="fa-solid fa-bell"></i> Job Alerts
                             </div>
                         </div>
                     </div>
@@ -698,67 +559,10 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
 
                 {/* RIGHT CONTENT */}
                 <div className="right">
-                    {/* Search Bar */}
-                    <div className="search-bar-container">
-                        <form onSubmit={handleSearchSubmit} className="search-form">
-                            <div className="search-input-group">
-                                <i className="fas fa-search search-input-icon"></i>
-                                <input 
-                                    type="text" 
-                                    placeholder="Search for jobs by title, company, or keywords..." 
-                                    value={searchTerm}
-                                    onChange={handleSearchChange}
-                                    className="search-input-field"
-                                />
-                                {searchTerm && (
-                                    <button 
-                                        type="button" 
-                                        className="clear-search-btn-field"
-                                        onClick={() => setSearchTerm('')}
-                                    >
-                                        <i className="fas fa-times"></i>
-                                    </button>
-                                )}
-                                <button type="submit" className="search-submit-btn">
-                                    <i className="fas fa-search"></i> Search
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-
-                    {/* Sort Bar */}
-                    <div className="sort-bar">
-                        <div className="sort-wrapper">
-                            <label className="sort-label">Sort by:</label>
-                            <select 
-                                value={sortBy} 
-                                onChange={(e) => setSortBy(e.target.value)}
-                                className="sort-select"
-                            >
-                                {sortOptions.map(option => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* Jobs Count */}
-                    <div className="jobs-count">
-                        <span>Found <strong>{jobsCount}</strong> jobs</span>
-                        {(searchTerm || activeFilter !== 'all' || quickFilters.remoteOnly || quickFilters.easyApply || quickFilters.urgentFeatured || experienceLevel !== 'all') && (
-                            <button className="clear-all-btn" onClick={handleClearSearch}>
-                                Clear All Filters
-                            </button>
-                        )}
-                    </div>
-
-                    {/* TOP PICKS SECTION */}
                     <div className="card">
                         <div className="card-header">
                             <h3>Top Jobs picks for you</h3>
-                            <p>Based on your profile, preferences, and activity</p>
+                            <p>Based on your profile, preferences, and activity like applies and saves</p>
                         </div>
 
                         {loading ? (
@@ -768,9 +572,7 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
                                 <i className="fas fa-search"></i>
                                 <h4>No recommended jobs found</h4>
                                 <p>We couldn't find any jobs matching your skills</p>
-                                <button className="clear-search-btn" onClick={handleClearSearch}>
-                                    Clear All Filters
-                                </button>
+                                <button className="clear-search-btn" onClick={handleClearSearch}>Clear All Filters</button>
                                 <div className="suggestions">
                                     <p>Try:</p>
                                     <div className="suggestion-tags">
@@ -793,62 +595,28 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
                                             <div className="job-header">
                                                 <h4>{job.title}</h4>
                                                 {matchPercentage > 0 && (
-                                                    <div className="match-badge" style={{ 
-                                                        background: `linear-gradient(135deg, ${getMatchColor(matchPercentage)} 0%, ${getMatchColor(matchPercentage - 10)} 100%)`
-                                                    }}>
+                                                    <div className="match-badge" style={{ background: `linear-gradient(135deg, ${getMatchColor(matchPercentage)} 0%, ${getMatchColor(matchPercentage - 10)} 100%)` }}>
                                                         <i className="fas fa-chart-line"></i> {matchPercentage}% Match
                                                     </div>
                                                 )}
                                             </div>
                                             <p>{job.company} • {job.location}</p>
                                             <span className="job-tags">{job.tags?.join(' • ') || job.job_type}</span>
-                                            {job.experience_level && (
-                                                <span className="experience-tag">{job.experience_level}</span>
-                                            )}
+                                            {job.experience_level && <span className="experience-tag">{job.experience_level}</span>}
                                             <div className="job-meta">
                                                 <span>{job.posted_at}</span>
-                                                {job.salary_range && (
-                                                    <span className="salary-tag">{job.salary_range}</span>
-                                                )}
+                                                {job.salary_range && <span className="salary-tag">{job.salary_range}</span>}
                                             </div>
-                                            <span 
-                                                className={`save-job-span ${savedJobs.includes(job.id) ? 'saved' : ''}`}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleSaveJob(job.id);
-                                                }}
-                                            >
-                                                {savedJobs.includes(job.id) ? 'Saved' : 'Save Job'} 
+                                            <span className={`save-job-span ${savedJobs.includes(job.id) ? 'saved' : ''}`} onClick={(e) => { e.stopPropagation(); handleSaveJob(job.id); }}>
+                                                {savedJobs.includes(job.id) ? 'Saved' : 'Save Job'}
                                                 <i className="fa-regular fa-bookmark"></i>
                                             </span>
                                         </div>
                                         <div className="job-actions-row">
-                                            <button
-                                                className="apply-now-btn"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleApplyNow(job);
-                                                }}
-                                            >
-                                                Apply Now
-                                            </button>
-                                            <button
-                                                className="easy-apply-btn"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleEasyApply(job);
-                                                }}
-                                            >
-                                                Easy Apply <i className="fa-solid fa-paper-plane"></i>
-                                            </button>
+                                            <button className="apply-now-btn" onClick={(e) => { e.stopPropagation(); handleApplyNow(job); }}>Apply Now</button>
+                                            <button className="easy-apply-btn" onClick={(e) => { e.stopPropagation(); handleEasyApply(job); }}>Easy Apply <i className="fa-solid fa-paper-plane"></i></button>
                                         </div>
-                                        <i 
-                                            className="fa-solid fa-times-circle close" 
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleDismissJob(job.id);
-                                            }}
-                                        ></i>
+                                        <i className="fa-solid fa-times-circle close" onClick={(e) => { e.stopPropagation(); handleDismissJob(job.id); }}></i>
                                     </div>
                                 );
                             })
@@ -861,7 +629,6 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
                         )}
                     </div>
 
-                    {/* EXPLORE SECTION */}
                     <div className="card">
                         <div className="card-header">
                             <h3>Explore with job collections</h3>
@@ -888,9 +655,7 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
                                             <div className="job-header">
                                                 <h4>{job.title}</h4>
                                                 {matchPercentage > 0 && (
-                                                    <div className="match-badge" style={{ 
-                                                        background: `linear-gradient(135deg, ${getMatchColor(matchPercentage)} 0%, ${getMatchColor(matchPercentage - 10)} 100%)`
-                                                    }}>
+                                                    <div className="match-badge" style={{ background: `linear-gradient(135deg, ${getMatchColor(matchPercentage)} 0%, ${getMatchColor(matchPercentage - 10)} 100%)` }}>
                                                         <i className="fas fa-chart-line"></i> {matchPercentage}% Match
                                                     </div>
                                                 )}
@@ -902,32 +667,10 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
                                             </div>
                                         </div>
                                         <div className="job-actions-row">
-                                            <button
-                                                className="apply-now-btn"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleApplyNow(job);
-                                                }}
-                                            >
-                                                Apply Now
-                                            </button>
-                                            <button
-                                                className="easy-apply-btn"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleEasyApply(job);
-                                                }}
-                                            >
-                                                Easy Apply <i className="fa-solid fa-paper-plane"></i>
-                                            </button>
+                                            <button className="apply-now-btn" onClick={(e) => { e.stopPropagation(); handleApplyNow(job); }}>Apply Now</button>
+                                            <button className="easy-apply-btn" onClick={(e) => { e.stopPropagation(); handleEasyApply(job); }}>Easy Apply <i className="fa-solid fa-paper-plane"></i></button>
                                         </div>
-                                        <i 
-                                            className="fa-solid fa-times-circle close"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleDismissJob(job.id);
-                                            }}
-                                        ></i>
+                                        <i className="fa-solid fa-times-circle close" onClick={(e) => { e.stopPropagation(); handleDismissJob(job.id); }}></i>
                                     </div>
                                 );
                             })
@@ -941,6 +684,14 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
                     </div>
                 </div>
             </div>
+
+            {/* Toast Notification */}
+            {toast.show && (
+                <div className={`toast-notification ${toast.type}`}>
+                    <i className={`fas ${toast.type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}`}></i>
+                    <span>{toast.message}</span>
+                </div>
+            )}
         </>
     );
 }

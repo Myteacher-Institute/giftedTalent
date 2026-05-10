@@ -1,6 +1,7 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import Notification from './Notification';
+import ApplicationLogo from './ApplicationLogo'; // Add this import
 
 const AppNavbar = ({ user, newJobsCount, onMenuToggle, isMenuOpen }) => {
     const [scrolled, setScrolled] = useState(false);
@@ -52,15 +53,15 @@ const AppNavbar = ({ user, newJobsCount, onMenuToggle, isMenuOpen }) => {
     return (
         <>
             <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
-                <Link href="/" className="logo">
-                    <span className="blue">GiftedTalents</span>.Online
+                {/* Logo with image */}
+                <Link href="/" className="logo-container">
+                    <ApplicationLogo className="logo-image" />
                 </Link>
 
                 <div className={`nav-links ${mobileNavOpen ? 'mobile-open' : ''}`}>
                     <Link href="/" onClick={handleNavClick}>Home</Link>
                     <Link href="/search-jobs" onClick={handleNavClick}>Jobs</Link>
                     <Link href="/explore" onClick={handleNavClick}>Explore</Link>
-                    {/* <Link href="/hire">Hire</Link> */}
                 </div>
 
                 <div className="search">

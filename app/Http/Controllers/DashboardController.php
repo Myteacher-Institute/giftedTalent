@@ -11,6 +11,7 @@ use Inertia\Inertia;
 use App\Models\Skill;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\JobApplication;
 
 class DashboardController extends Controller
 {
@@ -33,7 +34,8 @@ class DashboardController extends Controller
             'experiences', 
             'applications', 
             'resumes', 
-            'notifications'
+            'notifications',
+            'educations',
         ]);
         
         $profile = $user->profile;
@@ -94,18 +96,19 @@ class DashboardController extends Controller
             
             return [
                 'id' => $job->id,
-                'title' => $job->job_title ?? $job->title ?? 'Job Title',
-                'company' => $job->company_name ?? $job->company ?? 'Company',
-                'location' => $job->company_location ?? $job->location ?? 'Location',
+                'company_name' => $job->company_name ?? $job->company ?? 'Company',
+                'company_logo_url' => $job->company_logo_url ?? null,
+                'job_title' => $job->job_title ?? $job->title ?? 'Job Title',
+                'company_location' => $job->company_location ?? $job->location ?? 'Location',
                 'job_type' => $job->job_type ?? 'Full-time',
                 'salary_range' => $job->salary_range ?? $job->salary ?? null,
-                'description' => substr($job->description ?? '', 0, 120),
+                'description' => substr($job->description ?? '', 0, 150),
                 'tags' => is_array($job->required_skills) ? array_slice($job->required_skills, 0, 3) : [],
                 'match_score' => round($matchScore),
                 'match_reasons' => $matchReasons,
                 'posted_at' => $job->created_at ? $job->created_at->diffForHumans() : 'Recently',
                 'easy_apply' => $job->easy_apply ?? false,
-                'image' => $job->logo_url ?? 'https://i.pravatar.cc/40?img=' . $job->id,
+                'applicants_count' => $job->applicants_count ?? 0,
             ];
         })->filter(function($job) {
             return $job['match_score'] > 0;
@@ -139,29 +142,34 @@ class DashboardController extends Controller
             $jobsQuery->where('company_location', 'like', '%' . $location . '%');
         }
 
-        // Recommended jobs (now filtered admin jobs)
+        // Get filtered admin jobs
+        $userSkillsCollection = $user->skills ? $user->skills->pluck('name') : collect();
         $adminJobs = $jobsQuery->limit(10)->get();
-        
-        // No fallback jobs - skip skill matching for now
-        $fallbackJobs = collect();
 
-        $jobs = $adminJobs->merge($fallbackJobs);
+        if ($adminJobs->isEmpty() && $userSkillsCollection->isNotEmpty()) {
+            $fallbackJobs = Job::where('status', 'active')
+                ->where(function($q) use ($userSkillsCollection) {
+                    foreach ($userSkillsCollection as $skill) {
+                        $q->orWhere('job_title', 'like', '%' . $skill . '%')
+                          ->orWhere('description', 'like', '%' . $skill . '%');
+                    }
+                })->limit(5)->get();
+            $jobs = $fallbackJobs;
+        } else {
+            $jobs = $adminJobs;
+        }
 
-        // Profile completion status from user model
-        $profileComplete = $user->profile_completed;
-        
-        // Get profile status for checklist items
-        $profileStatus = [
-            'status' => [
-                'portfolio' => !empty($profile->portfolio_url),
-                'experience' => $user->experiences()->count() > 0,
-                'email_verified' => !is_null($user->email_verified_at),
-                'skills' => $user->skills()->count() > 0,
-                'cv_uploaded' => $user->resumes()->count() > 0,
-            ]
-        ];
+        // Profile completion status
+        $profileStatus = ['percent' => 0, 'status' => []];
+        $profileComplete = 0;
+        if ($user->profile) {
+            $completion = $this->calculateProfileCompletion($user->profile);
+            $profileStatus = $completion;
+            $profileComplete = $completion['percent'];
+        }
 
-        // Job types for filter
+        // Notifications data for bell/navbar
+        // Extract job types before return
         $jobTypes = Job::whereHas('user', fn($q) => $q->where('is_admin', true))
                           ->distinct()
                           ->pluck('job_type')
@@ -201,19 +209,52 @@ class DashboardController extends Controller
                 ->map(function($job) {
                     return [
                         'id' => $job->id,
-                        'company' => $job->company_name ?? $job->company ?? 'Company',
-                        'title' => $job->job_title ?? $job->title,  
-                        'tags' => ($job->job_type ?? 'Full-time') . ($job->company_location ? ' • ' . $job->company_location : ''),
-                        'time' => $job->created_at ? $job->created_at->diffForHumans() : 'Recently',
-                        'image' => $job->logo_url ?? 'https://i.pravatar.cc/40?img=' . $job->id,
-                        'type' => $job->job_type ?? 'Full-time',
-                        'location' => $job->company_location ?? 'Remote',
+                        'company_name' => $job->company_name ?? $job->company ?? 'Company',
+                        'company_logo_url' => $job->company_logo_url ?? null,
+                        'job_title' => $job->job_title ?? $job->title,
+                        'company_location' => $job->company_location ?? 'Remote',
+                        'job_type' => $job->job_type ?? 'Full-time',
+                        'salary_range' => $job->salary_range ?? null,
+                        'description' => substr($job->description ?? '', 0, 120),
+                        'posted_at' => $job->created_at ? $job->created_at->diffForHumans() : 'Recently',
                         'match_score' => 0,
+                        'easy_apply' => $job->easy_apply ?? false,
                     ];
                 })
                 ->toArray();
         }
-        // =======================================================
+
+        // Map jobs to include all necessary fields for the frontend
+        $mappedJobs = $jobs->map(function($job) use ($userSkillsCollection) {
+            // Calculate match score for regular jobs
+            $matchScore = 0;
+            $jobSkills = is_array($job->required_skills) ? $job->required_skills : [];
+            if (!empty($jobSkills) && $userSkillsCollection->isNotEmpty()) {
+                $matchingSkills = array_intersect(
+                    array_map('strtolower', $userSkillsCollection->toArray()),
+                    array_map('strtolower', $jobSkills)
+                );
+                if (count($jobSkills) > 0) {
+                    $matchScore = round((count($matchingSkills) / count($jobSkills)) * 100);
+                }
+            }
+            
+            return [
+                'id' => $job->id,
+                'company_name' => $job->company_name ?? 'Company',
+                'company_logo_url' => $job->company_logo_url ?? null,
+                'job_title' => $job->job_title ?? 'Job Title',
+                'company_location' => $job->company_location ?? 'Location',
+                'job_type' => $job->job_type ?? 'Full-time',
+                'salary_range' => $job->salary_range ?? null,
+                'description' => substr($job->description ?? '', 0, 150),
+                'posted_at' => $job->created_at ? $job->created_at->diffForHumans() : 'Recently',
+                'match_score' => $matchScore,
+                'easy_apply' => $job->easy_apply ?? false,
+                'applicants_count' => $job->applicants_count ?? 0,
+                'tags' => $job->job_type . ($job->company_location ? ' • ' . $job->company_location : ''),
+            ];
+        });
 
         return Inertia::render('Dashboard', [
             'auth' => [
@@ -223,23 +264,16 @@ class DashboardController extends Controller
             'profileComplete' => $profileComplete,
             'profileStatus' => $profileStatus,
             'stats' => [
-                'applied' => $user->applications()->count(),
-                'pending_cv' => $user->resumes()->pending()->count(),
-                'approved_cv' => $user->resumes()->approved()->count(),
-                'rejected_cv' => $user->resumes()->rejected()->count(),
-            ],
+    'applied' => JobApplication::where('user_id', $user->id)->count(),
+    'review' => JobApplication::where('user_id', $user->id)->where('status', 'pending')->count(),
+    'interview' => JobApplication::where('user_id', $user->id)->where('status', 'interview')->count(),
+    'rejected' => JobApplication::where('user_id', $user->id)->where('status', 'rejected')->count(),
+    'pending_cv' => $user->resumes()->pending()->count(),
+    'approved_cv' => $user->resumes()->approved()->count(),
+    'rejected_cv' => $user->resumes()->rejected()->count(),
+],
             'resumes' => $user->resumes,
-            'jobs' => $jobs->map(fn($job) => [
-                'id' => $job->id,
-                'company' => $job->company_name ?? $job->company ?? 'Company',
-                'title' => $job->job_title ?? $job->title,
-                'tags' => $job->job_type . ($job->company_location ? ' • ' . $job->company_location : ''),
-                'time' => $job->created_at->diffForHumans(),
-                'image' => $job->logo_url ?? 'https://i.pravatar.cc/40?img=' . $job->id,
-                'type' => $job->job_type,
-                'location' => $job->company_location,
-                'match_score' => $this->calculateMatchScore($user, $job),
-            ]),
+            'jobs' => $mappedJobs,
             'searchParams' => [
                 'q' => $query,
                 'job_type' => $jobType,
@@ -252,18 +286,33 @@ class DashboardController extends Controller
         ]);
     }
 
-    private function calculateMatchScore($user, $job)
+    private function calculateProfileCompletion(Profile $profile): array
     {
-        $userSkills = $user->skills->pluck('name')->toArray();
-        $jobSkills = $job->required_skills ?? [];
+        $user = $profile->user;
         
-        if (empty($jobSkills)) {
-            return 0;
-        }
+        $status = [
+            'email_verified' => $user->email_verified_at !== null,
+            'name' => !empty($user->name),
+            'phone' => !empty($profile->phone) || !empty($user->phone),
+            'position' => !empty($profile->position),
+            'company' => !empty($profile->company),
+            'bio' => !empty($profile->bio) && strlen(trim($profile->bio)) > 20,
+            'skills' => $user->skills()->count() >= 1,
+            'experience' => $user->experiences()->count() > 0,
+            'education' => $user->educations()->count() > 0,
+            'portfolio' => !empty($profile->portfolio_url),
+            'location' => !empty($profile->city) || !empty($profile->address),
+            'cv_uploaded' => $user->resumes()->count() > 0,
+        ];
+
+        $total = count($status);
+        $complete = array_sum(array_map(fn($v) => $v ? 1 : 0, $status));
         
-        $matchingSkills = array_intersect($userSkills, $jobSkills);
-        $score = (count($matchingSkills) / count($jobSkills)) * 100;
+        $percent = round(($complete / $total) * 100);
         
-        return round($score);
+        return [
+            'percent' => min($percent, 100),
+            'status' => $status
+        ];
     }
 }

@@ -1,19 +1,19 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, router, Link } from '@inertiajs/react';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import '../../css/userProfile.css';
 
-export default function EditProfile({ user, profile }) {
-    const { data, setData, patch, processing, errors, clearErrors, reset } = useForm({
+export default function EditProfile({ user }) {
+    const { data, setData, patch, processing, errors, clearErrors } = useForm({
         first_name: '',
         last_name: '',
         email: '',
         phone: '',
         position: '',
+        company: '',
         education: '',
         bio: '',
         city: '',
@@ -22,620 +22,801 @@ export default function EditProfile({ user, profile }) {
         linkedin_url: '',
         github_url: '',
         portfolio_url: '',
-        title: '',
-        company: '',
         employment_type: '',
         start_date: '',
-        profile_image: '', // This will store base64 image
+        availability_status: '',
     });
 
-    // State variables
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [hasChanges, setHasChanges] = useState(false);
-    const [uploading, setUploading] = useState(false);
-    const [previewImage, setPreviewImage] = useState(null);
-    const initialData = useRef({});
+    // Experience states
+    const [experiences, setExperiences] = useState([]);
+    const [showExpForm, setShowExpForm] = useState(false);
+    const [editingExp, setEditingExp] = useState(null);
+    const [expForm, setExpForm] = useState({
+        company: '',
+        position: '',
+        location: '',
+        start_date: '',
+        end_date: '',
+        is_current: false,
+        description: '',
+    });
 
-    // Employment types for dropdown
-    const employmentTypes = ['Full-time', 'Part-time', 'Contract', 'Remote', 'Internship', 'Freelance'];
+    // Skills states
+    const [skills, setSkills] = useState([]);
+    const [newSkill, setNewSkill] = useState('');
+    const [skillLevel, setSkillLevel] = useState('intermediate');
 
     // Populate form with current values on mount
     useEffect(() => {
         if (user) {
-            // Get profile data from either profile or user.profile
-            const userProfile = profile || user.profile || {};
-            
-            const formData = {
+            setData({
                 first_name: user.name ? user.name.split(' ')[0] || '' : '',
                 last_name: user.name ? user.name.split(' ').slice(1).join(' ') || '' : '',
                 email: user.email || '',
-                phone: userProfile.phone || user.phone || '',
-                position: userProfile.position || '',
-                education: userProfile.education || '',
-                bio: userProfile.bio || '',
-                city: userProfile.city || '',
-                address: userProfile.address || '',
-                country: userProfile.country || '',
-                linkedin_url: userProfile.linkedin_url || '',
-                github_url: userProfile.github_url || '',
-                portfolio_url: userProfile.portfolio_url || '',
-                title: userProfile.title || userProfile.position || '',
-                company: userProfile.company || '',
-                employment_type: userProfile.employment_type || '',
-                start_date: userProfile.start_date || '',
-                profile_image: '',
-            };
-            setData(formData);
-            initialData.current = { ...formData };
-            
-            // Set preview image from existing avatar (check for base64 first)
-            if (userProfile.profile_image_base64) {
-                setPreviewImage(userProfile.profile_image_base64);
-            } else if (userProfile.avatar_url) {
-                setPreviewImage(userProfile.avatar_url);
-            } else if (userProfile.avatar) {
-                if (userProfile.avatar.startsWith('data:image')) {
-                    setPreviewImage(userProfile.avatar);
-                } else if (userProfile.avatar.startsWith('/storage/')) {
-                    setPreviewImage(userProfile.avatar);
-                } else {
-                    setPreviewImage(`/storage/${userProfile.avatar}`);
-                }
-            } else if (user.avatar) {
-                if (user.avatar.startsWith('data:image')) {
-                    setPreviewImage(user.avatar);
-                } else {
-                    setPreviewImage(user.avatar);
-                }
-            }
+                phone: user.profile?.phone || '',
+                position: user.profile?.position || '',
+                company: user.profile?.company || '',
+                education: user.profile?.education || '',
+                bio: user.profile?.bio || '',
+                city: user.profile?.city || '',
+                address: user.profile?.address || '',
+                country: user.profile?.country || '',
+                linkedin_url: user.profile?.linkedin_url || '',
+                github_url: user.profile?.github_url || '',
+                portfolio_url: user.profile?.portfolio_url || '',
+                employment_type: user.profile?.employment_type || '',
+                start_date: user.profile?.start_date || '',
+                availability_status: user.profile?.availability_status || '',
+            });
         }
-    }, [user, profile, setData]);
 
-    // Track changes
-    useEffect(() => {
-        const hasAnyChanges = Object.keys(data).some(
-            key => data[key] !== initialData.current[key]
-        );
-        setHasChanges(hasAnyChanges);
-    }, [data]);
+        // Load experiences
+        if (user?.experiences) {
+            setExperiences(user.experiences);
+        }
 
-    // Convert file to base64
-    const convertToBase64 = (file) => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = (error) => reject(error);
-        });
-    };
+        // Load skills
+        if (user?.skills) {
+            setSkills(user.skills);
+        }
+    }, [user]);
+
+    const [uploading, setUploading] = useState(false);
 
     const submit = (e) => {
         e.preventDefault();
-        
-        if (isSubmitting) return;
-        
-        // Find only the fields that have changed
-        const changedFields = {};
-        Object.keys(data).forEach(key => {
-            if (data[key] !== initialData.current[key] && data[key] !== '') {
-                changedFields[key] = data[key];
-            }
-        });
-        
-        // Always include profile_image if it was changed
-        if (data.profile_image !== initialData.current.profile_image && data.profile_image !== '') {
-            changedFields.profile_image = data.profile_image;
-        }
-        
-        // Check if there are any changes
-        if (Object.keys(changedFields).length === 0) {
-            if (window.alertify) {
-                alertify.message('No changes to update');
-            } else {
-                alert('No changes to update');
-            }
-            return;
-        }
-        
         clearErrors();
-        setIsSubmitting(true);
-        
-        // Show loading message
-        if (window.alertify) {
-            alertify.message('Saving your changes...');
-        }
-        
-        // Use PATCH method
-        patch(route('profile.updateExtended'), changedFields, {
-            preserveState: false,
-            preserveScroll: true,
-            onSuccess: (response) => {
-                if (window.alertify) {
+
+        patch(route('profile.updateExtended'), {
+            onSuccess: () => {
+                if (typeof alertify !== 'undefined') {
                     alertify.success('Profile updated successfully!');
                 }
-                sessionStorage.setItem('profileUpdated', 'true');
-                sessionStorage.setItem('profileUpdateTime', Date.now().toString());
-                
-                // FORCE FULL PAGE RELOAD - This ensures navbar and dashboard get fresh data
-                window.location.href = '/dashboard';
+                router.reload();
             },
             onError: (errors) => {
                 console.error('Validation errors:', errors);
-                if (window.alertify) {
+                if (typeof alertify !== 'undefined') {
                     alertify.error('Please check the form for errors.');
                 }
-                setIsSubmitting(false);
             }
         });
     };
 
-    // Reset form function
-    const resetForm = () => {
-        setData(initialData.current);
-        const userProfile = profile || user?.profile || {};
-        if (userProfile.profile_image_base64) {
-            setPreviewImage(userProfile.profile_image_base64);
-        } else if (userProfile.avatar_url) {
-            setPreviewImage(userProfile.avatar_url);
-        } else {
-            setPreviewImage(null);
+    // ========== EXPERIENCE FUNCTIONS ==========
+    const handleAddExperience = async () => {
+        try {
+            const response = await fetch('/profile/experiences', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                },
+                body: JSON.stringify(expForm),
+            });
+
+            if (response.ok) {
+                const newExp = await response.json();
+                setExperiences([...experiences, newExp]);
+                setExpForm({
+                    company: '',
+                    position: '',
+                    location: '',
+                    start_date: '',
+                    end_date: '',
+                    is_current: false,
+                    description: '',
+                });
+                setShowExpForm(false);
+                if (typeof alertify !== 'undefined') {
+                    alertify.success('Experience added successfully!');
+                }
+                router.reload();
+            }
+        } catch (error) {
+            console.error('Error adding experience:', error);
         }
-        if (window.alertify) {
-            alertify.message('Changes discarded');
-        }
-        setHasChanges(false);
     };
 
-    // Handle image upload with base64 conversion
-    const handleImageUpload = async (e) => {
+    const handleUpdateExperience = async () => {
+        try {
+            const response = await fetch(`/profile/experiences/${editingExp.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                },
+                body: JSON.stringify(expForm),
+            });
+
+            if (response.ok) {
+                const updated = await response.json();
+                setExperiences(experiences.map(exp => exp.id === editingExp.id ? updated : exp));
+                setEditingExp(null);
+                setExpForm({
+                    company: '',
+                    position: '',
+                    location: '',
+                    start_date: '',
+                    end_date: '',
+                    is_current: false,
+                    description: '',
+                });
+                if (typeof alertify !== 'undefined') {
+                    alertify.success('Experience updated!');
+                }
+                router.reload();
+            }
+        } catch (error) {
+            console.error('Error updating experience:', error);
+        }
+    };
+
+    const handleDeleteExperience = async (id) => {
+        if (!confirm('Delete this experience?')) return;
+
+        try {
+            const response = await fetch(`/profile/experiences/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                },
+            });
+
+            if (response.ok) {
+                setExperiences(experiences.filter(exp => exp.id !== id));
+                if (typeof alertify !== 'undefined') {
+                    alertify.success('Experience deleted!');
+                }
+            }
+        } catch (error) {
+            console.error('Error deleting experience:', error);
+        }
+    };
+
+    // ========== SKILLS FUNCTIONS ==========
+    const handleAddSkill = async () => {
+        if (!newSkill.trim()) return;
+
+        try {
+            const response = await fetch('/profile/skills', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                },
+                body: JSON.stringify({
+                    name: newSkill,
+                    proficiency_level: skillLevel,
+                }),
+            });
+
+            if (response.ok) {
+                const addedSkill = await response.json();
+                setSkills([...skills, addedSkill]);
+                setNewSkill('');
+                setSkillLevel('intermediate');
+                if (typeof alertify !== 'undefined') {
+                    alertify.success('Skill added!');
+                }
+                router.reload();
+            }
+        } catch (error) {
+            console.error('Error adding skill:', error);
+        }
+    };
+
+    const handleDeleteSkill = async (skillId) => {
+        try {
+            const response = await fetch(`/profile/skills/${skillId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                },
+            });
+
+            if (response.ok) {
+                setSkills(skills.filter(s => s.id !== skillId));
+                if (typeof alertify !== 'undefined') {
+                    alertify.success('Skill removed');
+                }
+            }
+        } catch (error) {
+            console.error('Error deleting skill:', error);
+        }
+    };
+
+    const uploadAvatar = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-        if (!validTypes.includes(file.type)) {
-            if (window.alertify) {
-                alertify.error('Please upload a valid image file (JPEG, PNG, GIF, or WebP)');
-            }
-            return;
-        }
-
-        if (file.size > 5 * 1024 * 1024) {
-            if (window.alertify) {
-                alertify.error('Image size should be less than 5MB');
-            }
-            return;
-        }
-
         setUploading(true);
+        const formData = new FormData();
+        formData.append('avatar', file);
+
         try {
-            const base64 = await convertToBase64(file);
-            setData('profile_image', base64);
-            setPreviewImage(base64);
-            if (window.alertify) {
-                alertify.success('Image ready. Click Save Changes to apply.');
-            }
+            await router.post(route('profile.avatar.upload'), formData, {
+                forceFormData: true,
+                preserveState: true,
+                onSuccess: () => {
+                    router.reload();
+                }
+            });
         } catch (error) {
             console.error('Upload failed', error);
-            if (window.alertify) {
-                alertify.error('Failed to process image');
-            }
         } finally {
             setUploading(false);
         }
     };
 
-    const removeAvatar = () => {
-        if (window.confirm('Remove profile picture?')) {
-            setData('profile_image', '');
-            setPreviewImage(null);
-            if (window.alertify) {
-                alertify.message('Image will be removed when you save changes');
-            }
+    const removeAvatar = async () => {
+        if (!confirm('Remove profile picture?')) return;
+
+        try {
+            await router.delete(route('profile.avatar.remove'), {
+                preserveState: true,
+            });
+            router.reload();
+        } catch (error) {
+            console.error('Remove failed', error);
         }
     };
 
-    // Function to get profile image URL with proper fallback
-    const getProfileImageUrl = () => {
-        if (previewImage) {
-            return previewImage;
-        }
-        const userProfile = profile || user?.profile || {};
-        if (userProfile.profile_image_base64) {
-            return userProfile.profile_image_base64;
-        }
-        if (userProfile.avatar_url) {
-            return userProfile.avatar_url;
-        }
-        if (userProfile.avatar) {
-            const avatarPath = userProfile.avatar;
-            if (avatarPath.startsWith('data:image')) {
-                return avatarPath;
-            }
-            if (avatarPath.startsWith('/storage/')) {
-                return avatarPath;
-            }
-            return `/storage/${avatarPath}`;
-        }
-        if (user?.avatar) {
-            if (user.avatar.startsWith('data:image')) {
-                return user.avatar;
-            }
-            return user.avatar;
-        }
-        const userName = user?.name || 'User';
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
+    const initials = user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'JD';
+    const hasAvatar = user?.profile?.avatar_url || user?.profile?.avatar;
+
+    const handleChange = (e, field) => {
+        setData(field, e.target.value);
     };
 
     return (
         <>
             <Head title="Edit Profile" />
-            <div className="profile-edit-page">
-                {/* Back to Dashboard Button */}
-                <div className="back-to-dashboard">
-                    <Link href="/dashboard" className="back-btn">
-                        <i className="fas fa-arrow-left"></i> Back to Dashboard
-                    </Link>
-                </div>
-                
-                <div className="py-12">
-                    <div className="container">
-                        <div className="card">
-                            <div className="card-header">
-                                <h1 className="card-title">Edit Profile</h1>
-                                <p className="card-subtitle">Update your personal and professional details</p>
+            <div className="profile-edit-container">
+                <div className="profile-edit-card">
+                    {/* Header */}
+                    <div className="profile-edit-header">
+                        <Link href="/dashboard" className="back-to-dashboard">
+                            <i className="fas fa-arrow-left"></i> Back to Dashboard
+                        </Link>
+                        <h1>Edit Profile</h1>
+                        <p>Update your personal and professional details</p>
+                    </div>
+
+                    {/* Avatar Section */}
+                    <div className="profile-avatar-section">
+                        <div className="profile-avatar-wrapper">
+                            {hasAvatar ? (
+                                <img
+                                    src={user.profile?.avatar_url || user.profile?.avatar}
+                                    alt="Profile"
+                                    className="profile-avatar-img"
+                                />
+                            ) : (
+                                <div className="profile-avatar-initials">
+                                    {initials}
+                                </div>
+                            )}
+                            <div className="profile-verified-badge">
+                                <i className="fas fa-check-circle"></i>
                             </div>
-
-                            {/* Profile Image Section */}
-                            <div className="profile-section">
-                                <div className="profile-left">
-                                    <div className="profile-image-wrapper">
-                                        <img 
-                                            src={getProfileImageUrl()} 
-                                            alt={user?.name || 'Profile'} 
-                                            className="profile-image"
-                                            onError={(e) => {
-                                                const userName = user?.name || 'User';
-                                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
-                                            }}
-                                        />
-                                        <div className="verified-overlay">
-                                            <i className="fa-solid fa-check-circle"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="profile-right">
-                                    <div className="profile-info">
-                                        <div className="profile-name">{user?.name || 'User'}</div>
-                                        <div className="profile-experience">
-                                            {data.title || data.position || 'Add your title'} at {data.company || 'Add company'}
-                                        </div>
-                                    </div>
-                                    <div className="profile-actions">
-                                        <label htmlFor="avatar-upload" className="btn-upload">
-                                            <i className="fa-solid fa-camera"></i> 
-                                            {uploading ? 'Processing...' : 'Change Photo'}
-                                            <input 
-                                                id="avatar-upload"
-                                                type="file" 
-                                                onChange={handleImageUpload}
-                                                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-                                                className="hidden"
-                                                disabled={uploading || isSubmitting}
-                                            />
-                                        </label>
-                                        {(previewImage || profile?.avatar || profile?.profile_image_base64) && (
-                                            <button 
-                                                type="button"
-                                                onClick={removeAvatar} 
-                                                className="btn-remove" 
-                                                disabled={uploading || isSubmitting}
-                                            >
-                                                <i className="fa-solid fa-trash"></i> Remove
-                                            </button>
-                                        )}
-                                    </div>
-                                    <p className="text-xs text-gray-500">
-                                        Max size: 5MB. Supported formats: JPG, PNG, GIF, WebP
-                                    </p>
-                                </div>
-                            </div>
-
-                            <form onSubmit={submit}>
-                                {/* Personal Information */}
-                                <div className="section-title">
-                                    <i className="fas fa-user-circle"></i>
-                                    Personal Information
-                                </div>
-
-                                <div className="form-row">
-                                    <div className="form-group">
-                                        <label htmlFor="first_name">First Name</label>
-                                        <TextInput
-                                            id="first_name"
-                                            value={data.first_name}
-                                            onChange={(e) => setData('first_name', e.target.value)}
-                                            className="mt-1 block w-full"
-                                            disabled={isSubmitting}
-                                        />
-                                        <InputError message={errors.first_name} />
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label htmlFor="last_name">Last Name</label>
-                                        <TextInput
-                                            id="last_name"
-                                            value={data.last_name}
-                                            onChange={(e) => setData('last_name', e.target.value)}
-                                            className="mt-1 block w-full"
-                                            disabled={isSubmitting}
-                                        />
-                                        <InputError message={errors.last_name} />
-                                    </div>
-                                </div>
-
-                                <div className="form-row">
-                                    <div className="form-group full-width">
-                                        <label htmlFor="email">Email</label>
-                                        <TextInput
-                                            id="email"
-                                            type="email"
-                                            value={data.email}
-                                            onChange={(e) => setData('email', e.target.value)}
-                                            className="mt-1 block w-full"
-                                            disabled={isSubmitting}
-                                        />
-                                        <InputError message={errors.email} />
-                                    </div>
-                                </div>
-
-                                <div className="form-row">
-                                    <div className="form-group">
-                                        <label htmlFor="phone">Phone Number</label>
-                                        <TextInput
-                                            id="phone"
-                                            type="tel"
-                                            value={data.phone}
-                                            onChange={(e) => setData('phone', e.target.value)}
-                                            className="mt-1 block w-full"
-                                            placeholder="e.g. 08012345678"
-                                            disabled={isSubmitting}
-                                        />
-                                        <InputError message={errors.phone} />
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label htmlFor="employment_type">Employment Type</label>
-                                        <select
-                                            id="employment_type"
-                                            value={data.employment_type}
-                                            onChange={(e) => setData('employment_type', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                            disabled={isSubmitting}
-                                        >
-                                            <option value="">Select employment type</option>
-                                            {employmentTypes.map(type => (
-                                                <option key={type} value={type}>{type}</option>
-                                            ))}
-                                        </select>
-                                        <InputError message={errors.employment_type} />
-                                    </div>
-                                </div>
-
-                                {/* Professional Details */}
-                                <div className="section-title">
-                                    <i className="fas fa-briefcase"></i>
-                                    Professional Details
-                                </div>
-
-                                <div className="form-row">
-                                    <div className="form-group">
-                                        <label htmlFor="title">Job Title</label>
-                                        <TextInput
-                                            id="title"
-                                            placeholder="e.g. Senior Frontend Developer"
-                                            value={data.title}
-                                            onChange={(e) => setData('title', e.target.value)}
-                                            className="mt-1 block w-full"
-                                            disabled={isSubmitting}
-                                        />
-                                        <InputError message={errors.title} />
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label htmlFor="company">Company Name</label>
-                                        <TextInput
-                                            id="company"
-                                            placeholder="e.g. Tech Company Inc."
-                                            value={data.company}
-                                            onChange={(e) => setData('company', e.target.value)}
-                                            className="mt-1 block w-full"
-                                            disabled={isSubmitting}
-                                        />
-                                        <InputError message={errors.company} />
-                                    </div>
-                                </div>
-
-                                <div className="form-row">
-                                    <div className="form-group">
-                                        <label htmlFor="start_date">Start Date</label>
-                                        <TextInput
-                                            id="start_date"
-                                            type="date"
-                                            value={data.start_date}
-                                            onChange={(e) => setData('start_date', e.target.value)}
-                                            className="mt-1 block w-full"
-                                            disabled={isSubmitting}
-                                        />
-                                        <InputError message={errors.start_date} />
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label htmlFor="position">Position/Title (Alternative)</label>
-                                        <TextInput
-                                            id="position"
-                                            placeholder="e.g. Frontend Developer"
-                                            value={data.position}
-                                            onChange={(e) => setData('position', e.target.value)}
-                                            className="mt-1 block w-full"
-                                            disabled={isSubmitting}
-                                        />
-                                        <InputError message={errors.position} />
-                                    </div>
-                                </div>
-
-                                <div className="form-row">
-                                    <div className="form-group full-width">
-                                        <label htmlFor="education">Education</label>
-                                        <TextInput
-                                            id="education"
-                                            placeholder="e.g. B.Sc Computer Science, MIT"
-                                            value={data.education}
-                                            onChange={(e) => setData('education', e.target.value)}
-                                            className="mt-1 block w-full"
-                                            disabled={isSubmitting}
-                                        />
-                                        <InputError message={errors.education} />
-                                    </div>
-                                </div>
-
-                                <div className="form-row">
-                                    <div className="form-group full-width">
-                                        <label htmlFor="bio">Professional Bio</label>
-                                        <textarea
-                                            id="bio"
-                                            placeholder="Tell us about yourself, your experience, and what you're looking for..."
-                                            value={data.bio}
-                                            onChange={(e) => setData('bio', e.target.value)}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                            rows="4"
-                                            disabled={isSubmitting}
-                                        />
-                                        <InputError message={errors.bio} />
-                                    </div>
-                                </div>
-
-                                {/* Location */}
-                                <div className="section-title">
-                                    <i className="fas fa-map-marker-alt"></i>
-                                    Location
-                                </div>
-
-                                <div className="form-row">
-                                    <div className="form-group">
-                                        <label htmlFor="city">City</label>
-                                        <TextInput
-                                            id="city"
-                                            value={data.city}
-                                            onChange={(e) => setData('city', e.target.value)}
-                                            className="mt-1 block w-full"
-                                            placeholder="e.g. Lagos, Abuja"
-                                            disabled={isSubmitting}
-                                        />
-                                        <InputError message={errors.city} />
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label htmlFor="country">Country</label>
-                                        <TextInput
-                                            id="country"
-                                            value={data.country}
-                                            onChange={(e) => setData('country', e.target.value)}
-                                            className="mt-1 block w-full"
-                                            placeholder="e.g. Nigeria"
-                                            disabled={isSubmitting}
-                                        />
-                                        <InputError message={errors.country} />
-                                    </div>
-                                </div>
-
-                                <div className="form-row">
-                                    <div className="form-group full-width">
-                                        <label htmlFor="address">Street Address</label>
-                                        <TextInput
-                                            id="address"
-                                            value={data.address}
-                                            onChange={(e) => setData('address', e.target.value)}
-                                            className="mt-1 block w-full"
-                                            placeholder="e.g. 12, Unity Road, Ikeja"
-                                            disabled={isSubmitting}
-                                        />
-                                        <InputError message={errors.address} />
-                                    </div>
-                                </div>
-
-                                {/* Social Links */}
-                                <div className="section-title">
-                                    <i className="fas fa-link"></i>
-                                    Social Links
-                                </div>
-
-                                <div className="form-row">
-                                    <div className="form-group">
-                                        <label htmlFor="linkedin_url">LinkedIn Profile</label>
-                                        <TextInput
-                                            id="linkedin_url"
-                                            value={data.linkedin_url}
-                                            onChange={(e) => setData('linkedin_url', e.target.value)}
-                                            className="mt-1 block w-full"
-                                            placeholder="https://linkedin.com/in/username"
-                                            disabled={isSubmitting}
-                                        />
-                                        <InputError message={errors.linkedin_url} />
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label htmlFor="github_url">GitHub Profile</label>
-                                        <TextInput
-                                            id="github_url"
-                                            value={data.github_url}
-                                            onChange={(e) => setData('github_url', e.target.value)}
-                                            className="mt-1 block w-full"
-                                            placeholder="https://github.com/username"
-                                            disabled={isSubmitting}
-                                        />
-                                        <InputError message={errors.github_url} />
-                                    </div>
-                                </div>
-
-                                <div className="form-row">
-                                    <div className="form-group full-width">
-                                        <label htmlFor="portfolio_url">Portfolio / Personal Website</label>
-                                        <TextInput
-                                            id="portfolio_url"
-                                            value={data.portfolio_url}
-                                            onChange={(e) => setData('portfolio_url', e.target.value)}
-                                            className="mt-1 block w-full"
-                                            placeholder="https://yourportfolio.com"
-                                            disabled={isSubmitting}
-                                        />
-                                        <InputError message={errors.portfolio_url} />
-                                    </div>
-                                </div>
-
-                                {/* Form Actions */}
-                                <div className="card-actions">
-                                    <button 
-                                        type="button" 
-                                        className="btn-secondary" 
-                                        onClick={resetForm}
-                                        disabled={!hasChanges || processing || isSubmitting}
-                                    >
-                                        Cancel Changes
-                                    </button>
-                                    <button 
-                                        type="submit" 
-                                        className="btn-primary"
-                                        disabled={isSubmitting || processing}
-                                    >
-                                        {isSubmitting || processing ? 'Saving...' : 'Save Changes'}
-                                    </button>
-                                    <Link href="/dashboard" className="btn-secondary">
-                                        Back to Dashboard
-                                    </Link>
-                                </div>
-                            </form>
+                        </div>
+                        <div className="profile-avatar-actions">
+    <label htmlFor="avatar-upload" className="btn-avatar-upload">
+        <i className="fas fa-camera"></i> 
+        <span>Change Photo</span>
+        <input 
+            id="avatar-upload"
+            type="file" 
+            onChange={uploadAvatar}
+            accept="image/*"
+            className="hidden-input"
+            disabled={uploading}
+        />
+    </label>
+    {hasAvatar && (
+        <button onClick={removeAvatar} className="btn-avatar-remove" disabled={uploading}>
+            <i className="fas fa-trash"></i> 
+            <span>Remove</span>
+        </button>
+    )}
+</div>
+                        <div className="profile-info-text">
+                            <h3>{user?.name || 'User'}</h3>
                         </div>
                     </div>
+
+                    <form onSubmit={submit} className="profile-edit-form">
+                        {/* Personal Information Section */}
+                        <div className="form-section">
+                            <div className="form-section-title">
+                                <i className="fas fa-user-circle"></i>
+                                <span>Personal Information</span>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label htmlFor="first_name">First Name</label>
+                                    <input
+                                        type="text"
+                                        id="first_name"
+                                        value={data.first_name}
+                                        onChange={(e) => handleChange(e, 'first_name')}
+                                        className="form-input"
+                                        placeholder="Enter your first name"
+                                    />
+                                    <InputError message={errors.first_name} />
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor="last_name">Last Name</label>
+                                    <input
+                                        type="text"
+                                        id="last_name"
+                                        value={data.last_name}
+                                        onChange={(e) => handleChange(e, 'last_name')}
+                                        className="form-input"
+                                        placeholder="Enter your last name"
+                                    />
+                                    <InputError message={errors.last_name} />
+                                </div>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group full-width">
+                                    <label htmlFor="email">Email Address</label>
+                                    <input
+                                        type="email"
+                                        id="email"
+                                        value={data.email}
+                                        onChange={(e) => handleChange(e, 'email')}
+                                        className="form-input"
+                                        placeholder="your@email.com"
+                                    />
+                                    <InputError message={errors.email} />
+                                </div>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group full-width">
+                                    <label htmlFor="phone">Phone Number</label>
+                                    <input
+                                        type="tel"
+                                        id="phone"
+                                        value={data.phone}
+                                        onChange={(e) => handleChange(e, 'phone')}
+                                        className="form-input"
+                                        placeholder="+1 234 567 8900"
+                                    />
+                                    <InputError message={errors.phone} />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Professional Details Section */}
+                        <div className="form-section">
+                            <div className="form-section-title">
+                                <i className="fas fa-briefcase"></i>
+                                <span>Professional Details</span>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label htmlFor="position">Job Title / Position</label>
+                                    <input
+                                        type="text"
+                                        id="position"
+                                        value={data.position}
+                                        onChange={(e) => handleChange(e, 'position')}
+                                        className="form-input"
+                                        placeholder="e.g. Frontend Developer"
+                                    />
+                                    <InputError message={errors.position} />
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor="company">Company</label>
+                                    <input
+                                        type="text"
+                                        id="company"
+                                        value={data.company}
+                                        onChange={(e) => handleChange(e, 'company')}
+                                        className="form-input"
+                                        placeholder="e.g. Google, Microsoft"
+                                    />
+                                    <InputError message={errors.company} />
+                                </div>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label htmlFor="employment_type">Employment Type</label>
+                                    <select
+                                        id="employment_type"
+                                        value={data.employment_type}
+                                        onChange={(e) => handleChange(e, 'employment_type')}
+                                        className="form-select"
+                                    >
+                                        <option value="">Select employment type</option>
+                                        <option value="Full-time">Full-time</option>
+                                        <option value="Part-time">Part-time</option>
+                                        <option value="Contract">Contract</option>
+                                        <option value="Freelance">Freelance</option>
+                                        <option value="Remote">Remote</option>
+                                        <option value="Hybrid">Hybrid</option>
+                                    </select>
+                                    <InputError message={errors.employment_type} />
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor="availability_status">Availability Status</label>
+                                    <select
+                                        id="availability_status"
+                                        value={data.availability_status}
+                                        onChange={(e) => handleChange(e, 'availability_status')}
+                                        className="form-select"
+                                    >
+                                        <option value="">Select availability</option>
+                                        <option value="Open to work">Open to work</option>
+                                        <option value="Actively looking">Actively looking</option>
+                                        <option value="Not looking">Not looking</option>
+                                        <option value="Available immediately">Available immediately</option>
+                                    </select>
+                                    <InputError message={errors.availability_status} />
+                                </div>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group full-width">
+                                    <label htmlFor="bio">Professional Bio</label>
+                                    <textarea
+                                        id="bio"
+                                        value={data.bio}
+                                        onChange={(e) => handleChange(e, 'bio')}
+                                        className="form-textarea"
+                                        rows="4"
+                                        placeholder="Tell us about yourself, your experience, and what you're looking for..."
+                                    />
+                                    <InputError message={errors.bio} />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Work Experience Section */}
+                        <div className="form-section">
+                            <div className="form-section-title">
+                                <i className="fas fa-briefcase"></i>
+                                <span>Work Experience</span>
+                                <button type="button" className="add-item-btn" onClick={() => setShowExpForm(!showExpForm)}>
+                                    <i className="fas fa-plus"></i> Add Experience
+                                </button>
+                            </div>
+
+                            {/* Experience List */}
+                            {experiences.length > 0 && (
+                                <div className="items-list">
+                                    {experiences.map(exp => (
+                                        <div key={exp.id} className="item-card">
+                                            <div className="item-header">
+                                                <h4>{exp.position} at {exp.company}</h4>
+                                                <div className="item-actions">
+                                                    <button type="button" className="item-edit" onClick={() => {
+                                                        setEditingExp(exp);
+                                                        setExpForm(exp);
+                                                        setShowExpForm(true);
+                                                    }}>
+                                                        <i className="fas fa-edit"></i>
+                                                    </button>
+                                                    <button type="button" className="item-delete" onClick={() => handleDeleteExperience(exp.id)}>
+                                                        <i className="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <p className="item-date">{exp.start_date} - {exp.is_current ? 'Present' : exp.end_date}</p>
+                                            <p className="item-location">{exp.location}</p>
+                                            {exp.description && <p className="item-description">{exp.description}</p>}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Add/Edit Experience Form */}
+                            {showExpForm && (
+                                <div className="item-form">
+                                    <h4>{editingExp ? 'Edit Experience' : 'Add New Experience'}</h4>
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label>Company</label>
+                                            <input type="text" value={expForm.company} onChange={(e) => setExpForm({ ...expForm, company: e.target.value })} className="form-input" placeholder="Company name" />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Position</label>
+                                            <input type="text" value={expForm.position} onChange={(e) => setExpForm({ ...expForm, position: e.target.value })} className="form-input" placeholder="Job title" />
+                                        </div>
+                                    </div>
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label>Location</label>
+                                            <input type="text" value={expForm.location} onChange={(e) => setExpForm({ ...expForm, location: e.target.value })} className="form-input" placeholder="City, Country" />
+                                        </div>
+                                    </div>
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label>Start Date</label>
+                                            <input type="date" value={expForm.start_date} onChange={(e) => setExpForm({ ...expForm, start_date: e.target.value })} className="form-input" />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>End Date</label>
+                                            <input type="date" value={expForm.end_date} onChange={(e) => setExpForm({ ...expForm, end_date: e.target.value })} className="form-input" disabled={expForm.is_current} />
+                                        </div>
+                                    </div>
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label className="checkbox-label">
+                                                <input type="checkbox" checked={expForm.is_current} onChange={(e) => setExpForm({ ...expForm, is_current: e.target.checked, end_date: '' })} />
+                                                I currently work here
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div className="form-row">
+                                        <div className="form-group full-width">
+                                            <label>Description</label>
+                                            <textarea value={expForm.description} onChange={(e) => setExpForm({ ...expForm, description: e.target.value })} className="form-textarea" rows="3" placeholder="Describe your responsibilities and achievements..."></textarea>
+                                        </div>
+                                    </div>
+                                    <div className="form-actions small">
+                                        <button type="button" className="btn-cancel-small" onClick={() => {
+                                            setShowExpForm(false);
+                                            setEditingExp(null);
+                                            setExpForm({
+                                                company: '',
+                                                position: '',
+                                                location: '',
+                                                start_date: '',
+                                                end_date: '',
+                                                is_current: false,
+                                                description: '',
+                                            });
+                                        }}>Cancel</button>
+                                        <button type="button" className="btn-submit-small" onClick={editingExp ? handleUpdateExperience : handleAddExperience}>
+                                            {editingExp ? 'Update' : 'Add'} Experience
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Skills Section */}
+                        <div className="form-section">
+                            <div className="form-section-title">
+                                <i className="fas fa-code"></i>
+                                <span>Skills</span>
+                            </div>
+
+                            {/* Skills List */}
+                            <div className="skills-container">
+                                {skills.map(skill => (
+                                    <div key={skill.id} className="skill-tag">
+                                        <span>{skill.name}</span>
+                                        <button type="button" onClick={() => handleDeleteSkill(skill.id)}>
+                                            <i className="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Add Skill Form */}
+                            <div className="add-skill-form">
+                                <input
+                                    type="text"
+                                    value={newSkill}
+                                    onChange={(e) => setNewSkill(e.target.value)}
+                                    className="form-input"
+                                    placeholder="Enter a skill (e.g. React, Python, Project Management)"
+                                    onKeyPress={(e) => e.key === 'Enter' && handleAddSkill()}
+                                />
+                                <select value={skillLevel} onChange={(e) => setSkillLevel(e.target.value)} className="form-select">
+                                    <option value="beginner">Beginner</option>
+                                    <option value="intermediate">Intermediate</option>
+                                    <option value="advanced">Advanced</option>
+                                    <option value="expert">Expert</option>
+                                </select>
+                                <button type="button" onClick={handleAddSkill} className="btn-add-skill">
+                                    <i className="fas fa-plus"></i> Add
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Education Section */}
+                        <div className="form-section">
+                            <div className="form-section-title">
+                                <i className="fas fa-graduation-cap"></i>
+                                <span>Education</span>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group full-width">
+                                    <label htmlFor="education">Highest Education</label>
+                                    <input
+                                        type="text"
+                                        id="education"
+                                        value={data.education}
+                                        onChange={(e) => handleChange(e, 'education')}
+                                        className="form-input"
+                                        placeholder="e.g. B.Sc Computer Science, MBA, PhD"
+                                    />
+                                    <InputError message={errors.education} />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Location Section */}
+                        <div className="form-section">
+                            <div className="form-section-title">
+                                <i className="fas fa-map-marker-alt"></i>
+                                <span>Location</span>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label htmlFor="city">City</label>
+                                    <input
+                                        type="text"
+                                        id="city"
+                                        value={data.city}
+                                        onChange={(e) => handleChange(e, 'city')}
+                                        className="form-input"
+                                        placeholder="e.g. New York"
+                                    />
+                                    <InputError message={errors.city} />
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor="country">Country</label>
+                                    <input
+                                        type="text"
+                                        id="country"
+                                        value={data.country}
+                                        onChange={(e) => handleChange(e, 'country')}
+                                        className="form-input"
+                                        placeholder="e.g. United States"
+                                    />
+                                    <InputError message={errors.country} />
+                                </div>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group full-width">
+                                    <label htmlFor="address">Street Address</label>
+                                    <input
+                                        type="text"
+                                        id="address"
+                                        value={data.address}
+                                        onChange={(e) => handleChange(e, 'address')}
+                                        className="form-input"
+                                        placeholder="Street address, P.O. Box"
+                                    />
+                                    <InputError message={errors.address} />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Social Links Section */}
+                        <div className="form-section">
+                            <div className="form-section-title">
+                                <i className="fas fa-link"></i>
+                                <span>Social & Professional Links</span>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label htmlFor="linkedin_url">LinkedIn Profile</label>
+                                    <input
+                                        type="url"
+                                        id="linkedin_url"
+                                        value={data.linkedin_url}
+                                        onChange={(e) => handleChange(e, 'linkedin_url')}
+                                        className="form-input"
+                                        placeholder="https://linkedin.com/in/username"
+                                    />
+                                    <InputError message={errors.linkedin_url} />
+                                </div>
+
+                                <div className="form-group">
+                                    <label htmlFor="github_url">GitHub Profile</label>
+                                    <input
+                                        type="url"
+                                        id="github_url"
+                                        value={data.github_url}
+                                        onChange={(e) => handleChange(e, 'github_url')}
+                                        className="form-input"
+                                        placeholder="https://github.com/username"
+                                    />
+                                    <InputError message={errors.github_url} />
+                                </div>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group full-width">
+                                    <label htmlFor="portfolio_url">Portfolio / Website</label>
+                                    <input
+                                        type="url"
+                                        id="portfolio_url"
+                                        value={data.portfolio_url}
+                                        onChange={(e) => handleChange(e, 'portfolio_url')}
+                                        className="form-input"
+                                        placeholder="https://yourportfolio.com"
+                                    />
+                                    <InputError message={errors.portfolio_url} />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Start Date Preference */}
+                        <div className="form-section">
+                            <div className="form-section-title">
+                                <i className="fas fa-calendar-alt"></i>
+                                <span>Start Date Preference</span>
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group full-width">
+                                    <label htmlFor="start_date">When can you start?</label>
+                                    <select
+                                        id="start_date"
+                                        value={data.start_date}
+                                        onChange={(e) => handleChange(e, 'start_date')}
+                                        className="form-select"
+                                    >
+                                        <option value="">Select start preference</option>
+                                        <option value="Immediately">Immediately</option>
+                                        <option value="Within 2 weeks">Within 2 weeks</option>
+                                        <option value="Within 1 month">Within 1 month</option>
+                                        <option value="Negotiable">Negotiable</option>
+                                    </select>
+                                    <InputError message={errors.start_date} />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Form Actions */}
+                        <div className="form-actions">
+                            <button type="button" className="btn-cancel" onClick={() => window.history.back()}>
+                                Cancel
+                            </button>
+                            <button type="submit" className="btn-submit" disabled={processing}>
+                                {processing ? (
+                                    <>
+                                        <i className="fas fa-spinner fa-spin"></i> Saving...
+                                    </>
+                                ) : (
+                                    <>
+                                        <i className="fas fa-save"></i> Save Changes
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </>
