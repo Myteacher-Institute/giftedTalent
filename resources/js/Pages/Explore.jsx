@@ -3,53 +3,80 @@ import { useState, useEffect } from 'react';
 import AppNavbar from '../Components/AppNavbar';
 import '../../css/explore.css';
 
-export default function Explore({ auth, trendingIndustries = [], featuredCompanies = [], topSkills = [], stats = {}, recentJobs = [] }) {
+export default function Explore({ 
+    auth, 
+    trendingIndustries = [], 
+    featuredCompanies = [], 
+    topTalents = [], 
+    stats = {}, 
+    recentJobs = [],
+    featuredTalents = [],
+    jobCategories = []
+}) {
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedLocation, setSelectedLocation] = useState('all');
     const [selectedJobType, setSelectedJobType] = useState('all');
+    const [selectedIndustry, setSelectedIndustry] = useState('all');
     const [showFilters, setShowFilters] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+    const [filteredCompanies, setFilteredCompanies] = useState(featuredCompanies);
+    const [filteredIndustries, setFilteredIndustries] = useState(trendingIndustries);
+    const [filteredTalents, setFilteredTalents] = useState(topTalents);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(6);
+    const [liveJobCount, setLiveJobCount] = useState(stats.total_jobs || 1250);
     const [animatedStats, setAnimatedStats] = useState({
         total_jobs: 0,
         total_companies: 0,
         total_talents: 0,
-        success_rate: 0
+        success_rate: 0,
+        total_placements: 0
     });
     
     const currentUser = auth?.user;
+
+    // Live counter - updates every 30 seconds
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setLiveJobCount(prev => prev + Math.floor(Math.random() * 3) + 1);
+        }, 30000);
+        
+        return () => clearInterval(interval);
+    }, []);
 
     // Animate stats on load
     useEffect(() => {
         const animateStats = () => {
             const targets = {
-                total_jobs: stats.total_jobs || 0,
-                total_companies: stats.total_companies || 0,
-                total_talents: stats.total_talents || 500,
-                success_rate: stats.success_rate || 98
+                total_jobs: stats.total_jobs || 1250,
+                total_companies: stats.total_companies || 380,
+                total_talents: stats.total_talents || 2450,
+                success_rate: stats.success_rate || 94,
+                total_placements: stats.total_placements || 1870
             };
             
             const duration = 2000;
             const step = 20;
+            let current = 0;
             const increments = {};
             
             for (let key in targets) {
                 increments[key] = targets[key] / (duration / step);
             }
             
-            let current = 0;
             const timer = setInterval(() => {
                 current += step;
                 if (current >= duration) {
                     setAnimatedStats(targets);
                     clearInterval(timer);
                 } else {
-                    setAnimatedStats({
+                    setAnimatedStats(prev => ({
                         total_jobs: Math.min(Math.floor(increments.total_jobs * (current / step)), targets.total_jobs),
                         total_companies: Math.min(Math.floor(increments.total_companies * (current / step)), targets.total_companies),
                         total_talents: Math.min(Math.floor(increments.total_talents * (current / step)), targets.total_talents),
-                        success_rate: Math.min(Math.floor(increments.success_rate * (current / step)), targets.success_rate)
-                    });
+                        success_rate: Math.min(Math.floor(increments.success_rate * (current / step)), targets.success_rate),
+                        total_placements: Math.min(Math.floor(increments.total_placements * (current / step)), targets.total_placements)
+                    }));
                 }
             }, step);
         };
@@ -57,62 +84,81 @@ export default function Explore({ auth, trendingIndustries = [], featuredCompani
         animateStats();
     }, [stats]);
 
-    // Get unique locations from companies
+    // Apply filters
+    useEffect(() => {
+        let companies = [...featuredCompanies];
+        if (searchTerm) {
+            companies = companies.filter(company => 
+                company.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                company.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                company.description?.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        }
+        if (selectedLocation !== 'all') {
+            companies = companies.filter(company => company.location === selectedLocation);
+        }
+        if (selectedIndustry !== 'all') {
+            companies = companies.filter(company => company.industry === selectedIndustry);
+        }
+        setFilteredCompanies(companies);
+
+        let industries = [...trendingIndustries];
+        if (searchTerm) {
+            industries = industries.filter(industry =>
+                industry.name?.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        }
+        setFilteredIndustries(industries);
+
+        // Filter talents
+        let talents = [...topTalents];
+        if (searchTerm) {
+            talents = talents.filter(talent =>
+                talent.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                talent.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                talent.skills?.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()))
+            );
+        }
+        if (selectedLocation !== 'all') {
+            talents = talents.filter(talent => talent.location === selectedLocation);
+        }
+        setFilteredTalents(talents);
+        
+        setCurrentPage(1);
+    }, [searchTerm, selectedLocation, selectedIndustry, featuredCompanies, trendingIndustries, topTalents]);
+
     const locations = ['all', ...new Set(featuredCompanies?.map(c => c.location).filter(Boolean) || [])];
-    
-    // Filter companies
-    const filteredCompanies = featuredCompanies?.filter(company => {
-        const matchesSearch = company.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                             company.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                             company.description?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesLocation = selectedLocation === 'all' || company.location === selectedLocation;
-        return matchesSearch && matchesLocation;
-    }) || [];
+    const industries = ['all', ...new Set(trendingIndustries?.map(i => i.name).filter(Boolean) || [])];
+    const jobTypes = ['all', 'Full-time', 'Part-time', 'Remote', 'Contract', 'Freelance', 'Internship'];
 
-    // Filter industries
-    const filteredIndustries = trendingIndustries?.filter(industry => {
-        return industry.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    }) || [];
+    // Pagination for talents
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentTalents = filteredTalents.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredTalents.length / itemsPerPage);
 
-    // Filter skills
-    const filteredSkills = topSkills?.filter(skill => {
-        return skill.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    }) || [];
+    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+    const toggleMobileSidebar = () => setMobileSidebarOpen(!mobileSidebarOpen);
 
-    const toggleMobileSidebar = () => {
-        setMobileSidebarOpen(!mobileSidebarOpen);
+    const handleCompanyClick = (companyId, companyName) => {
+        router.visit(`/search-jobs?company=${encodeURIComponent(companyName)}`);
     };
 
-    const getRandomGradient = (index) => {
-        const gradients = [
-            'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-            'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-            'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-            'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-            'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)',
-        ];
-        return gradients[index % gradients.length];
+    const handleIndustryClick = (industryName) => {
+        router.visit(`/search-jobs?industry=${encodeURIComponent(industryName)}`);
     };
 
-    const handleCompanyClick = (companyName) => {
-        router.visit(`/find-jobs?company=${encodeURIComponent(companyName)}`);
-    };
-
-    const handleIndustryClick = (industryType) => {
-        router.visit(`/find-jobs?job_type=${encodeURIComponent(industryType)}`);
-    };
-
-    const handleSkillClick = (skillName) => {
-        router.visit(`/find-jobs?skill=${encodeURIComponent(skillName)}`);
+    const handleTalentClick = (talentId) => {
+        router.visit(`/talent/${talentId}`);
     };
 
     const handleViewAllJobs = () => {
-        let url = '/find-jobs';
+        let url = '/search-jobs';
         const params = new URLSearchParams();
         if (searchTerm) params.append('search', searchTerm);
         if (selectedLocation !== 'all') params.append('location', selectedLocation);
         if (selectedJobType !== 'all') params.append('job_type', selectedJobType);
+        if (selectedIndustry !== 'all') params.append('industry', selectedIndustry);
         if (params.toString()) url += '?' + params.toString();
         router.visit(url);
     };
@@ -121,6 +167,14 @@ export default function Explore({ auth, trendingIndustries = [], featuredCompani
         setSearchTerm('');
         setSelectedLocation('all');
         setSelectedJobType('all');
+        setSelectedIndustry('all');
+    };
+
+    const handleSubscribe = async (e) => {
+        e.preventDefault();
+        const email = e.target.querySelector('input[type="email"]').value;
+        alert('Subscribed successfully!');
+        e.target.reset();
     };
 
     return (
@@ -137,17 +191,24 @@ export default function Explore({ auth, trendingIndustries = [], featuredCompani
                 {/* Hero Section */}
                 <div className="explore-hero">
                     <div className="explore-hero-content">
-                        <span className="hero-badge animate-slide-up">✨ Explore Opportunities</span>
-                        <h1 className="animate-slide-up delay-1">Discover Your Next <span className="gradient-text">Chapter</span></h1>
-                        <p className="animate-slide-up delay-2">Explore industries, trending skills, and companies looking for talents like you.</p>
+                        <span className="hero-badge">✨ Explore Opportunities</span>
+                        <h1>Discover Your Next <span className="gradient-text">Chapter</span></h1>
+                        <p>Explore industries, companies, and talented professionals ready to work with you.</p>
                         
-                        {/* Search Bar - NEW */}
-                        <div className="hero-search animate-slide-up delay-3">
+                        {/* Live Counter Badge */}
+                        <div className="live-counter">
+                            <span className="live-dot"></span>
+                            <span className="live-text">{liveJobCount}+ live jobs</span>
+                            <span className="live-update">Updated just now</span>
+                        </div>
+                        
+                        {/* Search Bar */}
+                        <div className="hero-search">
                             <div className="search-input-wrapper">
                                 <i className="fas fa-search"></i>
                                 <input 
                                     type="text" 
-                                    placeholder="Search companies, industries, or skills..."
+                                    placeholder="Search companies, industries, or talents..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
@@ -161,15 +222,15 @@ export default function Explore({ auth, trendingIndustries = [], featuredCompani
                                 <i className="fas fa-sliders-h"></i> Filters
                             </button>
                             <button className="search-btn" onClick={handleViewAllJobs}>
-                                <i className="fas fa-arrow-right"></i>
+                                Explore Now <i className="fas fa-arrow-right"></i>
                             </button>
                         </div>
 
-                        {/* Advanced Filters - NEW */}
+                        {/* Advanced Filters */}
                         {showFilters && (
-                            <div className="advanced-filters animate-fade-in">
+                            <div className="advanced-filters">
                                 <div className="filter-group">
-                                    <label>Location</label>
+                                    <label><i className="fas fa-map-marker-alt"></i> Location</label>
                                     <select value={selectedLocation} onChange={(e) => setSelectedLocation(e.target.value)}>
                                         <option value="all">All Locations</option>
                                         {locations.filter(l => l !== 'all').map(location => (
@@ -179,25 +240,34 @@ export default function Explore({ auth, trendingIndustries = [], featuredCompani
                                     </select>
                                 </div>
                                 <div className="filter-group">
-                                    <label>Job Type</label>
+                                    <label><i className="fas fa-briefcase"></i> Job Type</label>
                                     <select value={selectedJobType} onChange={(e) => setSelectedJobType(e.target.value)}>
-                                        <option value="all">All Types</option>
-                                        <option value="Full-time">Full-time</option>
-                                        <option value="Part-time">Part-time</option>
-                                        <option value="Remote">Remote</option>
-                                        <option value="Contract">Contract</option>
+                                        {jobTypes.map(type => (
+                                            <option key={type} value={type === 'all' ? 'all' : type}>
+                                                {type === 'all' ? 'All Types' : type}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
-                                {(searchTerm || selectedLocation !== 'all' || selectedJobType !== 'all') && (
+                                <div className="filter-group">
+                                    <label><i className="fas fa-chart-line"></i> Industry</label>
+                                    <select value={selectedIndustry} onChange={(e) => setSelectedIndustry(e.target.value)}>
+                                        <option value="all">All Industries</option>
+                                        {industries.filter(i => i !== 'all').map(industry => (
+                                            <option key={industry} value={industry}>{industry}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                {(searchTerm || selectedLocation !== 'all' || selectedJobType !== 'all' || selectedIndustry !== 'all') && (
                                     <button className="clear-filters-btn" onClick={clearFilters}>
-                                        <i className="fas fa-times-circle"></i> Clear Filters
+                                        <i className="fas fa-times-circle"></i> Clear All
                                     </button>
                                 )}
                             </div>
                         )}
                         
-                        {/* Stats Section - Enhanced */}
-                        <div className="hero-stats animate-slide-up delay-4">
+                        {/* Stats Section */}
+                        <div className="hero-stats">
                             <div className="stat">
                                 <span className="stat-number">{animatedStats.total_jobs}+</span>
                                 <span className="stat-label">Open Positions</span>
@@ -209,6 +279,10 @@ export default function Explore({ auth, trendingIndustries = [], featuredCompani
                             <div className="stat">
                                 <span className="stat-number">{animatedStats.total_talents}+</span>
                                 <span className="stat-label">Active Talents</span>
+                            </div>
+                            <div className="stat">
+                                <span className="stat-number">{animatedStats.total_placements}+</span>
+                                <span className="stat-label">Placements</span>
                             </div>
                             <div className="stat">
                                 <span className="stat-number">{animatedStats.success_rate}%</span>
@@ -227,38 +301,39 @@ export default function Explore({ auth, trendingIndustries = [], featuredCompani
                                 <h2>Trending <span className="gradient-text">Industries</span></h2>
                                 <p>Most in-demand sectors right now</p>
                             </div>
-                            <Link href="/find-jobs" className="view-all-link">
+                            <Link href="/search-jobs" className="view-all-link">
                                 View All Jobs <i className="fas fa-arrow-right"></i>
                             </Link>
                         </div>
                         
-                        {filteredIndustries.length === 0 && searchTerm ? (
+                        {filteredIndustries.length === 0 ? (
                             <div className="empty-state">
-                                <i className="fas fa-search"></i>
+                                <i className="fas fa-chart-line"></i>
                                 <p>No industries found matching "{searchTerm}"</p>
                                 <button onClick={() => setSearchTerm('')} className="clear-search-btn">Clear Search</button>
                             </div>
                         ) : (
                             <div className="industries-grid">
-                                {filteredIndustries.length === 0 ? (
-                                    <div className="empty-state">No industries found. Add jobs to see them here.</div>
-                                ) : (
-                                    filteredIndustries.map((industry, index) => (
-                                        <div 
-                                            key={index} 
-                                            className="industry-card"
-                                            style={{ background: getRandomGradient(index) }}
-                                            onClick={() => handleIndustryClick(industry.name)}
-                                        >
+                                {filteredIndustries.map((industry, index) => (
+                                    <div 
+                                        key={industry.id || index} 
+                                        className="industry-card"
+                                        onClick={() => handleIndustryClick(industry.name)}
+                                    >
+                                        {industry.image ? (
+                                            <img src={industry.image} alt={industry.name} className="industry-image" />
+                                        ) : (
                                             <div className="industry-icon">
                                                 <i className={`fas ${industry.icon || 'fa-briefcase'}`}></i>
                                             </div>
-                                            <h3>{industry.name}</h3>
-                                            <p>{industry.count}+ Open Positions</p>
-                                            <div className="card-hover-effect"></div>
+                                        )}
+                                        <h3>{industry.name}</h3>
+                                        <p>{industry.count || industry.job_count || 0}+ Open Positions</p>
+                                        <div className="trend-up">
+                                            <i className="fas fa-arrow-up"></i> +{industry.growth || 12}%
                                         </div>
-                                    ))
-                                )}
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </div>
@@ -271,93 +346,130 @@ export default function Explore({ auth, trendingIndustries = [], featuredCompani
                                 <h2>Featured <span className="gradient-text">Companies</span></h2>
                                 <p>Top employers hiring now</p>
                             </div>
-                            <Link href="/find-jobs" className="view-all-link">
+                            <Link href="/search-jobs" className="view-all-link">
                                 View All <i className="fas fa-arrow-right"></i>
                             </Link>
                         </div>
                         
-                        {filteredCompanies.length === 0 && searchTerm ? (
+                        {filteredCompanies.length === 0 ? (
                             <div className="empty-state">
                                 <i className="fas fa-building"></i>
-                                <p>No companies found matching "{searchTerm}"</p>
-                                <button onClick={() => setSearchTerm('')} className="clear-search-btn">Clear Search</button>
+                                <p>No companies found matching your criteria</p>
+                                <button onClick={clearFilters} className="clear-search-btn">Clear Filters</button>
                             </div>
                         ) : (
                             <div className="companies-grid">
-                                {filteredCompanies.length === 0 ? (
-                                    <div className="empty-state">No companies found. Jobs will appear here when added.</div>
-                                ) : (
-                                    filteredCompanies.map((company, index) => (
-                                        <div key={index} className="company-card" onClick={() => handleCompanyClick(company.name)}>
-                                            <div className="company-logo">
-                                                {company.logo ? (
-                                                    <img src={company.logo} alt={company.name} />
-                                                ) : (
-                                                    <div className="company-logo-placeholder" style={{ background: getRandomGradient(index) }}>
-                                                        {company.name?.charAt(0)?.toUpperCase() || 'C'}
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <h3 className="company-name">{company.name}</h3>
-                                            <p className="company-desc">{company.description || 'Innovative Solutions Provider'}</p>
-                                            <div className="company-location">
-                                                <i className="fas fa-map-marker-alt"></i>
-                                                {company.location}
-                                            </div>
-                                            <div className="company-stats">
-                                                <span className="job-count-badge">
-                                                    <i className="fas fa-briefcase"></i> {company.job_count} Open Positions
-                                                </span>
-                                            </div>
-                                            <button className="view-jobs-btn">View Openings →</button>
+                                {filteredCompanies.map((company, index) => (
+                                    <div key={company.id || index} className="company-card" onClick={() => handleCompanyClick(company.id, company.name)}>
+                                        <div className="company-logo">
+                                            {company.logo ? (
+                                                <img src={company.logo} alt={company.name} className="company-logo-img" />
+                                            ) : (
+                                                <div className="company-logo-placeholder">
+                                                    {company.name?.charAt(0)?.toUpperCase() || 'C'}
+                                                </div>
+                                            )}
                                         </div>
-                                    ))
-                                )}
+                                        <h3 className="company-name">{company.name}</h3>
+                                        <p className="company-desc">{company.description || 'Innovative Solutions Provider'}</p>
+                                        <div className="company-location">
+                                            <i className="fas fa-map-marker-alt"></i> {company.location || 'Remote Friendly'}
+                                        </div>
+                                        <div className="company-stats">
+                                            <span className="job-count-badge">
+                                                <i className="fas fa-briefcase"></i> {company.job_count || 0} Open Positions
+                                            </span>
+                                        </div>
+                                        <button className="view-jobs-btn">View Openings →</button>
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </div>
 
-                    {/* Top Skills Section */}
+                    {/* Top Talents Section - NEW (Replaces Skills) */}
                     <div className="section">
                         <div className="section-header">
                             <div className="section-header-left">
-                                <span className="section-badge">Skills</span>
-                                <h2>Top Skills <span className="gradient-text">in Demand</span></h2>
-                                <p>Most requested skills by employers</p>
+                                <span className="section-badge">Talents</span>
+                                <h2>Top <span className="gradient-text">Talents</span></h2>
+                                <p>Skilled professionals ready to work with you</p>
                             </div>
                         </div>
                         
-                        {filteredSkills.length === 0 && searchTerm ? (
+                        {filteredTalents.length === 0 ? (
                             <div className="empty-state">
-                                <i className="fas fa-code"></i>
-                                <p>No skills found matching "{searchTerm}"</p>
+                                <i className="fas fa-users"></i>
+                                <p>No talents found matching "{searchTerm}"</p>
                                 <button onClick={() => setSearchTerm('')} className="clear-search-btn">Clear Search</button>
                             </div>
                         ) : (
-                            <div className="skills-grid">
-                                {filteredSkills.length === 0 ? (
-                                    <div className="empty-state">No skills found. Add jobs with required skills.</div>
-                                ) : (
-                                    filteredSkills.map((skill, index) => (
-                                        <div key={index} className="skill-card" onClick={() => handleSkillClick(skill.name)}>
-                                            <div className="skill-icon" style={{ background: skill.color || getRandomGradient(index) }}>
-                                                <i className="fas fa-code"></i>
+                            <>
+                                <div className="talents-grid">
+                                    {currentTalents.map((talent, index) => (
+                                        <div key={talent.id || index} className="talent-card" onClick={() => handleTalentClick(talent.id)}>
+                                            <div className="talent-avatar">
+                                                {talent.avatar ? (
+                                                    <img src={talent.avatar} alt={talent.name} className="talent-avatar-img" />
+                                                ) : (
+                                                    <div className="talent-avatar-placeholder">
+                                                        {talent.name?.charAt(0)?.toUpperCase() || 'T'}
+                                                    </div>
+                                                )}
+                                                {talent.verified && (
+                                                    <div className="verified-badge">
+                                                        <i className="fas fa-check-circle"></i>
+                                                    </div>
+                                                )}
                                             </div>
-                                            <div className="skill-info">
-                                                <h3>{skill.name}</h3>
-                                                <p>{skill.count}+ job openings</p>
+                                            <h3 className="talent-name">{talent.name}</h3>
+                                            <p className="talent-title">{talent.title || 'Professional'}</p>
+                                            <div className="talent-location">
+                                                <i className="fas fa-map-marker-alt"></i> {talent.location || 'Remote'}
                                             </div>
-                                            <div className="skill-demand-bar">
-                                                <div className="demand-fill" style={{ width: `${skill.demand_percentage || 70}%` }}></div>
+                                            <div className="talent-skills">
+                                                {(talent.skills || []).slice(0, 3).map((skill, i) => (
+                                                    <span key={i} className="talent-skill-tag">{skill}</span>
+                                                ))}
+                                                {(talent.skills || []).length > 3 && (
+                                                    <span className="talent-skill-tag more">+{talent.skills.length - 3}</span>
+                                                )}
                                             </div>
+                                            <div className="talent-rating">
+                                                <i className="fas fa-star"></i>
+                                                <span>{talent.rating || 4.5}</span>
+                                                <span className="reviews">({talent.reviews || 0} reviews)</span>
+                                            </div>
+                                            <button className="view-talent-btn">View Profile →</button>
                                         </div>
-                                    ))
+                                    ))}
+                                </div>
+                                
+                                {/* Pagination */}
+                                {totalPages > 1 && (
+                                    <div className="pagination">
+                                        <button 
+                                            onClick={() => paginate(currentPage - 1)} 
+                                            disabled={currentPage === 1}
+                                            className="page-btn"
+                                        >
+                                            <i className="fas fa-chevron-left"></i> Previous
+                                        </button>
+                                        <span className="page-info">Page {currentPage} of {totalPages}</span>
+                                        <button 
+                                            onClick={() => paginate(currentPage + 1)} 
+                                            disabled={currentPage === totalPages}
+                                            className="page-btn"
+                                        >
+                                            Next <i className="fas fa-chevron-right"></i>
+                                        </button>
+                                    </div>
                                 )}
-                            </div>
+                            </>
                         )}
                     </div>
 
-                    {/* Recent Jobs Section - NEW */}
+                    {/* Recent Jobs Section */}
                     {recentJobs && recentJobs.length > 0 && (
                         <div className="section">
                             <div className="section-header">
@@ -366,18 +478,18 @@ export default function Explore({ auth, trendingIndustries = [], featuredCompani
                                     <h2>Recent <span className="gradient-text">Jobs</span></h2>
                                     <p>New opportunities posted recently</p>
                                 </div>
-                                <Link href="/find-jobs" className="view-all-link">
+                                <Link href="/search-jobs" className="view-all-link">
                                     View All Jobs <i className="fas fa-arrow-right"></i>
                                 </Link>
                             </div>
                             
                             <div className="recent-jobs-list">
-                                {recentJobs.map((job, index) => (
-                                    <div key={index} className="recent-job-card" onClick={() => router.visit(`/jobs/${job.id}`)}>
+                                {recentJobs.slice(0, 5).map((job, index) => (
+                                    <div key={job.id || index} className="recent-job-card" onClick={() => router.visit(`/jobs/${job.id}`)}>
                                         <div className="job-card-left">
                                             <div className="job-company-logo">
-                                                {job.logo ? (
-                                                    <img src={job.logo} alt={job.company} />
+                                                {job.company_logo ? (
+                                                    <img src={job.company_logo} alt={job.company} />
                                                 ) : (
                                                     <div className="mini-logo-placeholder">
                                                         {job.company?.charAt(0)?.toUpperCase() || 'C'}
@@ -403,7 +515,7 @@ export default function Explore({ auth, trendingIndustries = [], featuredCompani
                         </div>
                     )}
 
-                    {/* Newsletter Section - NEW */}
+                    {/* Newsletter Section */}
                     <div className="newsletter-section">
                         <div className="newsletter-content">
                             <div className="newsletter-icon">
@@ -411,12 +523,9 @@ export default function Explore({ auth, trendingIndustries = [], featuredCompani
                             </div>
                             <h3>Get Job Alerts</h3>
                             <p>Subscribe to receive personalized job recommendations straight to your inbox</p>
-                            <form className="newsletter-form" onSubmit={(e) => {
-                                e.preventDefault();
-                                alertify.success('Subscribed successfully!');
-                            }}>
+                            <form className="newsletter-form" onSubmit={handleSubscribe}>
                                 <input type="email" placeholder="Enter your email address" required />
-                                <button type="submit">Subscribe</button>
+                                <button type="submit">Subscribe <i className="fas fa-paper-plane"></i></button>
                             </form>
                             <p className="newsletter-note">We respect your privacy. Unsubscribe anytime.</p>
                         </div>

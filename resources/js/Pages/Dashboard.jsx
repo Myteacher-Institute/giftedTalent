@@ -8,7 +8,6 @@ import AppNavbar from '../Components/AppNavbar';
 
 window.alertify = window.alertify || alertify;
 
-// Job Card Component - UPDATED VERSION
 // Job Card Component - Professional Design with View More Toggle
 function JobCard({ job, onSave, onUnsave, onApply, isSaved = false }) {
     const [showMenu, setShowMenu] = useState(null);
@@ -64,11 +63,6 @@ function JobCard({ job, onSave, onUnsave, onApply, isSaved = false }) {
 
     const salaryDisplay = formatSalary(job.salary_range);
     const matchScore = job.match_score || 0;
-
-    // Truncate description for collapsed view
-    const truncatedDescription = job.description && job.description.length > 100 
-        ? job.description.substring(0, 100) + '...' 
-        : job.description;
 
     return (
         <div className={`professional-job-card ${matchScore >= 60 ? 'premium-job' : ''}`}>
@@ -243,44 +237,20 @@ export default function Dashboard({
     }, []);
 
     const getProfileImageUrl = () => {
-        if (profile?.profile_image_base64) {
-            return profile.profile_image_base64;
-        }
-        if (currentUser?.profile?.profile_image_base64) {
-            return currentUser.profile.profile_image_base64;
-        }
-        if (currentUser?.profile?.avatar_url) {
-            return currentUser.profile.avatar_url;
-        }
-        if (currentUser?.profile?.avatar) {
-            const avatarPath = currentUser.profile.avatar;
-            if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
-                return avatarPath;
-            }
-            if (avatarPath.startsWith('data:image')) {
-                return avatarPath;
-            }
-            const cleanPath = avatarPath.replace(/^\/+/, '');
-            return `/storage/${cleanPath}`;
-        }
-        if (profile?.avatar_url) {
-            return profile.avatar_url;
-        }
-        if (profile?.avatar) {
-            if (profile.avatar.startsWith('data:image')) {
-                return profile.avatar;
-            }
-            return `/storage/${profile.avatar}`;
-        }
-        if (currentUser?.avatar) {
-            if (currentUser.avatar.startsWith('data:image')) {
-                return currentUser.avatar;
-            }
-            return currentUser.avatar;
-        }
-        const userName = currentUser?.name || 'User';
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
-    };
+    // Force refresh with timestamp
+    const timestamp = Date.now();
+    
+    if (profile?.profile_image_base64) {
+        return profile.profile_image_base64;
+    }
+    
+    if (user?.profile?.avatar_url) {
+        return `${user.profile.avatar_url}?t=${timestamp}`;
+    }
+    
+    const userName = user?.name || 'User';
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true&t=${timestamp}`;
+};
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -506,8 +476,8 @@ export default function Dashboard({
                             )}
                         </li>
                         <li onClick={() => router.visit('/settings')}>
-    <i className="fa-solid fa-gear"></i> Settings
-</li>
+                            <i className="fa-solid fa-gear"></i> Settings
+                        </li>
                         <li className="logout-item">
                             <a href="/" onClick={(e) => { e.preventDefault(); handleLogout(); }}>
                                 <i className="fa-solid fa-right-from-bracket logout-icon"></i>
@@ -563,193 +533,79 @@ export default function Dashboard({
                                 </button>
                             </div>
 
-                            {profileComplete === 100 ? (
-                                <div className="alert-success">
-                                    <i className="fa-solid fa-check-circle"></i>
-                                    <p>Your profile is 100% complete! <i className="fa-solid fa-party-horn"></i></p>
-                                </div>
-                            ) : profileComplete > 0 && profileComplete < 100 ? (
-                                <div className="alert-warning">
-                                    <i className="fa-solid fa-exclamation-triangle"></i>
-                                    <p>Complete your profile to get better job recommendations! ({profileComplete}% complete)
-                                        <Link href="/profile/edit" className="alert-link">Update Profile →</Link>
-                                    </p>
-                                </div>
-                            ) : null}
-
-                            {/* Professional Search Section */}
-<div className="search-section">
-    <div className="search-header">
-        <h2>Find Your Next Opportunity</h2>
-        <p>Discover jobs that match your skills and career goals</p>
-    </div>
-    
-    <div className="search-container">
-        <div className="search-main">
-            <div className="search-input-wrapper">
-                <i className="fas fa-search search-icon-left"></i>
-                <input 
-                    type="text" 
-                    placeholder="Job title, keywords, or company..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearch(e)}
-                />
-                {searchQuery && (
-                    <button className="clear-input" onClick={() => setSearchQuery('')}>
-                        <i className="fas fa-times-circle"></i>
-                    </button>
-                )}
-            </div>
-            
-            <div className="search-filters">
-                <div className="filter-select-wrapper">
-                    <i className="fas fa-briefcase filter-icon"></i>
-                    <select
-                        value={selectedJobType}
-                        onChange={(e) => setSelectedJobType(e.target.value)}
-                    >
-                        <option value="">All Job Types</option>
-                        {jobTypes.map(type => (
-                            <option key={type} value={type}>{type}</option>
-                        ))}
-                    </select>
-                </div>
-                
-                <button className="advanced-filter-btn" onClick={toggleAdvanced}>
-                    <i className="fas fa-sliders-h"></i>
-                    <span>Advanced</span>
-                </button>
-                
-                <button className="search-submit-btn" onClick={handleSearch} disabled={loading}>
-                    {loading ? (
-                        <i className="fas fa-spinner fa-spin"></i>
-                    ) : (
-                        <>
-                            <i className="fas fa-search"></i>
-                            <span>Search</span>
-                        </>
-                    )}
-                </button>
-                
-                {(searchQuery || selectedJobType) && (
-                    <button className="clear-all-btn" onClick={clearSearch}>
-                        <i className="fas fa-times"></i>
-                        <span>Clear</span>
-                    </button>
-                )}
-            </div>
-        </div>
-    </div>
-</div>
-
-{/* Advanced Filter Modal */}
-{showAdvanced && (
-    <div className="advanced-modal-overlay" onClick={toggleAdvanced}>
-        <div className="advanced-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="advanced-modal-header">
-                <h3>
-                    <i className="fas fa-sliders-h"></i>
-                    Advanced Filters
-                </h3>
-                <button className="modal-close-btn" onClick={toggleAdvanced}>
-                    <i className="fas fa-times"></i>
-                </button>
-            </div>
-            <div className="advanced-modal-body">
-                <div className="filter-group">
-                    <label>Location</label>
-                    <div className="filter-input-wrapper">
-                        <i className="fas fa-map-marker-alt"></i>
-                        <input type="text" placeholder="City, state, or remote" />
-                    </div>
-                </div>
-                <div className="filter-group">
-                    <label>Salary Range</label>
-                    <div className="salary-range">
-                        <input type="number" placeholder="Min" />
-                        <span>-</span>
-                        <input type="number" placeholder="Max" />
-                    </div>
-                </div>
-                <div className="filter-group">
-                    <label>Experience Level</label>
-                    <div className="filter-options">
-                        <button className="filter-option">Entry Level</button>
-                        <button className="filter-option">Mid Level</button>
-                        <button className="filter-option">Senior</button>
-                        <button className="filter-option">Lead</button>
-                        <button className="filter-option">Manager</button>
-                    </div>
-                </div>
-                <div className="filter-group">
-                    <label>Remote Options</label>
-                    <div className="filter-options">
-                        <button className="filter-option">On-site</button>
-                        <button className="filter-option">Hybrid</button>
-                        <button className="filter-option active">Remote</button>
-                    </div>
-                </div>
-            </div>
-            <div className="advanced-modal-footer">
-                <button className="reset-filters-btn">Reset All</button>
-                <button className="apply-filters-btn" onClick={toggleAdvanced}>Apply Filters</button>
-            </div>
-        </div>
-    </div>
-)}
-
                             {/* Professional Alert System */}
-<div className="alerts-container">
-    {profileComplete === 100 ? (
-        <div className="alert alert-success">
-            <div className="alert-icon">
-                <i className="fas fa-trophy"></i>
-            </div>
-            <div className="alert-content">
-                <h4>Profile Complete! 🎉</h4>
-                <p>Your profile is 100% complete. You're getting the best job matches!</p>
-            </div>
-            <button className="alert-close">
-                <i className="fas fa-times"></i>
-            </button>
-        </div>
-    ) : profileComplete > 0 && profileComplete < 100 ? (
-        <div className="alert alert-warning">
-            <div className="alert-icon">
-                <i className="fas fa-chart-line"></i>
-            </div>
-            <div className="alert-content">
-                <h4>Complete Your Profile</h4>
-                <p>Your profile is {profileComplete}% complete. Add more details to get better job matches.</p>
-                <Link href="/profile/edit" className="alert-action">
-                    Update Now <i className="fas fa-arrow-right"></i>
-                </Link>
-            </div>
-            <button className="alert-close">
-                <i className="fas fa-times"></i>
-            </button>
-        </div>
-    ) : null}
-    
-    {!hasCV && (
-        <div className="alert alert-info">
-            <div className="alert-icon">
-                <i className="fas fa-file-upload"></i>
-            </div>
-            <div className="alert-content">
-                <h4>Upload Your CV</h4>
-                <p>Employers are more likely to notice you when you have a CV uploaded.</p>
-                <Link href="/cv" className="alert-action">
-                    Upload CV <i className="fas fa-arrow-right"></i>
-                </Link>
-            </div>
-            <button className="alert-close">
-                <i className="fas fa-times"></i>
-            </button>
-        </div>
-    )}
-</div>
+                            <div className="alerts-container">
+                                {profileComplete === 100 ? (
+                                    <div className="alert alert-success">
+                                        <div className="alert-icon">
+                                            <i className="fas fa-trophy"></i>
+                                        </div>
+                                        <div className="alert-content">
+                                            <h4>Profile Complete! 🎉</h4>
+                                            <p>Your profile is 100% complete. You're getting the best job matches!</p>
+                                        </div>
+                                        <button className="alert-close" onClick={() => {}}>
+                                            <i className="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                ) : profileComplete > 0 && profileComplete < 100 ? (
+                                    <div className="alert alert-warning">
+                                        <div className="alert-icon">
+                                            <i className="fas fa-chart-line"></i>
+                                        </div>
+                                        <div className="alert-content">
+                                            <h4>Complete Your Profile</h4>
+                                            <p>Your profile is {profileComplete}% complete. Add more details to get better job matches.</p>
+                                            <Link href="/profile/edit" className="alert-action">
+                                                Update Now <i className="fas fa-arrow-right"></i>
+                                            </Link>
+                                        </div>
+                                        <button className="alert-close" onClick={() => {}}>
+                                            <i className="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                ) : null}
+                                
+                                {!hasCV && (
+                                    <div className="alert alert-info">
+                                        <div className="alert-icon">
+                                            <i className="fas fa-file-upload"></i>
+                                        </div>
+                                        <div className="alert-content">
+                                            <h4>Upload Your CV</h4>
+                                            <p>Employers are more likely to notice you when you have a CV uploaded.</p>
+                                            <Link href="/cv" className="alert-action">
+                                                Upload CV <i className="fas fa-arrow-right"></i>
+                                            </Link>
+                                        </div>
+                                        <button className="alert-close" onClick={() => {}}>
+                                            <i className="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Recommended Jobs Section */}
+                            {recommendedJobs && recommendedJobs.length > 0 && (
+                                <div className="jobs-section">
+                                    <div className="section-header">
+                                        <h2><i className="fa-solid fa-bullseye"></i> Recommended for You</h2>
+                                        <span>Based on your profile and skills</span>
+                                    </div>
+                                    <div className="jobs">
+                                        {recommendedJobs.map((job) => (
+                                            <JobCard
+                                                key={job.id}
+                                                job={job}
+                                                onSave={handleSaveJob}
+                                                onUnsave={handleUnsaveJob}
+                                                onApply={handleApplyJob}
+                                                isSaved={localSavedJobs.some(saved => saved.id === job.id)}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Other Jobs Section */}
                             {otherJobs.length > 0 && (
@@ -793,12 +649,12 @@ export default function Dashboard({
                     <div className="progress-card">
                         <h3>Complete Your Profile</h3>
                         <div className="progress-container">
-                           <div className="progress-circle" data-progress={Math.floor(profileComplete / 10)} style={{ '--progress': `${profileComplete}` }}>
-    <div className="progress-percent">
-        <h2>{profileComplete}%</h2>
-        <span>Complete</span>
-    </div>
-</div>
+                            <div className="progress-circle" data-progress={Math.floor(profileComplete / 10)} style={{ '--progress': `${profileComplete}` }}>
+                                <div className="progress-percent">
+                                    <h2>{profileComplete}%</h2>
+                                    <span>Complete</span>
+                                </div>
+                            </div>
                         </div>
 
                         <p className="text-center text-sm text-gray-600 mt-3 mb-4">
@@ -879,33 +735,33 @@ export default function Dashboard({
                     </div>
 
                     <div className="tracker">
-    <h3>
-        <i className="fas fa-chart-line"></i>
-        Application Tracker
-    </h3>
-    <div className="tracker-grid">
-        <div className="tracker-box blue">
-            <i className="fas fa-file-alt"></i>
-            <h2>{stats.applied || 0}</h2>
-            <p>Applied</p>
-        </div>
-        <div className="tracker-box orange">
-            <i className="fas fa-clock"></i>
-            <h2>{stats.review || 0}</h2>
-            <p>Under Review</p>
-        </div>
-        <div className="tracker-box green">
-            <i className="fas fa-calendar-check"></i>
-            <h2>{stats.interview || 0}</h2>
-            <p>Interview</p>
-        </div>
-        <div className="tracker-box red">
-            <i className="fas fa-times-circle"></i>
-            <h2>{stats.rejected || 0}</h2>
-            <p>Rejected</p>
-        </div>
-    </div>
-</div>
+                        <h3>
+                            <i className="fas fa-chart-line"></i>
+                            Application Tracker
+                        </h3>
+                        <div className="tracker-grid">
+                            <div className="tracker-box blue">
+                                <i className="fas fa-file-alt"></i>
+                                <h2>{stats.applied || 0}</h2>
+                                <p>Applied</p>
+                            </div>
+                            <div className="tracker-box orange">
+                                <i className="fas fa-clock"></i>
+                                <h2>{stats.review || 0}</h2>
+                                <p>Under Review</p>
+                            </div>
+                            <div className="tracker-box green">
+                                <i className="fas fa-calendar-check"></i>
+                                <h2>{stats.interview || 0}</h2>
+                                <p>Interview</p>
+                            </div>
+                            <div className="tracker-box red">
+                                <i className="fas fa-times-circle"></i>
+                                <h2>{stats.rejected || 0}</h2>
+                                <p>Rejected</p>
+                            </div>
+                        </div>
+                    </div>
                 </aside>
             </div>
         </>

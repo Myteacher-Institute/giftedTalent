@@ -191,10 +191,10 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
     useEffect(() => {
         if (currentUser?.skills && jobs.length > 0) {
             const percentages = {};
-            const userSkills = currentUser.skills.map(s => s.toLowerCase());
+            const userSkills = currentUser.skills.map(s => String(s).toLowerCase());
 
             jobs.forEach(job => {
-                const jobSkills = job.tags?.map(t => t.toLowerCase()) || [];
+                const jobSkills = (job.tags || []).map(t => String(t).toLowerCase());
                 const matchingSkills = jobSkills.filter(skill => userSkills.includes(skill));
                 const percentage = jobSkills.length > 0
                     ? Math.round((matchingSkills.length / jobSkills.length) * 100)
@@ -206,31 +206,39 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
         }
     }, [jobs, currentUser?.skills]);
 
-    // Filter and Sort jobs
+    // Filter and Sort jobs - FIXED: Added safe string conversion
     useEffect(() => {
         let filtered = [...jobs];
 
         if (searchTerm.trim() !== '') {
-            filtered = filtered.filter(job =>
-                job.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                job.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                job.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                job.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-            );
+            const searchLower = searchTerm.toLowerCase();
+            filtered = filtered.filter(job => {
+                const title = job.title ? String(job.title).toLowerCase() : '';
+                const company = job.company ? String(job.company).toLowerCase() : '';
+                const location = job.location ? String(job.location).toLowerCase() : '';
+                const tags = (job.tags || []).some(tag => String(tag).toLowerCase().includes(searchLower));
+                
+                return title.includes(searchLower) || 
+                       company.includes(searchLower) || 
+                       location.includes(searchLower) || 
+                       tags;
+            });
         }
 
         if (activeFilter !== 'all' && activeFilter !== 'All') {
-            filtered = filtered.filter(job =>
-                job.job_type === activeFilter ||
-                job.tags?.includes(activeFilter)
-            );
+            filtered = filtered.filter(job => {
+                const jobType = job.job_type ? String(job.job_type) : '';
+                const tags = (job.tags || []).some(tag => String(tag) === activeFilter);
+                return jobType === activeFilter || tags;
+            });
         }
 
         if (quickFilters.remoteOnly) {
-            filtered = filtered.filter(job =>
-                job.location?.toLowerCase().includes('remote') ||
-                job.job_type === 'Remote'
-            );
+            filtered = filtered.filter(job => {
+                const location = job.location ? String(job.location).toLowerCase() : '';
+                const jobType = job.job_type ? String(job.job_type) : '';
+                return location.includes('remote') || jobType === 'Remote';
+            });
         }
 
         if (quickFilters.easyApply) {
@@ -242,24 +250,26 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
         }
 
         if (experienceLevel !== 'all' && experienceLevel !== 'All') {
-            filtered = filtered.filter(job =>
-                job.experience_level === experienceLevel
-            );
+            filtered = filtered.filter(job => {
+                const expLevel = job.experience_level ? String(job.experience_level) : '';
+                return expLevel === experienceLevel;
+            });
         }
 
         filtered = filtered.filter(job => {
             const salary = job.salary_range || job.salary;
             if (!salary) return true;
-            const numericSalary = parseInt(salary.replace(/[^0-9]/g, ''));
-            return numericSalary >= salaryRange[0] && numericSalary <= salaryRange[1];
+            const salaryStr = String(salary);
+            const numericSalary = parseInt(salaryStr.replace(/[^0-9]/g, ''));
+            return !isNaN(numericSalary) && numericSalary >= salaryRange[0] && numericSalary <= salaryRange[1];
         });
 
         if (sortBy === 'newest') {
             filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         } else if (sortBy === 'highest_salary') {
             filtered.sort((a, b) => {
-                const salaryA = parseInt((a.salary_range || a.salary || '0').replace(/[^0-9]/g, ''));
-                const salaryB = parseInt((b.salary_range || b.salary || '0').replace(/[^0-9]/g, ''));
+                const salaryA = parseInt(String(a.salary_range || a.salary || '0').replace(/[^0-9]/g, ''));
+                const salaryB = parseInt(String(b.salary_range || b.salary || '0').replace(/[^0-9]/g, ''));
                 return salaryB - salaryA;
             });
         } else if (sortBy === 'relevance') {
@@ -445,7 +455,6 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
                         </div>
 
                         {/* Menu Items */}
-                        {/* Menu Items - Navigation Links */}
                         <div className="sidebar-menu">
                             <div className="menu-item" onClick={() => router.visit('/')}>
                                 <i className="fas fa-home"></i> Home
@@ -465,7 +474,7 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
                             <div className="menu-divider"></div>
                         </div>
 
-                        {/* Filter Section - ALWAYS OPEN, NO TOGGLE BUTTON */}
+                        {/* Filter Section */}
                         <div className="filter-section">
                             <div className="filters-container">
                                 <div className="filter-group">
@@ -601,7 +610,7 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
                                                 )}
                                             </div>
                                             <p>{job.company} • {job.location}</p>
-                                            <span className="job-tags">{job.tags?.join(' • ') || job.job_type}</span>
+                                            <span className="job-tags">{(job.tags || []).join(' • ') || job.job_type}</span>
                                             {job.experience_level && <span className="experience-tag">{job.experience_level}</span>}
                                             <div className="job-meta">
                                                 <span>{job.posted_at}</span>
@@ -661,7 +670,7 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
                                                 )}
                                             </div>
                                             <p>{job.company} • {job.location}</p>
-                                            <span className="job-tags">{job.tags?.join(' • ') || job.job_type}</span>
+                                            <span className="job-tags">{(job.tags || []).join(' • ') || job.job_type}</span>
                                             <div className="job-meta">
                                                 <span>{job.posted_at}</span>
                                             </div>

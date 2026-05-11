@@ -291,7 +291,7 @@ class DashboardController extends Controller
         $user = $profile->user;
         
         $status = [
-            'email_verified' => $user->email_verified_at !== null,
+            // 'email_verified' => $user->email_verified_at !== null,  // COMMENTED OUT - EMAIL VERIFICATION NOT REQUIRED
             'name' => !empty($user->name),
             'phone' => !empty($profile->phone) || !empty($user->phone),
             'position' => !empty($profile->position),

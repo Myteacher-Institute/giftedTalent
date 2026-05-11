@@ -17,9 +17,9 @@ export default function ProfileSettings({ user, profile, onUpdate }) {
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
-    
+
     // Use Inertia form
-    const { data, setData, put, processing, errors, reset } = useForm({
+    const { data, setData, patch, processing, errors, reset } = useForm({
         name: user?.name || '',
         email: user?.email || '',
         position: profile?.position || '',
@@ -32,14 +32,14 @@ export default function ProfileSettings({ user, profile, onUpdate }) {
         twitter_url: profile?.twitter_url || '',
         skills: [],
     });
-    
+
     const proficiencyLevels = [
         { value: 'beginner', label: 'Beginner' },
         { value: 'intermediate', label: 'Intermediate' },
         { value: 'advanced', label: 'Advanced' },
         { value: 'expert', label: 'Expert' }
     ];
-    
+
     // Load skills from profile
     useEffect(() => {
         const userSkills = profile?.skills || user?.profile?.skills || [];
@@ -47,17 +47,17 @@ export default function ProfileSettings({ user, profile, onUpdate }) {
             setSkills(userSkills);
         }
     }, []);
-    
+
     // Updated getProfileImageUrl to check for base64 first
     const getProfileImageUrl = () => {
         // Priority 1: Preview image (new upload not yet saved)
         if (profileImagePreview) return profileImagePreview;
-        
+
         // Priority 2: Base64 image from database
         if (profile?.profile_image_base64) {
             return profile.profile_image_base64;
         }
-        
+
         // Priority 3: Avatar from storage (for backward compatibility)
         if (profile?.avatar_url) return profile.avatar_url;
         if (profile?.avatar) {
@@ -67,175 +67,348 @@ export default function ProfileSettings({ user, profile, onUpdate }) {
             }
             return `/storage/${avatarPath.replace(/^\/+/, '')}`;
         }
-        
+
         // Fallback: Avatar from name
         const userName = user?.name || 'User';
         return `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
     };
-    
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setData(name, value);
         setSaveStatus(null);
     };
-    
+
+    // Add these functions if they don't exist or are named differently
     const handleProfileImageChange = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        
+
         const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
         if (!allowedTypes.includes(file.type)) {
             setSaveStatus({ type: 'error', message: 'Please upload a valid image (JPEG, PNG, or WebP)' });
             return;
         }
-        
+
         if (file.size > 5 * 1024 * 1024) {
             setSaveStatus({ type: 'error', message: 'Image size should be less than 5MB' });
             return;
         }
-        
+
         const reader = new FileReader();
         reader.onloadend = () => {
             setProfileImagePreview(reader.result);
         };
         reader.readAsDataURL(file);
-        
+
         setUploadingImage(true);
         const uploadFormData = new FormData();
         uploadFormData.append('avatar', file);
-        
+
         try {
-            const response = await axios.post('/user/upload-avatar', uploadFormData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+            const response = await axios.post('/profile/avatar', uploadFormData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                }
             });
-            
+
             if (response.data.success) {
                 setSaveStatus({ type: 'success', message: 'Profile picture updated!' });
-                // Update the profile data with new base64 image
                 if (onUpdate && response.data.image) {
                     onUpdate({ ...profile, profile_image_base64: response.data.image });
                 }
                 setTimeout(() => setSaveStatus(null), 3000);
             }
         } catch (error) {
+            console.error('Upload error:', error);
             setSaveStatus({ type: 'error', message: 'Failed to upload image' });
         } finally {
             setUploadingImage(false);
         }
     };
-    
+
     const handleRemoveProfileImage = async () => {
         if (!confirm('Remove profile picture?')) return;
-        
+
         setUploadingImage(true);
         try {
-            const response = await axios.delete('/user/remove-avatar');
+            const response = await axios.delete('/profile/avatar', {
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                }
+            });
+
             if (response.data.success) {
                 setProfileImagePreview('');
                 setSaveStatus({ type: 'success', message: 'Profile picture removed!' });
-                // Update the profile to clear the base64 image
                 if (onUpdate) {
                     onUpdate({ ...profile, profile_image_base64: null });
                 }
                 setTimeout(() => setSaveStatus(null), 3000);
             }
         } catch (error) {
+            console.error('Remove error:', error);
             setSaveStatus({ type: 'error', message: 'Failed to remove image' });
         } finally {
             setUploadingImage(false);
         }
     };
-    
+
     const handleAddSkill = () => {
         if (!newSkill.trim()) {
             setSaveStatus({ type: 'error', message: 'Enter a skill name' });
             return;
         }
-        
+
         if (skills.some(skill => skill.name?.toLowerCase() === newSkill.toLowerCase())) {
             setSaveStatus({ type: 'error', message: 'Skill already exists' });
             return;
         }
-        
+
         setSkills([...skills, { id: Date.now(), name: newSkill.trim(), proficiency: newSkillProficiency }]);
         setNewSkill('');
         setSaveStatus(null);
     };
-    
+
     const handleRemoveSkill = (skillId) => {
         setSkills(skills.filter(skill => skill.id !== skillId));
     };
-    
+
     const handleUpdateSkillProficiency = (skillId, proficiency) => {
-        setSkills(skills.map(skill => 
+        setSkills(skills.map(skill =>
             skill.id === skillId ? { ...skill, proficiency } : skill
         ));
     };
-    
+
     const handleSubmit = (e) => {
-        e.preventDefault();
-        
-        // Add skills to form data
-        setData('skills', skills);
-        
-        // Submit using Inertia
-        put('/user/profile', {
-            preserveScroll: true,
-            onSuccess: () => {
-                setSaveStatus({ type: 'success', message: 'Profile updated successfully!' });
-                if (onUpdate) onUpdate(data);
-                setTimeout(() => setSaveStatus(null), 3000);
-            },
-            onError: (err) => {
-                console.error('Profile update error:', err);
-                const errorMessages = Object.values(err).flat().join(', ');
-                setSaveStatus({ type: 'error', message: errorMessages || 'Failed to update profile' });
-            }
-        });
-    };
+    e.preventDefault();
     
-    // Styles - Fixed duplicate key issue
+    // Add skills to form data
+    setData('skills', skills);
+    
+    // Use the correct endpoint from your routes
+    patch('/profile/extended', {
+        preserveScroll: true,
+        onSuccess: () => {
+            setSaveStatus({ type: 'success', message: 'Profile updated successfully!' });
+            if (onUpdate) onUpdate(data);
+            setTimeout(() => setSaveStatus(null), 3000);
+        },
+        onError: (err) => {
+            console.error('Profile update error:', err);
+            const errorMessages = Object.values(err).flat().join(', ');
+            setSaveStatus({ type: 'error', message: errorMessages || 'Failed to update profile' });
+        }
+    });
+};
+
+    // Updated responsive styles
     const styles = {
-        container: { maxWidth: '800px' },
-        section: { background: 'white', borderRadius: '12px', padding: '24px', marginBottom: '24px', border: '1px solid #e5e7eb' },
-        title: { fontSize: '18px', fontWeight: '600', marginBottom: '20px', color: '#1f2937', display: 'flex', alignItems: 'center', gap: '8px' },
-        formGrid: { display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '20px' },
-        formGroup: { display: 'flex', flexDirection: 'column', marginBottom: '16px' },
-        label: { fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' },
-        input: { padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '14px' },
-        textarea: { padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '14px', resize: 'vertical', minHeight: '100px' },
-        hint: { fontSize: '12px', color: '#6b7280', marginTop: '4px' },
-        errorText: { fontSize: '12px', color: '#ef4444', marginTop: '4px' },
-        profileImageContainer: { textAlign: 'center', position: 'relative', display: 'inline-block' },
-        profileImage: { width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #4F46E5' },
-        imageActions: { position: 'absolute', bottom: '0', right: '0', display: 'flex', gap: '8px' },
-        imageBtn: { width: '36px', height: '36px', borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+        container: {
+            maxWidth: '800px',
+            width: '100%',
+            margin: '0 auto',
+            padding: isMobile ? '0 12px' : '0'
+        },
+        section: {
+            background: 'white',
+            borderRadius: isMobile ? '8px' : '12px',
+            padding: isMobile ? '16px' : '24px',
+            marginBottom: isMobile ? '16px' : '24px',
+            border: '1px solid #e5e7eb',
+            boxShadow: isMobile ? 'none' : '0 1px 2px rgba(0,0,0,0.05)'
+        },
+        title: {
+            fontSize: isMobile ? '16px' : '18px',
+            fontWeight: '600',
+            marginBottom: '16px',
+            color: '#1f2937',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+        },
+        formGrid: {
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+            gap: isMobile ? '16px' : '20px'
+        },
+        formGroup: {
+            display: 'flex',
+            flexDirection: 'column',
+            marginBottom: isMobile ? '0' : '16px'
+        },
+        label: {
+            fontSize: isMobile ? '13px' : '14px',
+            fontWeight: '500',
+            marginBottom: '8px',
+            color: '#374151'
+        },
+        input: {
+            padding: isMobile ? '12px' : '10px 12px',
+            border: '1px solid #e5e7eb',
+            borderRadius: '8px',
+            fontSize: isMobile ? '16px' : '14px', // Prevents zoom on mobile
+            width: '100%',
+            boxSizing: 'border-box'
+        },
+        textarea: {
+            padding: isMobile ? '12px' : '10px 12px',
+            border: '1px solid #e5e7eb',
+            borderRadius: '8px',
+            fontSize: isMobile ? '16px' : '14px',
+            resize: 'vertical',
+            minHeight: isMobile ? '120px' : '100px',
+            width: '100%',
+            boxSizing: 'border-box',
+            fontFamily: 'inherit'
+        },
+        hint: {
+            fontSize: isMobile ? '11px' : '12px',
+            color: '#6b7280',
+            marginTop: '8px'
+        },
+        errorText: {
+            fontSize: '12px',
+            color: '#ef4444',
+            marginTop: '4px'
+        },
+        profileImageContainer: {
+            textAlign: 'center',
+            position: 'relative',
+            display: 'inline-block',
+            margin: '0 auto'
+        },
+        profileImage: {
+            width: isMobile ? '120px' : '150px',
+            height: isMobile ? '120px' : '150px',
+            borderRadius: '50%',
+            objectFit: 'cover',
+            border: '3px solid #4F46E5'
+        },
+        imageActions: {
+            position: 'absolute',
+            bottom: '0',
+            right: '0',
+            display: 'flex',
+            gap: '8px'
+        },
+        imageBtn: {
+            width: isMobile ? '32px' : '36px',
+            height: isMobile ? '32px' : '36px',
+            borderRadius: '50%',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+        },
         uploadBtn: { background: '#4F46E5', color: 'white' },
         removeBtn: { background: '#ef4444', color: 'white' },
-        skillsList: { display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' },
-        skillItem: { display: 'flex', alignItems: 'center', gap: '8px', background: '#f9fafb', padding: '8px 12px', borderRadius: '8px' },
-        addSkill: { display: 'flex', gap: '12px', marginTop: '16px' },
-        addSkillInput: { flex: 1, padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: '8px' },
-        addSkillSelect: { padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: '8px' },
-        addSkillBtn: { padding: '10px 20px', background: '#4F46E5', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' },
-        formActions: { display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #e5e7eb' },
-        saveBtn: { padding: '12px 24px', background: '#4F46E5', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' },
-        cancelBtn: { padding: '12px 24px', background: 'white', color: '#374151', border: '1px solid #e5e7eb', borderRadius: '8px', cursor: 'pointer' },
-        saveStatus: { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '8px', marginBottom: '24px' },
+        skillsList: {
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '10px',
+            marginBottom: '20px'
+        },
+        skillItem: {
+            display: 'flex',
+            alignItems: 'center',
+            flexWrap: isMobile ? 'wrap' : 'nowrap',
+            gap: '8px',
+            background: '#f9fafb',
+            padding: isMobile ? '8px 12px' : '8px 12px',
+            borderRadius: '8px',
+            width: isMobile ? '100%' : 'auto',
+            justifyContent: 'space-between'
+        },
+        addSkill: {
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: '12px',
+            marginTop: '16px'
+        },
+        addSkillInput: {
+            flex: 1,
+            padding: isMobile ? '12px' : '10px 12px',
+            border: '1px solid #e5e7eb',
+            borderRadius: '8px',
+            fontSize: isMobile ? '16px' : '14px',
+            width: isMobile ? '100%' : 'auto',
+            boxSizing: 'border-box'
+        },
+        addSkillSelect: {
+            padding: isMobile ? '12px' : '10px 12px',
+            border: '1px solid #e5e7eb',
+            borderRadius: '8px',
+            fontSize: isMobile ? '16px' : '14px',
+            width: isMobile ? '100%' : 'auto'
+        },
+        addSkillBtn: {
+            padding: isMobile ? '12px' : '10px 20px',
+            background: '#4F46E5',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: isMobile ? '14px' : '14px',
+            width: isMobile ? '100%' : 'auto'
+        },
+        formActions: {
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: '12px',
+            justifyContent: 'flex-end',
+            marginTop: '24px',
+            paddingTop: '24px',
+            borderTop: '1px solid #e5e7eb'
+        },
+        saveBtn: {
+            padding: isMobile ? '12px' : '12px 24px',
+            background: '#4F46E5',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            fontSize: isMobile ? '14px' : '14px',
+            width: isMobile ? '100%' : 'auto'
+        },
+        cancelBtn: {
+            padding: isMobile ? '12px' : '12px 24px',
+            background: 'white',
+            color: '#374151',
+            border: '1px solid #e5e7eb',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: isMobile ? '14px' : '14px',
+            width: isMobile ? '100%' : 'auto'
+        },
+        saveStatus: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            marginBottom: '24px'
+        },
         success: { background: '#f0fdf4', border: '1px solid #86efac', color: '#166534' },
         errorStatus: { background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b' }
     };
-    
+
     return (
         <div style={styles.container}>
             {saveStatus && (
                 <div style={{ ...styles.saveStatus, ...(saveStatus.type === 'success' ? styles.success : styles.errorStatus) }}>
                     <i className={`fas fa-${saveStatus.type === 'success' ? 'check-circle' : 'exclamation-circle'}`}></i>
                     <span>{saveStatus.message}</span>
-                    <button onClick={() => setSaveStatus(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+                    <button onClick={() => setSaveStatus(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}>×</button>
                 </div>
             )}
-            
+
             <form onSubmit={handleSubmit}>
                 {/* Profile Picture */}
                 <div style={styles.section}>
@@ -256,7 +429,7 @@ export default function ProfileSettings({ user, profile, onUpdate }) {
                         <p style={styles.hint}>Square image, 300x300px, max 5MB</p>
                     </div>
                 </div>
-                
+
                 {/* Basic Info */}
                 <div style={styles.section}>
                     <h3 style={styles.title}><i className="fas fa-user"></i> Basic Information</h3>
@@ -285,59 +458,108 @@ export default function ProfileSettings({ user, profile, onUpdate }) {
                         </div>
                     </div>
                 </div>
-                
-                {/* Bio */}
+
+                {/* Bio / About - IMPROVED RESPONSIVE SECTION */}
                 <div style={styles.section}>
                     <h3 style={styles.title}><i className="fas fa-align-left"></i> Bio / About</h3>
-                    <label htmlFor="profile-bio" style={styles.label} className="sr-only">Bio / About</label>
-                    <textarea id="profile-bio" name="bio" rows="4" autoComplete="off" value={data.bio} onChange={handleInputChange} style={styles.textarea} placeholder="Tell employers about yourself..."></textarea>
-                    <p style={styles.hint}>{data.bio.length}/500 characters</p>
+                    <div style={styles.formGroup}>
+                        <label htmlFor="profile-bio" style={styles.label}>Tell us about yourself</label>
+                        <textarea
+                            id="profile-bio"
+                            name="bio"
+                            rows={isMobile ? "6" : "4"}
+                            autoComplete="off"
+                            value={data.bio}
+                            onChange={handleInputChange}
+                            style={styles.textarea}
+                            placeholder="Write a professional summary... Highlight your experience, skills, and career goals."
+                        />
+                        <div style={{ ...styles.hint, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span>✓ Professional summary helps employers understand your background</span>
+                            <span>{data.bio.length}/500 characters</span>
+                        </div>
+                    </div>
                 </div>
-                
-                {/* Skills */}
+
+                {/* Skills & Expertise - IMPROVED RESPONSIVE SECTION */}
                 <div style={styles.section}>
                     <h3 style={styles.title}><i className="fas fa-code"></i> Skills & Expertise</h3>
+
+                    {/* Skills List - Improved mobile layout */}
                     <div style={styles.skillsList}>
-                        {skills.map(skill => (
-                            <div key={skill.id} style={styles.skillItem}>
-                                <span>{skill.name}</span>
-                                <select 
-                                    value={skill.proficiency} 
-                                    onChange={(e) => handleUpdateSkillProficiency(skill.id, e.target.value)} 
-                                    style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '12px' }}
-                                >
-                                    {proficiencyLevels.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
-                                </select>
-                                <button type="button" onClick={() => handleRemoveSkill(skill.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af' }}>×</button>
-                            </div>
-                        ))}
+                        {skills.length === 0 ? (
+                            <p style={{ color: '#9ca3af', fontSize: '14px', width: '100%', textAlign: 'center', padding: '20px' }}>
+                                No skills added yet. Add your first skill below!
+                            </p>
+                        ) : (
+                            skills.map(skill => (
+                                <div key={skill.id} style={styles.skillItem}>
+                                    <span style={{ fontWeight: '500' }}>{skill.name}</span>
+                                    <select
+                                        value={skill.proficiency}
+                                        onChange={(e) => handleUpdateSkillProficiency(skill.id, e.target.value)}
+                                        style={{
+                                            padding: isMobile ? '6px 10px' : '4px 8px',
+                                            borderRadius: '6px',
+                                            fontSize: isMobile ? '13px' : '12px',
+                                            border: '1px solid #e5e7eb'
+                                        }}
+                                    >
+                                        {proficiencyLevels.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
+                                    </select>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleRemoveSkill(skill.id)}
+                                        style={{
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            color: '#ef4444',
+                                            fontSize: isMobile ? '18px' : '16px',
+                                            padding: '4px 8px'
+                                        }}
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                            ))
+                        )}
                     </div>
+
+                    {/* Add Skill Section - Improved mobile layout */}
                     <div style={styles.addSkill}>
-                        <label htmlFor="skill-input" style={{ display: 'none' }}>Add skill</label>
-                        <input 
+                        <input
                             id="skill-input"
-                            type="text" 
+                            type="text"
                             name="new_skill"
-                            value={newSkill} 
-                            onChange={(e) => setNewSkill(e.target.value)} 
-                            placeholder="Add a skill..." 
-                            style={styles.addSkillInput} 
+                            value={newSkill}
+                            onChange={(e) => setNewSkill(e.target.value)}
+                            placeholder="Add a skill (e.g., JavaScript, Project Management, Figma)..."
+                            style={styles.addSkillInput}
                             autoComplete="off"
+                            onKeyPress={(e) => e.key === 'Enter' && handleAddSkill()}
                         />
-                        <label htmlFor="skill-proficiency" style={{ display: 'none' }}>Skill proficiency</label>
-                        <select 
+                        <select
                             id="skill-proficiency"
                             name="new_skill_proficiency"
-                            value={newSkillProficiency} 
-                            onChange={(e) => setNewSkillProficiency(e.target.value)} 
+                            value={newSkillProficiency}
+                            onChange={(e) => setNewSkillProficiency(e.target.value)}
                             style={styles.addSkillSelect}
                         >
                             {proficiencyLevels.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
                         </select>
-                        <button type="button" onClick={handleAddSkill} style={styles.addSkillBtn}>Add</button>
+                        <button type="button" onClick={handleAddSkill} style={styles.addSkillBtn}>
+                            <i className="fas fa-plus"></i> Add Skill
+                        </button>
                     </div>
+
+                    {isMobile && (
+                        <p style={{ ...styles.hint, marginTop: '12px' }}>
+                            <i className="fas fa-info-circle"></i> Tap "Add Skill" to build your skills list
+                        </p>
+                    )}
                 </div>
-                
+
                 {/* Professional Links */}
                 <div style={styles.section}>
                     <h3 style={styles.title}><i className="fas fa-link"></i> Professional Links</h3>
@@ -360,7 +582,7 @@ export default function ProfileSettings({ user, profile, onUpdate }) {
                         </div>
                     </div>
                 </div>
-                
+
                 {/* Actions */}
                 <div style={styles.formActions}>
                     <button type="submit" disabled={processing} style={styles.saveBtn}>

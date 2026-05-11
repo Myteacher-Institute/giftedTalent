@@ -1,7 +1,7 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import Notification from './Notification';
-import ApplicationLogo from './ApplicationLogo'; // Add this import
+import ApplicationLogo from './ApplicationLogo';
 
 const AppNavbar = ({ user, newJobsCount, onMenuToggle, isMenuOpen }) => {
     const [scrolled, setScrolled] = useState(false);
@@ -53,9 +53,9 @@ const AppNavbar = ({ user, newJobsCount, onMenuToggle, isMenuOpen }) => {
     return (
         <>
             <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
-                {/* Logo with image */}
+                {/* Logo with fixed size */}
                 <Link href="/" className="logo-container">
-                    <ApplicationLogo className="logo-image" />
+                    <ApplicationLogo className="logo-image" style={{ width: '120px', height: 'auto' }} />
                 </Link>
 
                 <div className={`nav-links ${mobileNavOpen ? 'mobile-open' : ''}`}>
