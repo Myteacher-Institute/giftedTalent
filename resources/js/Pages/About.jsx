@@ -6,6 +6,7 @@ import '../../css/nav.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faHeart, faUsers, faRocket } from '@fortawesome/free-solid-svg-icons';
 import ApplicationLogo from '@/Components/ApplicationLogo';
+import Footer from '@/Components/Footer';
 
 
 // Nav Component
@@ -229,36 +230,8 @@ export default function About() {
                         </div>
                     </div>
                 </section>
-
-                {/* FOOTER */}
-                <footer>
-                    <div className="footer-top">
-                        <div className="footer-left">
-                            <a href="#" className="brand" onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
-                                <ApplicationLogo className="logo" />
-                            </a>
-                        </div>
-
-                        <div className="footer-right">
-                            <a href="/about">About</a>
-                            <a href="/contact">Contact</a>
-                            <a href="/privacy">Privacy Policy</a>
-                            <a href="/guidelines">Community Guideline</a>
-                        </div>
-                    </div>
-
-                    <div className="footer-bottom">
-                        <div className='copyright'>
-                            <p>©</p>
-                            <span>2026</span>
-                        </div>
-
-                        <p>
-                            <span>Powered by:</span> MyTeacher Institute. All rights reserved.
-                        </p>
-                    </div>
-
-                </footer>
+                
+                <Footer />
             </div>
         </>
     );
