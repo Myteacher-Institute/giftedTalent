@@ -236,20 +236,8 @@ export default function Dashboard({
         }
     }, []);
 
-    const getProfileImageUrl = () => {
-    // Force refresh with timestamp
-    const timestamp = Date.now();
-    
-    if (profile?.profile_image_base64) {
-        return profile.profile_image_base64;
-    }
-    
-    if (user?.profile?.avatar_url) {
-        return `${user.profile.avatar_url}?t=${timestamp}`;
-    }
-    
-    const userName = user?.name || 'User';
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true&t=${timestamp}`;
+  const getProfileImageUrl = (userData) => {
+  return userData?.profile_photo_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(userData?.name || 'User');
 };
 
     const handleSearch = (e) => {

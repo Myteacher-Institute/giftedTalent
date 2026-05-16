@@ -1,7 +1,9 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import { useState } from 'react';
 import AppNavbar from '../Components/AppNavbar';
 import '../../css/talent_profile.css';
+
+
 
 export default function TalentProfile({ auth, talent }) {
     const [imageError, setImageError] = useState(false);

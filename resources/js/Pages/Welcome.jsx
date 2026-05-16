@@ -10,6 +10,71 @@ import starIcon from '../../assets/svg/star.svg';
 import halfStarIcon from '../../assets/svg/half-star.svg';
 import heroImage from '../../assets/img/giftedtalentimage.png';
 import ApplicationLogo from '@/Components/ApplicationLogo';
+import Footer from '@/Components/Footer';
+
+// Counter Component
+// Counter Component
+// Counter Component
+function Counter({ target, suffix = "", duration = 2000 }) {
+    const [count, setCount] = useState(0);
+    const containerRef = useRef(null);
+    const [hasAnimated, setHasAnimated] = useState(false);
+
+    // Parse target number (remove +, %, etc)
+    const targetNumber = parseInt(target.toString().replace(/[^0-9]/g, ''));
+    const isPercentage = target.toString().includes('%');
+    const isPlus = target.toString().includes('+');
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && !hasAnimated) {
+                    setHasAnimated(true);
+                    let start = 0;
+                    const increment = targetNumber / (duration / 16);
+
+                    const timer = setInterval(() => {
+                        start += increment;
+                        if (start >= targetNumber) {
+                            setCount(targetNumber);
+                            clearInterval(timer);
+                        } else {
+                            setCount(Math.floor(start));
+                        }
+                    }, 16);
+
+                    return () => clearInterval(timer);
+                } else if (!entries[0].isIntersecting && hasAnimated) {
+                    // Reset when leaving view
+                    setHasAnimated(false);
+                    setCount(0);
+                }
+            },
+            { threshold: 0.3 }
+        );
+
+        if (containerRef.current) {
+            observer.observe(containerRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, [targetNumber, duration, hasAnimated]);
+
+    let displayValue = count;
+    if (isPercentage) {
+        displayValue = count + '%';
+    } else if (isPlus) {
+        displayValue = count + '+';
+    } else {
+        displayValue = count;
+    }
+
+    return (
+        <div ref={containerRef} className="counter-container">
+            <span className="stat-number">{displayValue}{suffix}</span>
+        </div>
+    );
+}
 
 // Nav Component
 function Nav({ auth }) {
@@ -774,25 +839,8 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
                         </div>
                     </div>
                 )}
-                { /* Footer */}
-                <footer className="footer">
-                    <div className="footer-right">
-                        <a href="/about">About</a>
-                        <a href="/contact">Contact</a>
-                        <a href="/privacy">Privacy Policy</a>
-                        <a href="/guidelines">Community Guideline</a>
-                        <div className="footer-bottom">
-                            <div className='copyright'>
-                                <p>©</p>
-                                <span>2026</span>
-                            </div>
-
-                            <p>
-                                <span>Powered by:</span> MyTeacher Institute. All rights reserved.
-                            </p>
-                        </div>
-                    </div>
-                </footer>
+                {/* FOOTER */}
+                <Footer />
 
             </div>
         </>

@@ -87,7 +87,6 @@ class User extends Authenticatable
     {
         return $this->hasMany(Resume::class);
     }
-
     /**
      * Get the user's applications.
      */

@@ -751,206 +751,12 @@ body {
     animation: fadeSlide 0.3s ease-out;
 }
 
-/* FOOTER */
-footer {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    margin-top: 1rem;
-    gap: 2rem;
-    align-items: center;
-}
-
-/* Desktop footer */
-@media (min-width: 1024px) {
-    footer {
-        padding: 1.5rem 0;
-        gap: 3rem;
-        align-items: center;
-    }
-}
-
-.footer-top {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    align-items: center;
-    font-size: 14px;
-    /* padding: 0 1.5rem; */
-}
-
-.footer-top .footer-left {
-    padding: 0 1.5rem;
-}
-
-@media (min-width: 768px) {
-    .footer-top {
-        flex-direction: row;
-        gap: 2rem;
-    }
-}
-
-.footer-top .brand {
-    text-decoration: none;
-    font-weight: 600;
-    margin-left: 0;
-    color: #222;
-}
-
-.footer-top .brand span {
-    color: #3B82F6;
-}
-
-.footer-top div {
-    display: flex;
-    gap: 10px;
-}
-
-.footer-right {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem !important;
-    margin-top: 10rem;
-}
-
-@media (min-width: 1024px) {
-
-    .footer-top {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        align-items: center;
-        font-size: 14px;
-        padding: 0 1.5rem;
-    }
-
-    .footer-right {
-        width: 100%;
-        display: flex;
-        flex-direction: row;
-        gap: 18rem !important;
-        justify-content: center;
-    }
-}
-
-@media (min-width: 820px) {
-    .footer-top {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        font-size: 14px;
-    }
-
-    .footer-right {
-        width: 100%;
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-    }
-}
-
-.footer-right a {
-    display: flex;
-    justify-content: space-around;
-    text-decoration: none;
-    color: #000;
-    font-weight: 600;
-    font-size: 14px;
-    margin-left: 0;
-    white-space: nowrap;
-}
-
-.footer-right a:hover {
-    color: #0A2463;
-}
-
 @media (max-width: 768px) {
 
     .feature-jobs,
     .featured-talents {
         padding: 60px 16px;
     }
-
-    .talent-swiper-container {
-        overflow-x: auto;
-        overflow-y: hidden;
-        scroll-snap-type: x mandatory;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: thin;
-        padding: 10px 0 20px 0;
-    }
-
-    .talent-swiper-container::-webkit-scrollbar {
-        height: 4px;
-    }
-
-    .talent-swiper-container::-webkit-scrollbar-track {
-        background: #e2e8f0;
-        border-radius: 10px;
-    }
-
-    .talent-swiper-container::-webkit-scrollbar-thumb {
-        background: #0A2463;
-        border-radius: 10px;
-    }
-
-    .talent-swiper-wrapper {
-        display: flex;
-        flex-direction: row;
-        gap: 16px;
-        width: max-content;
-        padding: 0 16px;
-    }
-
-    .feature-talent-card {
-        width: 280px;
-        flex-shrink: 0;
-        scroll-snap-align: start;
-    }
-
-    .feature-talent-card-header img,
-    .feature-talent-avatar-initials {
-        width: 80px;
-        height: 80px;
-    }
-
-    .feature-talent-avatar-initials {
-        font-size: 32px;
-    }
-
-    .talent-swiper-prev,
-    .talent-swiper-next {
-        display: none;
-    }
-
-    .footer-right {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem !important;
-        margin: 0;
-    }
-}
-
-.footer-bottom {
-    display: flex;
-    flex-direction: column;
-    text-align: center;
-    font-size: 12px;
-    font-weight: 600;
-    color: #6B7280;
-    margin-bottom: 1.2rem;
-}
-
-.footer-bottom .copyright {
-    display: flex;
-    justify-content: center;
-    gap: 4px;
-    margin-bottom: 0.5rem;
-}
-
-.footer-bottom p span {
-    font-weight: 600;
-    color: #000;
 }
 
 /* Small Mobile */
@@ -959,13 +765,7 @@ footer {
         padding: 40px 12px;
     }
 
-    .footer-right {
-        display: flex;
-        flex-direction: row;
-        gap: 1rem !important;
-        margin-top: 2.2rem;
-    }
-
+    /* Prevent any overflow */
     * {
         max-width: 100%;
     }
@@ -1028,25 +828,6 @@ footer {
     transition: all 0.3s ease;
     z-index: 10;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-@media (max-width: 353px) {
-    .footer-top {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        align-items: center;
-        font-size: 14px;
-        padding: 0 1.5rem;
-    }
-
-    .footer-right {
-        display: flex;
-        flex-direction: row;
-        gap: 1rem !important;
-        margin-top: 2.2rem;
-        padding: 0 1.7;
-    }
 }
 
 /* Ensure touch-friendly buttons >=44px height */

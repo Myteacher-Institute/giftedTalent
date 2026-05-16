@@ -60,6 +60,7 @@ const AppNavbar = ({ user, newJobsCount, onMenuToggle, isMenuOpen }) => {
 
                 <div className={`nav-links ${mobileNavOpen ? 'mobile-open' : ''}`}>
                     <Link href="/" onClick={handleNavClick}>Home</Link>
+                    <Link href="/dashboard" onClick={handleNavClick}>Dashboard</Link>
                     <Link href="/search-jobs" onClick={handleNavClick}>Jobs</Link>
                     <Link href="/explore" onClick={handleNavClick}>Explore</Link>
                 </div>

@@ -88,6 +88,7 @@ export default function EditProfile({ user }) {
         clearErrors();
 
         patch(route('profile.updateExtended'), {
+            preserveScroll: true,
             onSuccess: () => {
                 if (typeof alertify !== 'undefined') {
                     alertify.success('Profile updated successfully!');
@@ -105,19 +106,23 @@ export default function EditProfile({ user }) {
 
     // ========== EXPERIENCE FUNCTIONS ==========
     const handleAddExperience = async () => {
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        
         try {
             const response = await fetch('/profile/experiences', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json',
                 },
                 body: JSON.stringify(expForm),
             });
 
+            const data = await response.json();
+            
             if (response.ok) {
-                const newExp = await response.json();
-                setExperiences([...experiences, newExp]);
+                setExperiences([...experiences, data]);
                 setExpForm({
                     company: '',
                     position: '',
@@ -132,26 +137,38 @@ export default function EditProfile({ user }) {
                     alertify.success('Experience added successfully!');
                 }
                 router.reload();
+            } else {
+                console.error('Error:', data);
+                if (typeof alertify !== 'undefined') {
+                    alertify.error(data.message || 'Failed to add experience');
+                }
             }
         } catch (error) {
             console.error('Error adding experience:', error);
+            if (typeof alertify !== 'undefined') {
+                alertify.error('Network error. Please try again.');
+            }
         }
     };
 
     const handleUpdateExperience = async () => {
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        
         try {
             const response = await fetch(`/profile/experiences/${editingExp.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json',
                 },
                 body: JSON.stringify(expForm),
             });
 
+            const data = await response.json();
+            
             if (response.ok) {
-                const updated = await response.json();
-                setExperiences(experiences.map(exp => exp.id === editingExp.id ? updated : exp));
+                setExperiences(experiences.map(exp => exp.id === editingExp.id ? data : exp));
                 setEditingExp(null);
                 setExpForm({
                     company: '',
@@ -166,6 +183,11 @@ export default function EditProfile({ user }) {
                     alertify.success('Experience updated!');
                 }
                 router.reload();
+            } else {
+                console.error('Error:', data);
+                if (typeof alertify !== 'undefined') {
+                    alertify.error(data.message || 'Failed to update experience');
+                }
             }
         } catch (error) {
             console.error('Error updating experience:', error);
@@ -175,11 +197,14 @@ export default function EditProfile({ user }) {
     const handleDeleteExperience = async (id) => {
         if (!confirm('Delete this experience?')) return;
 
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        
         try {
             const response = await fetch(`/profile/experiences/${id}`, {
                 method: 'DELETE',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json',
                 },
             });
 
@@ -188,6 +213,9 @@ export default function EditProfile({ user }) {
                 if (typeof alertify !== 'undefined') {
                     alertify.success('Experience deleted!');
                 }
+            } else {
+                const data = await response.json();
+                console.error('Error:', data);
             }
         } catch (error) {
             console.error('Error deleting experience:', error);
@@ -198,12 +226,15 @@ export default function EditProfile({ user }) {
     const handleAddSkill = async () => {
         if (!newSkill.trim()) return;
 
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        
         try {
             const response = await fetch('/profile/skills', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json',
                 },
                 body: JSON.stringify({
                     name: newSkill,
@@ -211,27 +242,38 @@ export default function EditProfile({ user }) {
                 }),
             });
 
+            const data = await response.json();
+            
             if (response.ok) {
-                const addedSkill = await response.json();
-                setSkills([...skills, addedSkill]);
+                setSkills([...skills, data]);
                 setNewSkill('');
                 setSkillLevel('intermediate');
                 if (typeof alertify !== 'undefined') {
                     alertify.success('Skill added!');
                 }
-                router.reload();
+            } else {
+                console.error('Error:', data);
+                if (typeof alertify !== 'undefined') {
+                    alertify.error(data.message || 'Failed to add skill');
+                }
             }
         } catch (error) {
             console.error('Error adding skill:', error);
+            if (typeof alertify !== 'undefined') {
+                alertify.error('Network error. Please try again.');
+            }
         }
     };
 
     const handleDeleteSkill = async (skillId) => {
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        
         try {
             const response = await fetch(`/profile/skills/${skillId}`, {
                 method: 'DELETE',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json',
                 },
             });
 
@@ -253,17 +295,34 @@ export default function EditProfile({ user }) {
         setUploading(true);
         const formData = new FormData();
         formData.append('avatar', file);
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
         try {
             await router.post(route('profile.avatar.upload'), formData, {
+                headers: {
+                    'X-CSRF-TOKEN': token,
+                    'Content-Type': 'multipart/form-data',
+                },
                 forceFormData: true,
                 preserveState: true,
                 onSuccess: () => {
+                    if (typeof alertify !== 'undefined') {
+                        alertify.success('Avatar uploaded!');
+                    }
                     router.reload();
+                },
+                onError: (errors) => {
+                    console.error('Upload error:', errors);
+                    if (typeof alertify !== 'undefined') {
+                        alertify.error('Failed to upload image');
+                    }
                 }
             });
         } catch (error) {
             console.error('Upload failed', error);
+            if (typeof alertify !== 'undefined') {
+                alertify.error('Upload failed');
+            }
         } finally {
             setUploading(false);
         }
@@ -272,11 +331,27 @@ export default function EditProfile({ user }) {
     const removeAvatar = async () => {
         if (!confirm('Remove profile picture?')) return;
 
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        
         try {
             await router.delete(route('profile.avatar.remove'), {
+                headers: {
+                    'X-CSRF-TOKEN': token,
+                },
                 preserveState: true,
+                onSuccess: () => {
+                    if (typeof alertify !== 'undefined') {
+                        alertify.success('Avatar removed');
+                    }
+                    router.reload();
+                },
+                onError: (errors) => {
+                    console.error('Remove error:', errors);
+                    if (typeof alertify !== 'undefined') {
+                        alertify.error('Failed to remove image');
+                    }
+                }
             });
-            router.reload();
         } catch (error) {
             console.error('Remove failed', error);
         }
@@ -311,6 +386,9 @@ export default function EditProfile({ user }) {
                                     src={user.profile?.avatar_url || user.profile?.avatar}
                                     alt="Profile"
                                     className="profile-avatar-img"
+                                    onError={(e) => {
+                                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=4F46E5&color=fff&size=150&bold=true`;
+                                    }}
                                 />
                             ) : (
                                 <div className="profile-avatar-initials">
@@ -322,25 +400,25 @@ export default function EditProfile({ user }) {
                             </div>
                         </div>
                         <div className="profile-avatar-actions">
-    <label htmlFor="avatar-upload" className="btn-avatar-upload">
-        <i className="fas fa-camera"></i> 
-        <span>Change Photo</span>
-        <input 
-            id="avatar-upload"
-            type="file" 
-            onChange={uploadAvatar}
-            accept="image/*"
-            className="hidden-input"
-            disabled={uploading}
-        />
-    </label>
-    {hasAvatar && (
-        <button onClick={removeAvatar} className="btn-avatar-remove" disabled={uploading}>
-            <i className="fas fa-trash"></i> 
-            <span>Remove</span>
-        </button>
-    )}
-</div>
+                            <label htmlFor="avatar-upload" className="btn-avatar-upload">
+                                <i className="fas fa-camera"></i>
+                                <span>Change Photo</span>
+                                <input
+                                    id="avatar-upload"
+                                    type="file"
+                                    onChange={uploadAvatar}
+                                    accept="image/*"
+                                    className="hidden-input"
+                                    disabled={uploading}
+                                />
+                            </label>
+                            {hasAvatar && (
+                                <button onClick={removeAvatar} className="btn-avatar-remove" disabled={uploading}>
+                                    <i className="fas fa-trash"></i>
+                                    <span>Remove</span>
+                                </button>
+                            )}
+                        </div>
                         <div className="profile-info-text">
                             <h3>{user?.name || 'User'}</h3>
                         </div>
