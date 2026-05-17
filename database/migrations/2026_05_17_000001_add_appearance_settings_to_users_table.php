@@ -6,25 +6,19 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        if (!Schema::hasColumn('users', 'profile_completed')) {
+        if (!Schema::hasColumn('users', 'appearance_settings')) {
             Schema::table('users', function (Blueprint $table) {
-                $table->integer('profile_completed')->default(0)->after('email');
+                $table->json('appearance_settings')->nullable()->after('notification_preferences');
             });
         }
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('profile_completed');
+            $table->dropColumn('appearance_settings');
         });
     }
 };

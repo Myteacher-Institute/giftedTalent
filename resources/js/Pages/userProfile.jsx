@@ -301,7 +301,6 @@ export default function EditProfile({ user }) {
             await router.post(route('profile.avatar.upload'), formData, {
                 headers: {
                     'X-CSRF-TOKEN': token,
-                    'Content-Type': 'multipart/form-data',
                 },
                 forceFormData: true,
                 preserveState: true,
@@ -360,6 +359,18 @@ export default function EditProfile({ user }) {
     const initials = user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'JD';
     const hasAvatar = user?.profile?.avatar_url || user?.profile?.avatar;
 
+    const getAvatarUrl = () => {
+        const avatarUrl = user?.profile?.avatar_url || user?.profile?.avatar;
+        if (!avatarUrl) {
+            return `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=4F46E5&color=fff&size=150&bold=true`;
+        }
+        if (typeof avatarUrl === 'string' && (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://') || avatarUrl.startsWith('data:image'))) {
+            return avatarUrl;
+        }
+        const cleanPath = String(avatarUrl).replace(/^\/+/, '');
+        return cleanPath.startsWith('storage/') ? `/${cleanPath}` : `/storage/${cleanPath}`;
+    };
+
     const handleChange = (e, field) => {
         setData(field, e.target.value);
     };
@@ -383,7 +394,7 @@ export default function EditProfile({ user }) {
                         <div className="profile-avatar-wrapper">
                             {hasAvatar ? (
                                 <img
-                                    src={user.profile?.avatar_url || user.profile?.avatar}
+                                    src={getAvatarUrl()}
                                     alt="Profile"
                                     className="profile-avatar-img"
                                     onError={(e) => {

@@ -19,6 +19,11 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
     });
     const [notificationCount, setNotificationCount] = useState(0);
 
+    useEffect(() => {
+        setJobs([...recommendedJobs, ...exploreJobs]);
+        setFilteredJobs([...recommendedJobs, ...exploreJobs]);
+    }, [recommendedJobs, exploreJobs]);
+
     // Job Type Filter
     const [activeFilter, setActiveFilter] = useState('all');
     const [jobTypes] = useState(['All', 'Full-time', 'Remote', 'Contract', 'Part-time', 'Internship']);
@@ -71,37 +76,17 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
     // Get profile data - prioritize the passed profile prop
     const userProfile = profile || currentUser?.profile || {};
 
-    // Debug: Log profile data
-    useEffect(() => {
-        console.log('=== SEARCH JOBS PROFILE DEBUG ===');
-        console.log('1. profile object:', profile);
-        console.log('2. userProfile:', userProfile);
-        console.log('3. profile_image_base64:', profile?.profile_image_base64);
-        console.log('4. position:', userProfile?.position);
-        console.log('5. city:', userProfile?.city);
-        console.log('6. recommendedJobs count:', recommendedJobs.length);
-        console.log('7. exploreJobs count:', exploreJobs.length);
-        console.log('8. savedJobs count:', initialSavedJobs.length);
-    }, [profile, userProfile, recommendedJobs, exploreJobs, initialSavedJobs]);
-
     // Get profile image URL with base64 support
     const getProfileImageUrl = () => {
-        // FIRST: Check for base64 in the profile prop
         if (profile?.profile_image_base64 && typeof profile.profile_image_base64 === 'string') {
             return profile.profile_image_base64;
         }
-
-        // SECOND: Check for base64 in user's profile
         if (currentUser?.profile?.profile_image_base64 && typeof currentUser.profile.profile_image_base64 === 'string') {
             return currentUser.profile.profile_image_base64;
         }
-
-        // THIRD: Check for avatar_url
         if (currentUser?.profile?.avatar_url && typeof currentUser.profile.avatar_url === 'string') {
             return currentUser.profile.avatar_url;
         }
-
-        // FOURTH: Check for avatar path
         if (currentUser?.profile?.avatar && typeof currentUser.profile.avatar === 'string') {
             const avatarPath = currentUser.profile.avatar;
             if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
@@ -113,8 +98,6 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
             const cleanPath = avatarPath.replace(/^\/+/, '');
             return `/storage/${cleanPath}`;
         }
-
-        // FIFTH: Default avatar - ALWAYS return a string
         const userName = currentUser?.name || 'User';
         return `https://ui-avatars.com/api/?background=667eea&color=fff&size=100&name=${encodeURIComponent(userName)}`;
     };
@@ -206,7 +189,7 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
         }
     }, [jobs, currentUser?.skills]);
 
-    // Filter and Sort jobs - FIXED: Added safe string conversion
+    // Filter and Sort jobs
     useEffect(() => {
         let filtered = [...jobs];
 
@@ -310,7 +293,9 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
         if (job.application_link) {
             const url = job.application_link.startsWith('http')
                 ? job.application_link
-                : `https://${job.application_link}`;
+                : job.application_link.startsWith('/')
+                    ? job.application_link
+                    : `/${job.application_link}`;
             window.open(url, '_blank', 'noopener,noreferrer');
             return;
         }
@@ -368,11 +353,6 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
         showToast('All filters cleared', 'info');
     };
 
-    const handleMenuClick = (route) => {
-        router.visit(route);
-        setMobileSidebarOpen(false);
-    };
-
     const handleJobClick = (jobId) => {
         router.visit(`/jobs/${jobId}`);
     };
@@ -390,10 +370,11 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
         return '#ef4444';
     };
 
-    // Use recommendedJobs as top picks and exploreJobs as explore section
-    const topPicksJobs = recommendedJobs.slice(0, visibleCounts.topPicks);
-    const exploreJobsList = exploreJobs.slice(0, visibleCounts.explore);
-    const jobsCount = filteredJobs.length;
+    // Use recommendedJobs as top picks and all jobs as the explore section
+    const filteredRecommendedJobs = recommendedJobs;
+    const filteredExploreJobs = exploreJobs;
+    const topPicksJobs = filteredRecommendedJobs.slice(0, visibleCounts.topPicks);
+    const exploreJobsList = filteredExploreJobs.slice(0, visibleCounts.explore);
 
     const LoadingSkeleton = () => (
         <div className="loading-skeleton">
@@ -418,7 +399,12 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
         <>
             <Head title="Search Jobs" />
 
-            <AppNavbar user={currentUser} newJobsCount={notificationCount} onMenuToggle={toggleMobileSidebar} isMenuOpen={mobileSidebarOpen} />
+            <AppNavbar
+                user={currentUser}
+                newJobsCount={notificationCount}
+                onMenuToggle={toggleMobileSidebar}
+                isMenuOpen={mobileSidebarOpen}
+            />
 
             <div className="container">
                 {/* LEFT SIDEBAR */}

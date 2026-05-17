@@ -6,6 +6,7 @@ import AccountSecurity from '../Components/Settings/AccountSecurity';
 import JobPreferences from '../Components/Settings/JobPreferences';
 import NotificationSettings from '../Components/Settings/NotificationSettings';
 import PrivacySettings from '../Components/Settings/PrivacySettings';
+import AppearanceSettings from '../Components/Settings/AppearanceSettings';
 import '../../css/Settings-Mobile.css';
 
 export default function Settings({ auth, user, profile, flash }) {
@@ -218,13 +219,7 @@ export default function Settings({ auth, user, profile, flash }) {
                             )}
 
                             {activeTab === 'appearance' && (
-                                <div className="settings-coming-soon">
-                                    <div className="settings-coming-soon-icon">
-                                        <i className="fas fa-palette"></i>
-                                    </div>
-                                    <h3>Appearance Settings</h3>
-                                    <p>Coming soon! Customize the dashboard theme.</p>
-                                </div>
+                                <AppearanceSettings />
                             )}
                         </div>
                     </main>

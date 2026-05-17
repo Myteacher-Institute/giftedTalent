@@ -59,7 +59,7 @@ export default function AccountSecurity({ user }) {
         
         setLoading(true);
         try {
-            const response = await axios.put('/user/password', formData);
+            const response = await axios.put('/password', formData);
             if (response.data.success) {
                 setSaveStatus({ type: 'success', message: 'Password updated!' });
                 setFormData({ current_password: '', new_password: '', new_password_confirmation: '' });

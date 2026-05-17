@@ -69,8 +69,8 @@ function JobCard({ job, onSave, onUnsave, onApply, isSaved = false }) {
             {/* Card Top Section - Logo, Company, Match Score */}
             <div className="job-card-top">
                 <div className="job-company-logo">
-                    <img 
-                        src={getCompanyLogo()} 
+                    <img
+                        src={getCompanyLogo()}
                         alt={job.company_name || job.company}
                         onError={(e) => {
                             e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(job.company_name || job.company || 'Company')}&background=4F46E5&color=fff&size=80&bold=true`;
@@ -140,7 +140,7 @@ function JobCard({ job, onSave, onUnsave, onApply, isSaved = false }) {
 
             {/* Card Footer - View More & Action Buttons */}
             <div className="job-card-footer">
-                <button 
+                <button
                     className="view-more-btn"
                     onClick={() => setExpanded(!expanded)}
                 >
@@ -148,7 +148,7 @@ function JobCard({ job, onSave, onUnsave, onApply, isSaved = false }) {
                     {expanded ? 'View Less' : 'View More'}
                 </button>
                 <div className="job-action-buttons">
-                    <button 
+                    <button
                         className={`easy-apply-btn ${job.easy_apply ? 'premium-easy' : ''}`}
                         onClick={handleApplyClick}
                         disabled={applying}
@@ -236,9 +236,38 @@ export default function Dashboard({
         }
     }, []);
 
-  const getProfileImageUrl = (userData) => {
-  return userData?.profile_photo_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(userData?.name || 'User');
-};
+    const getProfileImageUrl = () => {
+        // Check for base64 in profile
+        if (profile?.profile_image_base64 && typeof profile.profile_image_base64 === 'string') {
+            return profile.profile_image_base64;
+        }
+        // Check for avatar_url in user's profile
+        if (currentUser?.profile?.avatar_url && typeof currentUser.profile.avatar_url === 'string') {
+            if (currentUser.profile.avatar_url.startsWith('http')) {
+                return currentUser.profile.avatar_url;
+            }
+            return `/storage/${currentUser.profile.avatar_url.replace(/^\/+/, '')}`;
+        }
+        // Check for avatar path
+        if (currentUser?.profile?.avatar && typeof currentUser.profile.avatar === 'string') {
+            const avatarPath = currentUser.profile.avatar;
+            if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
+                return avatarPath;
+            }
+            if (avatarPath.startsWith('data:image')) {
+                return avatarPath;
+            }
+            const cleanPath = avatarPath.replace(/^\/+/, '');
+            return `/storage/${cleanPath}`;
+        }
+        // Check for profile avatar_url
+        if (profile?.avatar_url && typeof profile.avatar_url === 'string') {
+            return profile.avatar_url;
+        }
+        // Default avatar
+        const userName = currentUser?.name || 'User';
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
+    };
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -285,7 +314,7 @@ export default function Dashboard({
                     'X-CSRF-TOKEN': csrfToken,
                 },
             });
-            
+
             if (response.ok) {
                 const jobToAdd = [...jobs, ...recommendedJobs].find(job => job.id === jobId);
                 if (jobToAdd) {
@@ -312,7 +341,7 @@ export default function Dashboard({
                     'X-CSRF-TOKEN': csrfToken,
                 },
             });
-            
+
             if (response.ok) {
                 const updated = localSavedJobs.filter(job => job.id !== jobId);
                 setLocalSavedJobs(updated);
@@ -330,7 +359,7 @@ export default function Dashboard({
     const handleApplyJob = async (jobId) => {
         try {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            
+
             const response = await fetch(`/jobs/${jobId}/apply`, {
                 method: 'POST',
                 headers: {
@@ -338,9 +367,9 @@ export default function Dashboard({
                     'X-CSRF-TOKEN': csrfToken,
                 },
             });
-            
+
             const data = await response.json();
-            
+
             if (response.ok) {
                 alertify.success(data.message || 'Application submitted successfully!');
             } else {
@@ -406,8 +435,8 @@ export default function Dashboard({
         <>
             <Head title="Dashboard" />
 
-            <AppNavbar 
-                user={currentUser} 
+            <AppNavbar
+                user={currentUser}
                 newJobsCount={newJobsCount}
                 onMenuToggle={toggleSidebar}
                 isMenuOpen={sidebarOpen}
@@ -532,7 +561,7 @@ export default function Dashboard({
                                             <h4>Profile Complete! 🎉</h4>
                                             <p>Your profile is 100% complete. You're getting the best job matches!</p>
                                         </div>
-                                        <button className="alert-close" onClick={() => {}}>
+                                        <button className="alert-close" onClick={() => { }}>
                                             <i className="fas fa-times"></i>
                                         </button>
                                     </div>
@@ -548,12 +577,12 @@ export default function Dashboard({
                                                 Update Now <i className="fas fa-arrow-right"></i>
                                             </Link>
                                         </div>
-                                        <button className="alert-close" onClick={() => {}}>
+                                        <button className="alert-close" onClick={() => { }}>
                                             <i className="fas fa-times"></i>
                                         </button>
                                     </div>
                                 ) : null}
-                                
+
                                 {!hasCV && (
                                     <div className="alert alert-info">
                                         <div className="alert-icon">
@@ -566,7 +595,7 @@ export default function Dashboard({
                                                 Upload CV <i className="fas fa-arrow-right"></i>
                                             </Link>
                                         </div>
-                                        <button className="alert-close" onClick={() => {}}>
+                                        <button className="alert-close" onClick={() => { }}>
                                             <i className="fas fa-times"></i>
                                         </button>
                                     </div>

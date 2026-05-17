@@ -266,13 +266,15 @@ body {
     border-bottom: 1px solid #f3f4f6;
 }
 
+.profile-image-wrapper {
+    display: inline-block;
+}
+
 .profile img {
     width: 90px;
     height: 90px;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid #eef2ff;
-    padding: 3px;
     background: #fff;
     transition: all 0.3s ease;
 }
@@ -1083,7 +1085,7 @@ body {
 .progress-circle[data-progress="7"] { --progress-color: #06b6d4; }
 .progress-circle[data-progress="8"] { --progress-color: #3b82f6; }
 .progress-circle[data-progress="9"] { --progress-color: #6366f1; }
-.progress-circle[data-progress="10"] { --progress-color: #8b5cf6; }
+.progress-circle[data-progress="10"] { --progress-color: #0A66C2; }
 
 .progress-steps {
     margin-top: 16px;

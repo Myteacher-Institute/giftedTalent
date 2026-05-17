@@ -14,6 +14,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ExploreController;
 use App\Http\Controllers\PrivacySettingsController;
+use App\Http\Controllers\SearchController;
 use App\Models\Job;
 use App\Models\User;
 use Illuminate\Foundation\Application;
@@ -157,6 +158,12 @@ Route::middleware(['auth'])->group(function () {
         ]);
     })->name('settings');
 
+    Route::patch('/profile', [ProfileController::class, 'updateProfileSettings'])->name('profile.update');
+    Route::get('/user/notification-preferences', [ProfileController::class, 'getNotificationPreferences'])->name('user.notification-preferences.get');
+    Route::put('/user/notification-preferences', [ProfileController::class, 'updateNotificationPreferences'])->name('user.notification-preferences.update');
+
+    Route::get('/search', [SearchController::class, 'search'])->name('search');
+
     // Explore Route (ONLY ONCE)
     Route::get('/explore', [ExploreController::class, 'index'])->name('explore');
 
@@ -188,6 +195,10 @@ Route::middleware(['auth'])->group(function () {
     // Privacy Settings Routes
     Route::get('/user/privacy-settings', [PrivacySettingsController::class, 'getSettings'])->name('user.privacy-settings.get');
     Route::put('/user/privacy-settings', [PrivacySettingsController::class, 'updateSettings'])->name('user.privacy-settings.update');
+
+    // Appearance Settings Routes
+    Route::get('/user/appearance-settings', [ProfileController::class, 'getAppearanceSettings'])->name('user.appearance-settings.get');
+    Route::put('/user/appearance-settings', [ProfileController::class, 'updateAppearanceSettings'])->name('user.appearance-settings.update');
 
     // Saved Jobs Routes
     Route::post('/saved-jobs/{jobId}', function ($jobId) {

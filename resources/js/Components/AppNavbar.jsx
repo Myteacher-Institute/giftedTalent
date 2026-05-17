@@ -2,8 +2,9 @@ import { Link, router, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import Notification from './Notification';
 import ApplicationLogo from './ApplicationLogo';
+import '../../css/nav.css';
 
-const AppNavbar = ({ user, newJobsCount, onMenuToggle, isMenuOpen }) => {
+const AppNavbar = ({ user, newJobsCount, onMenuToggle, isMenuOpen, searchTerm, onSearchChange, onSearchSubmit }) => {
     const [scrolled, setScrolled] = useState(false);
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
     const { unreadMessagesCount } = usePage().props;
@@ -53,10 +54,9 @@ const AppNavbar = ({ user, newJobsCount, onMenuToggle, isMenuOpen }) => {
     return (
         <>
             <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
-                {/* Logo with fixed size */}
-                <Link href="/" className="logo-container">
-                    <ApplicationLogo className="logo-image" style={{ width: '120px', height: 'auto' }} />
-                </Link>
+                <div className="logo">
+                    <ApplicationLogo className="w-20 h-10" />
+                </div>
 
                 <div className={`nav-links ${mobileNavOpen ? 'mobile-open' : ''}`}>
                     <Link href="/" onClick={handleNavClick}>Home</Link>
@@ -66,7 +66,17 @@ const AppNavbar = ({ user, newJobsCount, onMenuToggle, isMenuOpen }) => {
                 </div>
 
                 <div className="search">
-                    <input type="text" placeholder="Search for jobs..." />
+                    <input
+                        type="text"
+                        placeholder="Search for jobs..."
+                        value={onSearchChange ? searchTerm : undefined}
+                        onChange={onSearchChange}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' && onSearchSubmit) {
+                                onSearchSubmit(e);
+                            }
+                        }}
+                    />
                 </div>
 
                 <div className="nav-icons">

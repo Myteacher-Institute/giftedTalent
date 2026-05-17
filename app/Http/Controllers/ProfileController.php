@@ -176,6 +176,14 @@ class ProfileController extends Controller
 
             session()->flash('success', 'Profile updated successfully!');
             
+            if ($request->wantsJson() || $request->header('X-Inertia')) {
+                return response()->json([
+                    'success' => true,
+                    'user' => $user->fresh('profile'),
+                    'profile' => $profile,
+                ]);
+            }
+
             return Redirect::route('dashboard');
             
         } catch (\Exception $e) {
@@ -183,6 +191,122 @@ class ProfileController extends Controller
             session()->flash('error', 'An error occurred while updating profile.');
             return Redirect::route('profile.editExtended')->withErrors(['error' => 'Update failed. Please try again.']);
         }
+    }
+
+    /**
+     * Update profile settings from the settings page.
+     */
+    public function updateProfileSettings(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $user = $request->user();
+        $profile = $user->profile ?? Profile::firstOrCreate(['user_id' => $user->id]);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
+            'position' => 'nullable|string|max:100',
+            'bio' => 'nullable|string|max:1000',
+            'phone' => 'nullable|string|max:20',
+            'location' => 'nullable|string|max:255',
+            'portfolio_url' => 'nullable|url|max:255',
+            'github_url' => 'nullable|url|max:255',
+            'linkedin_url' => 'nullable|url|max:255',
+            'twitter_url' => 'nullable|url|max:255',
+        ]);
+
+        if ($user->name !== $validated['name']) {
+            $user->name = $validated['name'];
+        }
+
+        if ($user->email !== $validated['email']) {
+            $user->email = $validated['email'];
+            $user->email_verified_at = null;
+        }
+
+        if ($user->isDirty()) {
+            $user->save();
+        }
+
+        $profile->position = $validated['position'] ?? null;
+        $profile->bio = $validated['bio'] ?? null;
+        $profile->phone = $validated['phone'] ?? null;
+        $profile->location = $validated['location'] ?? null;
+        $profile->portfolio_url = $validated['portfolio_url'] ?? null;
+        $profile->github_url = $validated['github_url'] ?? null;
+        $profile->linkedin_url = $validated['linkedin_url'] ?? null;
+        $profile->twitter_url = $validated['twitter_url'] ?? null;
+        $profile->save();
+
+        if (method_exists($user, 'updateProfileCompletion')) {
+            $user->updateProfileCompletion();
+        }
+
+        return response()->json([
+            'success' => true,
+            'user' => $user->fresh('profile'),
+            'profile' => $profile,
+        ]);
+    }
+
+    public function getNotificationPreferences(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $user = $request->user();
+        $preferences = $user->notification_preferences ?? [
+            'email_job_alerts' => true,
+            'email_application_updates' => true,
+            'email_message_notifications' => true,
+            'email_marketing' => false,
+            'email_newsletter' => false,
+            'in_app_job_alerts' => true,
+            'in_app_application_updates' => true,
+            'in_app_messages' => true,
+            'push_enabled' => false,
+            'push_job_alerts' => true,
+            'push_messages' => true,
+            'digest_frequency' => 'daily',
+            'quiet_hours_enabled' => false,
+            'quiet_hours_start' => '22:00',
+            'quiet_hours_end' => '08:00',
+            'desktop_enabled' => true,
+            'sound_enabled' => true,
+        ];
+
+        return response()->json([
+            'success' => true,
+            'preferences' => $preferences,
+        ]);
+    }
+
+    public function updateNotificationPreferences(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $validated = $request->validate([
+            'email_job_alerts' => 'boolean',
+            'email_application_updates' => 'boolean',
+            'email_message_notifications' => 'boolean',
+            'email_marketing' => 'boolean',
+            'email_newsletter' => 'boolean',
+            'in_app_job_alerts' => 'boolean',
+            'in_app_application_updates' => 'boolean',
+            'in_app_messages' => 'boolean',
+            'push_enabled' => 'boolean',
+            'push_job_alerts' => 'boolean',
+            'push_messages' => 'boolean',
+            'digest_frequency' => 'nullable|in:instant,daily,weekly',
+            'quiet_hours_enabled' => 'boolean',
+            'quiet_hours_start' => 'nullable|date_format:H:i',
+            'quiet_hours_end' => 'nullable|date_format:H:i',
+            'desktop_enabled' => 'boolean',
+            'sound_enabled' => 'boolean',
+        ]);
+
+        $user = $request->user();
+        $user->notification_preferences = $validated;
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'preferences' => $validated,
+        ]);
     }
 
     /**
@@ -329,6 +453,58 @@ class ProfileController extends Controller
                 'message' => 'Failed to save preferences: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Get appearance settings.
+     */
+    public function getAppearanceSettings(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $user = Auth::user();
+
+        $settings = $user->appearance_settings ?? [
+            'theme_mode' => 'system',
+            'accent_color' => 'indigo',
+            'density' => 'comfortable',
+            'sidebar_style' => 'modern',
+            'font_size' => 'normal',
+        ];
+
+        return response()->json([
+            'success' => true,
+            'settings' => $settings,
+        ]);
+    }
+
+    /**
+     * Update appearance settings.
+     */
+    public function updateAppearanceSettings(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'theme_mode' => 'nullable|in:light,dark,system',
+            'accent_color' => 'nullable|in:indigo,emerald,rose,amber,sky',
+            'density' => 'nullable|in:comfortable,compact',
+            'sidebar_style' => 'nullable|in:modern,classic',
+            'font_size' => 'nullable|in:normal,large',
+        ]);
+
+        $user->appearance_settings = array_merge([
+            'theme_mode' => 'system',
+            'accent_color' => 'indigo',
+            'density' => 'comfortable',
+            'sidebar_style' => 'modern',
+            'font_size' => 'normal',
+        ], $validated);
+
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'settings' => $user->appearance_settings,
+        ]);
     }
 
     /**

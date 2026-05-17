@@ -8,15 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->json('privacy_settings')->nullable();
-        });
+        if (!Schema::hasColumn('users', 'privacy_settings')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->json('privacy_settings')->nullable();
+            });
+        }
     }
 
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('status');
+            $table->dropColumn('privacy_settings');
         });
     }
 };

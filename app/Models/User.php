@@ -51,6 +51,10 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password'          => 'hashed',
             'is_admin'          => 'boolean',
+            'privacy_settings'  => 'array',
+            'job_preferences'   => 'array',
+            'notification_preferences' => 'array',
+            'appearance_settings' => 'array',
         ];
     }
 
