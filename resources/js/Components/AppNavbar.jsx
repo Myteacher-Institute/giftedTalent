@@ -7,6 +7,8 @@ import '../../css/nav.css';
 const AppNavbar = ({ user, newJobsCount, onMenuToggle, isMenuOpen, searchTerm, onSearchChange, onSearchSubmit }) => {
     const [scrolled, setScrolled] = useState(false);
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
+    const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+    const [searchValue, setSearchValue] = useState(searchTerm || '');
     const { unreadMessagesCount } = usePage().props;
 
     useEffect(() => {
@@ -21,16 +23,64 @@ const AppNavbar = ({ user, newJobsCount, onMenuToggle, isMenuOpen, searchTerm, o
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    useEffect(() => {
+        if (typeof searchTerm === 'string') {
+            setSearchValue(searchTerm);
+        }
+    }, [searchTerm]);
+
+    const effectiveSearchValue = onSearchChange ? searchTerm : searchValue;
+
+    const handleSearchChange = (e) => {
+        if (onSearchChange) {
+            onSearchChange(e);
+            return;
+        }
+
+        setSearchValue(e.target.value);
+    };
+
+    const handleSearchSubmit = (e) => {
+        if (e && e.preventDefault) {
+            e.preventDefault();
+        }
+
+        if (onSearchSubmit) {
+            onSearchSubmit(e);
+            return;
+        }
+
+        if (!effectiveSearchValue || effectiveSearchValue.trim().length === 0) {
+            return;
+        }
+
+        router.visit('/search', {
+            preserveState: true,
+            preserveScroll: true,
+            data: { q: effectiveSearchValue.trim() },
+        });
+    };
+
     const toggleMenu = () => {
-        setMobileNavOpen(!mobileNavOpen);
+        if (mobileSearchOpen) {
+            setMobileSearchOpen(false);
+        }
+
         if (onMenuToggle) {
             onMenuToggle();
+        } else {
+            setMobileNavOpen(!mobileNavOpen);
         }
     };
 
     const handleNavClick = () => {
         setMobileNavOpen(false);
+        setMobileSearchOpen(false);
     };
+
+    const isHamburgerActive = onMenuToggle ? isMenuOpen : mobileNavOpen;
+
+    const hasSearch = true;
 
     const getProfileImageUrl = () => {
         if (user?.profile?.profile_image_base64) {
@@ -68,18 +118,28 @@ const AppNavbar = ({ user, newJobsCount, onMenuToggle, isMenuOpen, searchTerm, o
                 <div className="search">
                     <input
                         type="text"
-                        placeholder="Search for jobs..."
-                        value={onSearchChange ? searchTerm : undefined}
-                        onChange={onSearchChange}
+                        placeholder="Search jobs, talents, companies..."
+                        value={effectiveSearchValue || ''}
+                        onChange={handleSearchChange}
                         onKeyDown={(e) => {
-                            if (e.key === 'Enter' && onSearchSubmit) {
-                                onSearchSubmit(e);
+                            if (e.key === 'Enter') {
+                                handleSearchSubmit(e);
                             }
                         }}
                     />
                 </div>
 
                 <div className="nav-icons">
+                    {hasSearch && (
+                        <button
+                            type="button"
+                            className="mobile-search-button"
+                            aria-label="Open search"
+                            onClick={() => setMobileSearchOpen(prev => !prev)}
+                        >
+                            <i className="fas fa-search"></i>
+                        </button>
+                    )}
                     <Link href="/messages" style={{ position: 'relative', textDecoration: 'none', color: 'inherit' }}>
                         <i className="fa-regular fa-envelope"></i>
                         {unreadMessagesCount > 0 && (
@@ -108,7 +168,7 @@ const AppNavbar = ({ user, newJobsCount, onMenuToggle, isMenuOpen, searchTerm, o
 
                 <div className="hamburger-container">
                     <button
-                        className={`hamburger ${mobileNavOpen ? 'active' : ''}`}
+                        className={`hamburger ${isHamburgerActive ? 'active' : ''}`}
                         onClick={toggleMenu}
                         type="button"
                         aria-label="Toggle navigation menu"
@@ -118,8 +178,22 @@ const AppNavbar = ({ user, newJobsCount, onMenuToggle, isMenuOpen, searchTerm, o
                         <span></span>
                     </button>
                 </div>
+
+                <div className={`mobile-search-container ${mobileSearchOpen ? 'open' : ''}`}>
+                    <input
+                        type="text"
+                        placeholder="Search jobs, talents, companies..."
+                        value={effectiveSearchValue || ''}
+                        onChange={handleSearchChange}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                handleSearchSubmit(e);
+                            }
+                        }}
+                    />
+                </div>
             </nav>
-            {mobileNavOpen && (
+            {!onMenuToggle && mobileNavOpen && (
                 <div className="mobile-nav-overlay active" onClick={() => setMobileNavOpen(false)}></div>
             )}
         </>

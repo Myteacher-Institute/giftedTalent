@@ -35,6 +35,41 @@ export default function Explore({
     
     const currentUser = auth?.user;
 
+    const getProfileImageUrl = () => {
+        if (currentUser?.profile?.profile_image_base64) {
+            return currentUser.profile.profile_image_base64;
+        }
+        if (currentUser?.profile?.avatar_url) {
+            return currentUser.profile.avatar_url;
+        }
+        if (currentUser?.profile?.avatar) {
+            const avatarPath = currentUser.profile.avatar;
+            if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
+                return avatarPath;
+            }
+            const cleanPath = avatarPath.replace(/^\/+/, '');
+            return `/storage/${cleanPath}`;
+        }
+        const userName = currentUser?.name || 'User';
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=667eea&color=fff&size=100&bold=true`;
+    };
+
+    const getDisplayName = () => {
+        return currentUser?.name?.toUpperCase() || 'USER NAME';
+    };
+
+    const getUserPosition = () => {
+        return currentUser?.profile?.position || currentUser?.headline || 'Professional';
+    };
+
+    const getUserLocation = () => {
+        return currentUser?.profile?.city || currentUser?.location || 'Remote';
+    };
+
+    const handleLogout = () => {
+        router.post('/logout');
+    };
+
     // Live counter - updates every 30 seconds
     useEffect(() => {
         const interval = setInterval(() => {
@@ -185,7 +220,69 @@ export default function Explore({
                 user={currentUser} 
                 onMenuToggle={toggleMobileSidebar}
                 isMenuOpen={mobileSidebarOpen}
+                searchTerm={searchTerm}
+                onSearchChange={(e) => setSearchTerm(e.target.value)}
             />
+
+            {mobileSidebarOpen && <div className="mobile-overlay" onClick={toggleMobileSidebar}></div>}
+
+            <div className={`left ${mobileSidebarOpen ? 'mobile-open' : ''}`}>
+                <div className="sidebar-single-container">
+                    <button className="sidebar-close" onClick={toggleMobileSidebar}>
+                        <i className="fas fa-times"></i>
+                    </button>
+
+                    <div className="sidebar-profile">
+                        <div className="profile-image-wrapper">
+                            <img
+                                src={getProfileImageUrl()}
+                                alt={currentUser?.name || 'Profile'}
+                                className="profile-img"
+                                onError={(e) => {
+                                    const userName = currentUser?.name || 'User';
+                                    e.target.src = `https://ui-avatars.com/api/?background=667eea&color=fff&size=100&name=${encodeURIComponent(userName)}`;
+                                }}
+                            />
+                            <div className="verified-badge">
+                                <i className="fas fa-check-circle"></i>
+                            </div>
+                        </div>
+                        <h3 className="profile-name">{getDisplayName()}</h3>
+                        <p className="profile-title">{getUserPosition()}</p>
+                        <p className="profile-location">
+                            <i className="fas fa-map-marker-alt"></i> {getUserLocation()}
+                        </p>
+                        <button className="edit-profile-btn" onClick={() => router.visit('/profile/edit')}>
+                            Edit Profile
+                        </button>
+                    </div>
+
+                    <div className="sidebar-menu">
+                        <div className="menu-item" onClick={() => router.visit('/') }>
+                            <i className="fas fa-home"></i> Home
+                        </div>
+                        <div className="menu-item" onClick={() => router.visit('/dashboard')}>
+                            <i className="fas fa-table"></i> Dashboard
+                        </div>
+                        <div className="menu-item" onClick={() => router.visit('/search-jobs')}>
+                            <i className="fas fa-briefcase"></i> Jobs
+                        </div>
+                        <div className="menu-item active" onClick={() => router.visit('/explore')}>
+                            <i className="fas fa-compass"></i> Explore
+                        </div>
+                        <div className="menu-item" onClick={() => router.visit('/messages')}>
+                            <i className="fas fa-envelope"></i> Messages
+                        </div>
+                        <div className="menu-item" onClick={() => router.visit('/settings')}>
+                            <i className="fas fa-gear"></i> Settings
+                        </div>
+                        <div className="menu-divider"></div>
+                        <div className="menu-item" onClick={handleLogout}>
+                            <i className="fas fa-right-from-bracket"></i> Logout
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div className="explore-page">
                 {/* Hero Section */}

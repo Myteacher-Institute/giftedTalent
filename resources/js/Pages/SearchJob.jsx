@@ -266,13 +266,6 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
         setSearchTerm(e.target.value);
     };
 
-    const handleSearchSubmit = (e) => {
-        e.preventDefault();
-        if (searchTerm.trim()) {
-            showToast(`Searching for "${searchTerm}"...`, 'info');
-        }
-    };
-
     const handleSaveJob = (jobId) => {
         if (savedJobs.includes(jobId)) {
             const updated = savedJobs.filter(id => id !== jobId);
@@ -404,6 +397,8 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
                 newJobsCount={notificationCount}
                 onMenuToggle={toggleMobileSidebar}
                 isMenuOpen={mobileSidebarOpen}
+                searchTerm={searchTerm}
+                onSearchChange={handleSearchChange}
             />
 
             <div className="container">

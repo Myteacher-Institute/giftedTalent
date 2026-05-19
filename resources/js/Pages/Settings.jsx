@@ -15,6 +15,7 @@ export default function Settings({ auth, user, profile, flash }) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [showSuccessToast, setShowSuccessToast] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
 
     const currentUser = user || auth?.user;
 
@@ -102,7 +103,12 @@ export default function Settings({ auth, user, profile, flash }) {
     return (
         <>
             <Head title="Settings - GiftedTalent" />
-            <AppNavbar user={currentUser} onMenuToggle={toggleMobileMenu} />
+            <AppNavbar
+                user={currentUser}
+                onMenuToggle={toggleMobileMenu}
+                searchTerm={searchQuery}
+                onSearchChange={(e) => setSearchQuery(e.target.value)}
+            />
 
             {showSuccessToast && (
                 <div className="toast-notification success">

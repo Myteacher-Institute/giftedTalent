@@ -271,17 +271,16 @@ export default function Dashboard({
 
     const handleSearch = (e) => {
         e.preventDefault();
-        setLoading(true);
-        router.get(
-            '/dashboard',
-            { q: searchQuery, job_type: selectedJobType },
-            {
-                preserveState: true,
-                preserveScroll: true,
-                onSuccess: () => setLoading(false),
-                onError: () => setLoading(false),
-            }
-        );
+
+        if (!searchQuery || searchQuery.trim().length === 0) {
+            return;
+        }
+
+        router.visit('/search', {
+            preserveState: true,
+            preserveScroll: true,
+            data: { q: searchQuery.trim() },
+        });
     };
 
     const clearSearch = () => {
@@ -440,6 +439,9 @@ export default function Dashboard({
                 newJobsCount={newJobsCount}
                 onMenuToggle={toggleSidebar}
                 isMenuOpen={sidebarOpen}
+                searchTerm={searchQuery}
+                onSearchChange={(e) => setSearchQuery(e.target.value)}
+                onSearchSubmit={handleSearch}
             />
 
             {sidebarOpen && <div className="mobile-overlay" onClick={toggleSidebar}></div>}
@@ -474,6 +476,11 @@ export default function Dashboard({
                             <i className="fa-solid fa-table"></i>Dashboard
                         </li>
                         <li><Link href="/search-jobs"><i className="fa-solid fa-magnifying-glass"></i> Search Job</Link></li>
+                        <li>
+                            <Link href="/Explore">
+                                <i className="fas fa-compass"></i> Explore
+                            </Link>
+                        </li>
                         <li>
                             <Link href="/my-applications">
                                 <i className="fa-solid fa-file"></i> My Applications

@@ -119,7 +119,12 @@ export default function SearchResults({ auth, jobs = [], talents = [], searchQue
                                 <div style={{ background: '#fff', borderRadius: '16px', padding: '60px 20px', border: '1px solid #e5e7eb', textAlign: 'center' }}>
                                     <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
                                     <h2 style={{ fontSize: '20px', color: '#111827', margin: 0 }}>No Results Found</h2>
-                                    <p style={{ color: '#6b7280', margin: '12px 0 0' }}>Try adjusting your search terms or explore featured opportunities.</p>
+                                    <p style={{ color: '#6b7280', margin: '12px 0 0' }}>
+                                        We could not find any jobs or talent matching "{searchQuery}".
+                                    </p>
+                                    <p style={{ color: '#6b7280', margin: '8px 0 0' }}>
+                                        Try a different keyword or make the query more specific.
+                                    </p>
                                 </div>
                             ) : (
                                 <div style={{ display: 'grid', gap: '16px' }}>
