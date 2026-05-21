@@ -115,6 +115,7 @@ const AppNavbar = ({ user, newJobsCount, onMenuToggle, isMenuOpen, searchTerm, o
                     <Link href="/explore" onClick={handleNavClick}>Explore</Link>
                 </div>
 
+                {/* ONLY ONE SEARCH INPUT - Desktop */}
                 <div className="search">
                     <input
                         type="text"
@@ -179,6 +180,7 @@ const AppNavbar = ({ user, newJobsCount, onMenuToggle, isMenuOpen, searchTerm, o
                     </button>
                 </div>
 
+                {/* MOBILE SEARCH - Only show on mobile */}
                 <div className={`mobile-search-container ${mobileSearchOpen ? 'open' : ''}`}>
                     <input
                         type="text"

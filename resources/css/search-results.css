@@ -1,0 +1,640 @@
+/* search-results.css - Professional Mobile Responsive */
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+.search-results-page {
+    min-height: 100vh;
+    background: #f8fafc;
+    padding-top: 20px;
+    padding-bottom: 60px;
+}
+
+.search-results-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* ============================================
+   HEADER SECTION
+   ============================================ */
+.search-header {
+    margin-bottom: 24px;
+}
+
+.search-header h1 {
+    font-size: 28px;
+    color: #111827;
+    margin: 0;
+    font-weight: 700;
+}
+
+.search-header p {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 8px 0 0;
+}
+
+/* ============================================
+   FILTER TOGGLE BUTTON (Mobile)
+   ============================================ */
+.filter-toggle-btn {
+    display: none;
+    width: 100%;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+    cursor: pointer;
+    text-align: left;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.filter-toggle-btn i {
+    transition: transform 0.3s ease;
+}
+
+.filter-toggle-btn.active i {
+    transform: rotate(180deg);
+}
+
+/* ============================================
+   LAYOUT - Desktop Grid
+   ============================================ */
+.search-layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+/* ============================================
+   FILTERS SIDEBAR
+   ============================================ */
+.search-filters-sidebar {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+    height: fit-content;
+    position: sticky;
+    top: 80px;
+    transition: all 0.3s ease;
+}
+
+.filter-title {
+    font-size: 16px;
+    color: #111827;
+    font-weight: 700;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.filter-group {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.filter-group:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.filter-label {
+    display: block;
+    font-size: 14px;
+    color: #374151;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+.radio-group {
+    display: grid;
+    gap: 8px;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    gap: 8px;
+    padding: 6px 0;
+}
+
+.radio-option input {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+}
+
+.radio-option span {
+    font-size: 14px;
+    color: #374151;
+}
+
+.filter-select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    cursor: pointer;
+    background: #fff;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #0A2463;
+    box-shadow: 0 0 0 2px rgba(10, 36, 99, 0.1);
+}
+
+/* Clear Filters Button */
+.clear-filters-btn {
+    width: 100%;
+    padding: 10px;
+    background: #f3f4f6;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 8px;
+}
+
+.clear-filters-btn:hover {
+    background: #e5e7eb;
+    color: #111827;
+}
+
+/* ============================================
+   RESULTS COUNT
+   ============================================ */
+.results-count {
+    background: #fff;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    border: 1px solid #e5e7eb;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.results-count strong {
+    color: #111827;
+    font-weight: 700;
+}
+
+/* ============================================
+   SEARCH RESULTS MAIN
+   ============================================ */
+.search-results-main {
+    display: grid;
+    gap: 16px;
+}
+
+/* Result Card */
+.search-result-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: block;
+}
+
+.search-result-card:hover {
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Badges */
+.result-badge-job {
+    display: inline-block;
+    font-size: 11px;
+    background-color: #dbeafe;
+    color: #0284c7;
+    padding: 4px 10px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.result-badge-talent {
+    display: inline-block;
+    font-size: 11px;
+    background-color: #f0fdf4;
+    color: #16a34a;
+    padding: 4px 10px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Result Content */
+.result-title {
+    font-size: 18px;
+    color: #111827;
+    margin: 0 0 4px 0;
+    font-weight: 700;
+}
+
+.result-subtitle {
+    color: #6b7280;
+    margin: 0 0 8px 0;
+    font-size: 13px;
+}
+
+.result-description {
+    color: #6b7280;
+    margin: 8px 0 0;
+    font-size: 14px;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Tags */
+.result-tags {
+    display: flex;
+    gap: 6px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+.result-tag {
+    font-size: 11px;
+    background: #f3f4f6;
+    color: #6b7280;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+/* Avatar */
+.result-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    object-fit: cover;
+}
+
+.result-content {
+    flex: 1;
+}
+
+/* Layout Helpers */
+.result-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.result-flex-row {
+    display: flex;
+    gap: 16px;
+    width: 100%;
+}
+
+/* ============================================
+   EMPTY STATE
+   ============================================ */
+.empty-state {
+    background: #fff;
+    border-radius: 16px;
+    padding: 60px 20px;
+    border: 1px solid #e5e7eb;
+    text-align: center;
+}
+
+.empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-title {
+    font-size: 20px;
+    color: #111827;
+    margin: 0;
+    font-weight: 600;
+}
+
+.empty-text {
+    color: #6b7280;
+    margin: 12px 0 0;
+    font-size: 14px;
+}
+
+/* ============================================
+   LOADING SKELETON
+   ============================================ */
+.loading-skeleton {
+    display: grid;
+    gap: 16px;
+}
+
+.skeleton-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+}
+
+.skeleton-avatar {
+    width: 56px;
+    height: 56px;
+    background: #e5e7eb;
+    border-radius: 12px;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-title {
+    height: 20px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    width: 70%;
+    margin-bottom: 8px;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-subtitle {
+    height: 14px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    width: 50%;
+    margin-bottom: 12px;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-text {
+    height: 40px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    width: 100%;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+/* Tablet */
+@media (max-width: 992px) {
+    .search-results-container {
+        padding: 0 16px;
+    }
+    
+    .search-layout {
+        gap: 20px;
+    }
+    
+    .search-filters-sidebar {
+        padding: 16px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .search-results-page {
+        padding-top: 12px;
+        padding-bottom: 40px;
+    }
+    
+    .search-header h1 {
+        font-size: 24px;
+    }
+    
+    .search-header p {
+        font-size: 13px;
+    }
+    
+    /* Show filter toggle button */
+    .filter-toggle-btn {
+        display: flex;
+    }
+    
+    /* Hide filters sidebar by default on mobile */
+    .search-filters-sidebar {
+        display: none;
+        position: fixed;
+        top: auto;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        max-height: 80vh;
+        overflow-y: auto;
+        border-radius: 20px 20px 0 0;
+        z-index: 1000;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+        padding: 20px;
+    }
+    
+    .search-filters-sidebar.open {
+        display: block;
+        animation: slideUp 0.3s ease;
+    }
+    
+    @keyframes slideUp {
+        from {
+            transform: translateY(100%);
+        }
+        to {
+            transform: translateY(0);
+        }
+    }
+    
+    /* Overlay for mobile filters */
+    .filter-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    .search-layout {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+    
+    .search-results-main {
+        gap: 12px;
+    }
+    
+    .search-result-card {
+        padding: 16px;
+    }
+    
+    .result-flex {
+        flex-direction: column;
+    }
+    
+    .result-flex-row {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .result-avatar {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .result-title {
+        font-size: 16px;
+    }
+    
+    .result-subtitle {
+        font-size: 12px;
+    }
+    
+    .result-description {
+        font-size: 13px;
+    }
+    
+    .result-tag {
+        font-size: 10px;
+        padding: 3px 7px;
+    }
+    
+    .results-count {
+        font-size: 13px;
+        padding: 10px 12px;
+    }
+    
+    .empty-state {
+        padding: 40px 16px;
+    }
+    
+    .empty-title {
+        font-size: 18px;
+    }
+    
+    .empty-text {
+        font-size: 13px;
+    }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+    .search-results-container {
+        padding: 0 12px;
+    }
+    
+    .search-header h1 {
+        font-size: 20px;
+    }
+    
+    .search-result-card {
+        padding: 14px;
+    }
+    
+    .result-badge-job,
+    .result-badge-talent {
+        font-size: 10px;
+        padding: 3px 8px;
+    }
+    
+    .result-title {
+        font-size: 15px;
+    }
+    
+    .result-subtitle {
+        font-size: 11px;
+    }
+    
+    .result-description {
+        font-size: 12px;
+    }
+    
+    .result-tags {
+        gap: 4px;
+    }
+    
+    .result-tag {
+        font-size: 9px;
+        padding: 2px 6px;
+    }
+    
+    .filter-group {
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+    }
+    
+    .filter-title {
+        font-size: 15px;
+    }
+    
+    .filter-label {
+        font-size: 13px;
+    }
+    
+    .radio-option span {
+        font-size: 13px;
+    }
+}
+
+/* Large Desktop */
+@media (min-width: 1400px) {
+    .search-results-container {
+        max-width: 1400px;
+    }
+    
+    .search-layout {
+        grid-template-columns: 280px 1fr;
+        gap: 28px;
+    }
+}
+
+/* Touch-friendly adjustments for mobile */
+@media (hover: none) and (pointer: coarse) {
+    .search-result-card {
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .search-result-card:active {
+        transform: scale(0.98);
+        transition: transform 0.1s;
+    }
+    
+    .radio-option {
+        padding: 8px 0;
+    }
+    
+    .filter-select {
+        padding: 12px;
+    }
+}

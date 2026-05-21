@@ -6,6 +6,7 @@ import '../../css/search-results.css';
 export default function SearchResults({ auth, jobs = [], talents = [], searchQuery = '' }) {
     const [filterType, setFilterType] = useState('all'); // 'all', 'jobs', 'talents'
     const [sortBy, setSortBy] = useState('relevance'); // 'relevance', 'newest', 'name'
+    const [filtersOpen, setFiltersOpen] = useState(false); // Mobile filters state
     const currentUser = auth?.user;
 
     const searchTerms = searchQuery.toLowerCase().split(' ').filter(term => term.length > 0);
@@ -17,6 +18,7 @@ export default function SearchResults({ auth, jobs = [], talents = [], searchQue
             item.description || item.bio || '',
             item.company || item.position || '',
             item.tags?.join(' ') || '',
+            item.skills?.join(' ') || '',
         ].join(' ').toLowerCase();
 
         searchTerms.forEach(term => {
@@ -68,45 +70,89 @@ export default function SearchResults({ auth, jobs = [], talents = [], searchQue
 
     const totalResults = displayJobs.length + displayTalents.length;
 
+    // Close filters when clicking outside on mobile
+    const handleOverlayClick = () => {
+        setFiltersOpen(false);
+    };
+
     return (
         <>
             <Head title={`Search Results: "${searchQuery}" - GiftedTalent`} />
             <AppNavbar user={currentUser} />
 
-            <div style={{ minHeight: '100vh', background: '#f8fafc', paddingTop: '20px', paddingBottom: '60px' }}>
-                <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
-                    <div style={{ marginBottom: '32px' }}>
-                        <h1 style={{ fontSize: '32px', color: '#111827', margin: 0 }}>
-                            Search Results
-                        </h1>
-                        <p style={{ fontSize: '16px', color: '#6b7280', margin: '8px 0 0' }}>
-                            {totalResults} result{totalResults !== 1 ? 's' : ''} found for "{searchQuery}"
-                        </p>
+            <div className="search-results-page">
+                <div className="search-results-container">
+                    {/* Header */}
+                    <div className="search-header">
+                        <h1>Search Results</h1>
+                        <p>{totalResults} result{totalResults !== 1 ? 's' : ''} found for "{searchQuery}"</p>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', gap: '24px', marginBottom: '32px' }}>
-                        <aside style={{ background: '#fff', borderRadius: '16px', padding: '20px', border: '1px solid #e5e7eb', height: 'fit-content' }}>
-                            <h3 style={{ fontSize: '16px', color: '#111827', fontWeight: '700', marginBottom: '14px' }}>Filter</h3>
+                    {/* Mobile Filter Toggle Button */}
+                    <button 
+                        className={`filter-toggle-btn ${filtersOpen ? 'active' : ''}`}
+                        onClick={() => setFiltersOpen(!filtersOpen)}
+                    >
+                        <span>🔍 Filter Results</span>
+                        <i className={`fas fa-chevron-${filtersOpen ? 'up' : 'down'}`}></i>
+                    </button>
 
-                            <div style={{ marginBottom: '20px' }}>
-                                <label style={{ display: 'block', fontSize: '14px', color: '#374151', marginBottom: '10px', fontWeight: '500' }}>Type</label>
-                                <div style={{ display: 'grid', gap: '8px' }}>
+                    {/* Mobile Overlay */}
+                    {filtersOpen && <div className="filter-overlay" onClick={handleOverlayClick}></div>}
+
+                    {/* Main Layout */}
+                    <div className="search-layout">
+                        {/* Filters Sidebar */}
+                        <aside className={`search-filters-sidebar ${filtersOpen ? 'open' : ''}`}>
+                            <h3 className="filter-title">
+                                Filters
+                                <button 
+                                    className="clear-filters-btn"
+                                    onClick={() => {
+                                        setFilterType('all');
+                                        setSortBy('relevance');
+                                    }}
+                                    style={{ width: 'auto', padding: '4px 12px', fontSize: '12px' }}
+                                >
+                                    Clear All
+                                </button>
+                            </h3>
+
+                            <div className="filter-group">
+                                <label className="filter-label">Type</label>
+                                <div className="radio-group">
                                     {[
                                         { value: 'all', label: `All (${displayJobs.length + displayTalents.length})` },
                                         { value: 'jobs', label: `Jobs (${filteredJobs.length})` },
                                         { value: 'talents', label: `Talents (${filteredTalents.length})` },
                                     ].map(opt => (
-                                        <label key={opt.value} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '8px' }}>
-                                            <input type="radio" name="filter" value={opt.value} checked={filterType === opt.value} onChange={() => setFilterType(opt.value)} style={{ cursor: 'pointer' }} />
-                                            <span style={{ fontSize: '14px', color: '#374151' }}>{opt.label}</span>
+                                        <label key={opt.value} className="radio-option">
+                                            <input 
+                                                type="radio" 
+                                                name="filter" 
+                                                value={opt.value} 
+                                                checked={filterType === opt.value} 
+                                                onChange={() => {
+                                                    setFilterType(opt.value);
+                                                    setFiltersOpen(false); // Close filters on mobile after selection
+                                                }} 
+                                            />
+                                            <span>{opt.label}</span>
                                         </label>
                                     ))}
                                 </div>
                             </div>
 
-                            <div>
-                                <label style={{ display: 'block', fontSize: '14px', color: '#374151', marginBottom: '10px', fontWeight: '500' }}>Sort By</label>
-                                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '14px', cursor: 'pointer' }}>
+                            <div className="filter-group">
+                                <label className="filter-label">Sort By</label>
+                                <select 
+                                    className="filter-select" 
+                                    value={sortBy} 
+                                    onChange={(e) => {
+                                        setSortBy(e.target.value);
+                                        setFiltersOpen(false); // Close filters on mobile after selection
+                                    }}
+                                >
                                     <option value="relevance">Most Relevant</option>
                                     <option value="newest">Newest First</option>
                                     <option value="name">Name (A-Z)</option>
@@ -114,61 +160,77 @@ export default function SearchResults({ auth, jobs = [], talents = [], searchQue
                             </div>
                         </aside>
 
-                        <main>
+                        {/* Results Main Content */}
+                        <main className="search-results-main">
+                            {/* Results Count Bar */}
+                            <div className="results-count">
+                                <strong>{totalResults}</strong> results found
+                                {filterType !== 'all' && <span> in <strong>{filterType}</strong></span>}
+                            </div>
+
                             {totalResults === 0 ? (
-                                <div style={{ background: '#fff', borderRadius: '16px', padding: '60px 20px', border: '1px solid #e5e7eb', textAlign: 'center' }}>
-                                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔍</div>
-                                    <h2 style={{ fontSize: '20px', color: '#111827', margin: 0 }}>No Results Found</h2>
-                                    <p style={{ color: '#6b7280', margin: '12px 0 0' }}>
+                                <div className="empty-state">
+                                    <div className="empty-icon">🔍</div>
+                                    <h2 className="empty-title">No Results Found</h2>
+                                    <p className="empty-text">
                                         We could not find any jobs or talent matching "{searchQuery}".
                                     </p>
-                                    <p style={{ color: '#6b7280', margin: '8px 0 0' }}>
+                                    <p className="empty-text">
                                         Try a different keyword or make the query more specific.
                                     </p>
                                 </div>
                             ) : (
-                                <div style={{ display: 'grid', gap: '16px' }}>
+                                <div className="search-results-main">
+                                    {/* Jobs Section */}
                                     {displayJobs.map(job => (
-                                        <Link key={`job-${job.id}`} href={`/jobs/${job.id}`} style={{ textDecoration: 'none' }}>
-                                            <div style={{ background: '#fff', borderRadius: '16px', padding: '20px', border: '1px solid #e5e7eb', cursor: 'pointer', transition: 'all 0.2s', hover: { boxShadow: '0 10px 30px rgba(15, 23, 42, 0.1)' } }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
-                                                    <div style={{ flex: 1 }}>
-                                                        <span style={{ display: 'inline-block', fontSize: '12px', backgroundColor: '#dbeafe', color: '#0284c7', padding: '4px 10px', borderRadius: '8px', marginBottom: '8px' }}>Job</span>
-                                                        <h3 style={{ fontSize: '18px', color: '#111827', margin: 0, marginBottom: '4px' }}>{job.title}</h3>
-                                                        <p style={{ color: '#6b7280', margin: 0, marginBottom: '8px', fontSize: '14px' }}>{job.company}</p>
-                                                        <p style={{ color: '#6b7280', margin: 0, fontSize: '14px', display: 'line-clamp', WebkitLineClamp: 2, overflow: 'hidden' }}>{job.description}</p>
-                                                        {job.tags && (
-                                                            <div style={{ display: 'flex', gap: '6px', marginTop: '10px', flexWrap: 'wrap' }}>
-                                                                {job.tags.slice(0, 3).map(tag => (
-                                                                    <span key={tag} style={{ fontSize: '12px', background: '#f3f4f6', color: '#6b7280', padding: '4px 8px', borderRadius: '6px' }}>{tag}</span>
-                                                                ))}
-                                                            </div>
-                                                        )}
-                                                    </div>
+                                        <Link key={`job-${job.id}`} href={`/jobs/${job.id}`} className="search-result-card">
+                                            <div className="result-flex">
+                                                <div className="result-content">
+                                                    <span className="result-badge-job">Job</span>
+                                                    <h3 className="result-title">{job.title}</h3>
+                                                    <p className="result-subtitle">{job.company}</p>
+                                                    <p className="result-description">{job.description}</p>
+                                                    {job.tags && job.tags.length > 0 && (
+                                                        <div className="result-tags">
+                                                            {job.tags.slice(0, 3).map(tag => (
+                                                                <span key={tag} className="result-tag">{tag}</span>
+                                                            ))}
+                                                            {job.tags.length > 3 && (
+                                                                <span className="result-tag">+{job.tags.length - 3} more</span>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </Link>
                                     ))}
 
+                                    {/* Talents Section */}
                                     {displayTalents.map(talent => (
-                                        <Link key={`talent-${talent.id}`} href={`/talent/${talent.id}`} style={{ textDecoration: 'none' }}>
-                                            <div style={{ background: '#fff', borderRadius: '16px', padding: '20px', border: '1px solid #e5e7eb', cursor: 'pointer', transition: 'all 0.2s' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
-                                                    <div style={{ display: 'flex', gap: '16px', width: '100%' }}>
-                                                        <img src={talent.avatar || talent.profile_image_base64 || `https://ui-avatars.com/api/?name=${talent.name}&background=4F46E5&color=fff`} alt={talent.name} style={{ width: '56px', height: '56px', borderRadius: '12px', objectFit: 'cover' }} />
-                                                        <div style={{ flex: 1 }}>
-                                                            <span style={{ display: 'inline-block', fontSize: '12px', backgroundColor: '#f0fdf4', color: '#16a34a', padding: '4px 10px', borderRadius: '8px', marginBottom: '8px' }}>Talent</span>
-                                                            <h3 style={{ fontSize: '18px', color: '#111827', margin: 0, marginBottom: '4px' }}>{talent.name}</h3>
-                                                            <p style={{ color: '#6b7280', margin: 0, marginBottom: '8px', fontSize: '14px' }}>{talent.title || talent.position}</p>
-                                                            {talent.skills && (
-                                                                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                                                                    {talent.skills.slice(0, 3).map(skill => (
-                                                                        <span key={skill} style={{ fontSize: '12px', background: '#f3f4f6', color: '#6b7280', padding: '4px 8px', borderRadius: '6px' }}>{skill}</span>
-                                                                    ))}
-                                                                </div>
+                                        <Link key={`talent-${talent.id}`} href={`/talent/${talent.id}`} className="search-result-card">
+                                            <div className="result-flex-row">
+                                                <img 
+                                                    src={talent.avatar || talent.profile_image_base64 || `https://ui-avatars.com/api/?name=${encodeURIComponent(talent.name)}&background=4F46E5&color=fff`} 
+                                                    alt={talent.name} 
+                                                    className="result-avatar"
+                                                    onError={(e) => {
+                                                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(talent.name)}&background=4F46E5&color=fff`;
+                                                    }}
+                                                />
+                                                <div className="result-content">
+                                                    <span className="result-badge-talent">Talent</span>
+                                                    <h3 className="result-title">{talent.name}</h3>
+                                                    <p className="result-subtitle">{talent.title || talent.position}</p>
+                                                    {talent.skills && talent.skills.length > 0 && (
+                                                        <div className="result-tags">
+                                                            {talent.skills.slice(0, 3).map(skill => (
+                                                                <span key={skill} className="result-tag">{skill}</span>
+                                                            ))}
+                                                            {talent.skills.length > 3 && (
+                                                                <span className="result-tag">+{talent.skills.length - 3} more</span>
                                                             )}
                                                         </div>
-                                                    </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </Link>

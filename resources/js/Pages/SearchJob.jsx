@@ -302,7 +302,7 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
         setSubmitting(true);
 
         setTimeout(() => {
-            showToast(`Successfully applied to ${selectedJob.title}!`, 'success');
+            showToast(`Successfully applied to ${selectedJob?.title}!`, 'success');
             setShowApplyModal(false);
             setCoverLetter('');
             setSelectedResume(null);
