@@ -47,6 +47,11 @@ footer {
     padding: 0 1.5rem;
 }
 
+.footer-top .footer-left img {
+   margin: 0;
+    height: auto;
+}
+
 @media (min-width: 768px) {
     .footer-top {
         flex-direction: row;

@@ -155,7 +155,7 @@ const AppNavbar = ({ user, newJobsCount, onMenuToggle, isMenuOpen, searchTerm, o
                         )}
                     </div>
                     
-                    <img 
+                    {/* <img 
                         src={getProfileImageUrl()} 
                         alt={user?.name || 'Profile'} 
                         className="navbar-profile-image"
@@ -164,7 +164,7 @@ const AppNavbar = ({ user, newJobsCount, onMenuToggle, isMenuOpen, searchTerm, o
                             const userName = user?.name || 'User';
                             e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=40&bold=true`;
                         }}
-                    />
+                    /> */}
                 </div>
 
                 <div className="hamburger-container">

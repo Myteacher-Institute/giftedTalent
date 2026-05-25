@@ -24,6 +24,7 @@ class Job extends Model
         'status',
         'applicants_count',
         'posted_at',
+        'tags',
     ];
 
     protected function casts(): array
@@ -31,6 +32,7 @@ class Job extends Model
         return [
             'posted_at'        => 'datetime',
             'applicants_count' => 'integer',
+                'tags'              => 'array',
         ];
     }
 
@@ -44,22 +46,4 @@ class Job extends Model
         return $this->hasMany(JobApplication::class);
     }
 
-    public function getTagsAttribute($value)
-    {
-        if (empty($value)) {
-            return [];
-        }
-
-        $tags = json_decode($value, true);
-        if (is_array($tags)) {
-            return $tags;
-        }
-
-        // If it's already a string like '["React","PHP"]'
-        if (is_string($value) && str_starts_with($value, '[')) {
-            return json_decode($value, true) ?? [];
-        }
-
-        return [];
-    }
 }

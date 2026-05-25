@@ -97,6 +97,9 @@ Route::get('/', function () {
 Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('google.redirect');
 Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('google.callback');
 
+// Search Results Route (Public - accessible without login)
+Route::get('/search-results', [SearchController::class, 'search'])->name('search.results');
+
 // ============================================
 // PROTECTED ROUTES (Login required for ALL)
 // ============================================

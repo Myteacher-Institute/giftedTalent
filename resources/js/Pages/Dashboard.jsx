@@ -36,7 +36,7 @@ function JobCard({ job, onSave, onUnsave, onApply, isSaved = false }) {
         setApplying(false);
     };
 
-    // Get company logo with fallback
+    // Get company logo with fallback - NO API CALLS
     const getCompanyLogo = () => {
         if (job.company_logo_url) {
             return job.company_logo_url;
@@ -44,7 +44,7 @@ function JobCard({ job, onSave, onUnsave, onApply, isSaved = false }) {
         if (job.image) {
             return job.image;
         }
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(job.company_name || job.company || 'Company')}&background=4F46E5&color=fff&size=80&bold=true`;
+        return null;
     };
 
     // Format salary range
@@ -64,18 +64,60 @@ function JobCard({ job, onSave, onUnsave, onApply, isSaved = false }) {
     const salaryDisplay = formatSalary(job.salary_range);
     const matchScore = job.match_score || 0;
 
+    // Get company initial for fallback
+    const getCompanyInitial = () => {
+        const companyName = job.company_name || job.company || 'C';
+        return companyName.charAt(0).toUpperCase();
+    };
+
     return (
         <div className={`professional-job-card ${matchScore >= 60 ? 'premium-job' : ''}`}>
             {/* Card Top Section - Logo, Company, Match Score */}
             <div className="job-card-top">
                 <div className="job-company-logo">
-                    <img
-                        src={getCompanyLogo()}
-                        alt={job.company_name || job.company}
-                        onError={(e) => {
-                            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(job.company_name || job.company || 'Company')}&background=4F46E5&color=fff&size=80&bold=true`;
-                        }}
-                    />
+                    {getCompanyLogo() ? (
+                        <img
+                            src={getCompanyLogo()}
+                            alt={job.company_name || job.company}
+                            onError={(e) => {
+                                e.target.style.display = 'none';
+                                const parent = e.target.parentElement;
+                                if (parent && !parent.querySelector('.logo-fallback')) {
+                                    const fallbackDiv = document.createElement('div');
+                                    fallbackDiv.className = 'logo-fallback';
+                                    fallbackDiv.textContent = getCompanyInitial();
+                                    fallbackDiv.style.cssText = `
+                                        width: 48px;
+                                        height: 48px;
+                                        border-radius: 12px;
+                                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        font-size: 20px;
+                                        font-weight: 700;
+                                        color: white;
+                                    `;
+                                    parent.appendChild(fallbackDiv);
+                                }
+                            }}
+                        />
+                    ) : (
+                        <div className="logo-fallback" style={{
+                            width: '48px',
+                            height: '48px',
+                            borderRadius: '12px',
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '20px',
+                            fontWeight: '700',
+                            color: 'white'
+                        }}>
+                            {getCompanyInitial()}
+                        </div>
+                    )}
                 </div>
                 <div className="job-company-info">
                     <h3 className="job-company-name">{job.company_name || job.company}</h3>
@@ -236,6 +278,7 @@ export default function Dashboard({
         }
     }, []);
 
+    // Get profile image URL - NO API CALLS, returns null if no image
     const getProfileImageUrl = () => {
         // Check for base64 in profile
         if (profile?.profile_image_base64 && typeof profile.profile_image_base64 === 'string') {
@@ -246,7 +289,10 @@ export default function Dashboard({
             if (currentUser.profile.avatar_url.startsWith('http')) {
                 return currentUser.profile.avatar_url;
             }
-            return `/storage/${currentUser.profile.avatar_url.replace(/^\/+/, '')}`;
+            // Remove any leading slashes and storage prefix
+            let cleanPath = currentUser.profile.avatar_url.replace(/^\/+/, '');
+            cleanPath = cleanPath.replace(/^storage\//, '');
+            return `/storage/${cleanPath}`;
         }
         // Check for avatar path
         if (currentUser?.profile?.avatar && typeof currentUser.profile.avatar === 'string') {
@@ -257,16 +303,30 @@ export default function Dashboard({
             if (avatarPath.startsWith('data:image')) {
                 return avatarPath;
             }
-            const cleanPath = avatarPath.replace(/^\/+/, '');
+            // Remove any leading slashes and storage prefix
+            let cleanPath = avatarPath.replace(/^\/+/, '');
+            cleanPath = cleanPath.replace(/^storage\//, '');
             return `/storage/${cleanPath}`;
         }
         // Check for profile avatar_url
         if (profile?.avatar_url && typeof profile.avatar_url === 'string') {
-            return profile.avatar_url;
+            let cleanPath = profile.avatar_url.replace(/^\/+/, '');
+            cleanPath = cleanPath.replace(/^storage\//, '');
+            return `/storage/${cleanPath}`;
         }
-        // Default avatar
+        // Return null - this will trigger the initials fallback
+        return null;
+    };
+
+    // Get user initials for fallback
+    const getUserInitials = () => {
         const userName = currentUser?.name || 'User';
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
+        return userName
+            .split(' ')
+            .map(name => name[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
     };
 
     const handleSearch = (e) => {
@@ -450,15 +510,71 @@ export default function Dashboard({
                 <aside className={`sidebar ${sidebarOpen ? 'mobile-open' : ''}`}>
                     <div className="profile">
                         <div className="profile-image-wrapper">
-                            <img
-                                src={getProfileImageUrl()}
-                                alt={currentUser?.name || 'Profile'}
-                                className="profile-image"
-                                onError={(e) => {
-                                    const userName = currentUser?.name || 'User';
-                                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
-                                }}
-                            />
+                            {currentUser?.profile?.profile_image_base64 ? (
+                                <img
+                                    src={currentUser.profile.profile_image_base64}
+                                    alt={currentUser?.name || 'Profile'}
+                                    className="profile-image"
+                                />
+                            ) : currentUser?.profile?.avatar ? (
+                                <img
+                                    src={(() => {
+                                        let avatarPath = currentUser.profile.avatar;
+                                        // Clean the path to avoid double storage
+                                        let cleanPath = avatarPath.replace(/^\/+/, '');
+                                        cleanPath = cleanPath.replace(/^storage\//, '');
+                                        return `/storage/${cleanPath}`;
+                                    })()}
+                                    alt={currentUser?.name || 'Profile'}
+                                    className="profile-image"
+                                    onError={(e) => {
+                                        e.target.style.display = 'none';
+                                        const parent = e.target.parentElement;
+                                        if (parent && !parent.querySelector('.initials-fallback')) {
+                                            const userName = currentUser?.name || 'User';
+                                            const initials = userName
+                                                .split(' ')
+                                                .map(name => name[0])
+                                                .join('')
+                                                .toUpperCase()
+                                                .slice(0, 2);
+                                            const initialsDiv = document.createElement('div');
+                                            initialsDiv.className = 'initials-fallback';
+                                            initialsDiv.textContent = initials;
+                                            initialsDiv.style.cssText = `
+                            width: 96px;
+                            height: 96px;
+                            border-radius: 50%;
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 36px;
+                            font-weight: 700;
+                            color: white;
+                            margin: 0 auto;
+                        `;
+                                            parent.appendChild(initialsDiv);
+                                        }
+                                    }}
+                                />
+                            ) : (
+                                <div className="initials-fallback" style={{
+                                    width: '96px',
+                                    height: '96px',
+                                    borderRadius: '50%',
+                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '36px',
+                                    fontWeight: '700',
+                                    color: 'white',
+                                    margin: '0 auto'
+                                }}>
+                                    {currentUser?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
+                                </div>
+                            )}
                             <div className="verified-overlay">
                                 <i className="fa-solid fa-check-circle"></i>
                             </div>
@@ -475,12 +591,19 @@ export default function Dashboard({
                         <li className={!showSavedJobs ? 'active' : ''} onClick={handleShowAllJobs}>
                             <i className="fa-solid fa-table"></i>Dashboard
                         </li>
-                        <li><Link href="/search-jobs"><i className="fa-solid fa-magnifying-glass"></i> Search Job</Link></li>
+
                         <li>
-                            <Link href="/Explore">
+                            <Link href="/search-jobs">
+                                <i className="fa-solid fa-magnifying-glass"></i> Search Job
+                            </Link>
+                        </li>
+
+                        <li>
+                            <Link href="/explore">
                                 <i className="fas fa-compass"></i> Explore
                             </Link>
                         </li>
+                        
                         <li>
                             <Link href="/my-applications">
                                 <i className="fa-solid fa-file"></i> My Applications

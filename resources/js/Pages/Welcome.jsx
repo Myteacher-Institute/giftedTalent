@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import '../../css/nav.css';
 import '../../css/hero.css';
 import '../../css/feature.css';
@@ -11,9 +11,8 @@ import halfStarIcon from '../../assets/svg/half-star.svg';
 import heroImage from '../../assets/img/giftedtalentimage.png';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Footer from '@/Components/Footer';
+import Faq from '@/Components/Faq';
 
-// Counter Component
-// Counter Component
 // Counter Component
 function Counter({ target, suffix = "", duration = 2000 }) {
     const [count, setCount] = useState(0);
@@ -105,9 +104,9 @@ function Nav({ auth }) {
     return (
         <>
             <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
-                <Link href="/" className="logo">
+                <div className="logo">
                     <ApplicationLogo className="w-20 h-10 mr-2" />
-                </Link>
+                </div>
 
                 {/* Desktop Navigation */}
                 <ul className="nav-links">
@@ -185,8 +184,18 @@ function Hero() {
                 <h1>Discover opportunities. <span>Showcase Your Talent.</span></h1>
                 <p>Connect with top employers and talented professionals. <br></br> Your dream job or ideal candidate is just a click away.</p>
                 <div className="hero-buttons">
-                    <button className="btn-primary">Find Jobs</button>
-                    <button className="btn-secondary">Hire Talent</button>
+                    <button
+                        className="btn-primary"
+                        onClick={() => window.location.href = '/jobs'}
+                    >
+                        Find Jobs
+                    </button>
+                    <button
+                        className="btn-secondary"
+                        onClick={() => window.location.href = '/find-talents'}
+                    >
+                        Hire Talent
+                    </button>
                 </div>
             </div>
             <div className="hero-right">
@@ -316,7 +325,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
         }));
     };
 
-    // Handle search
+    // Handle search - Redirect to search results page
     const handleSearch = () => {
         const hasSearchCriteria = searchInputs.keyword || searchInputs.skill || searchInputs.location;
 
@@ -325,47 +334,14 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
             return;
         }
 
-        setIsSearching(true);
-        setSearchError('');
-        showToast('Searching for jobs...', 'loading');
-
-        setTimeout(() => {
-            try {
-                const filtered = jobs.filter(job => {
-                    const keyword = searchInputs.keyword.toLowerCase().trim();
-                    const skill = searchInputs.skill.toLowerCase().trim();
-                    const location = searchInputs.location.toLowerCase().trim();
-
-                    const jobTitle = (job.job_title || job.title || '').toLowerCase();
-                    const jobSkills = (job.skills_required || job.skills || '').toLowerCase();
-                    const jobLocation = (job.company_location || job.location || '').toLowerCase();
-
-                    let matchesKeyword = true;
-                    let matchesSkill = true;
-                    let matchesLocation = true;
-
-                    if (keyword) matchesKeyword = jobTitle.includes(keyword);
-                    if (skill) matchesSkill = jobSkills.includes(skill);
-                    if (location) matchesLocation = jobLocation.includes(location);
-
-                    return matchesKeyword && matchesSkill && matchesLocation;
-                });
-
-                setSearchResults(filtered);
-
-                if (filtered.length > 0) {
-                    showToast(`Found ${filtered.length} job${filtered.length !== 1 ? 's' : ''} matching your criteria`, 'success');
-                } else {
-                    showToast('No jobs found matching your criteria. Try different keywords!', 'error');
-                }
-
-            } catch (err) {
-                showToast('An error occurred while searching. Please try again.', 'error');
-                console.error('Search error:', err);
-            } finally {
-                setIsSearching(false);
-            }
-        }, 500);
+        // Build query parameters
+        const params = new URLSearchParams();
+        if (searchInputs.keyword) params.append('keyword', searchInputs.keyword);
+        if (searchInputs.skill) params.append('skill', searchInputs.skill);
+        if (searchInputs.location) params.append('location', searchInputs.location);
+        
+        // Redirect to search results page with query parameters
+        router.visit(`/search-results?${params.toString()}`);
     };
 
     // Handle apply button click
@@ -839,6 +815,10 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
                         </div>
                     </div>
                 )}
+
+                {/* FAQ Section */}
+                <Faq />
+
                 {/* FOOTER */}
                 <Footer />
 

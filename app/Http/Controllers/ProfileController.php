@@ -174,17 +174,11 @@ class ProfileController extends Controller
                 $user->updateProfileCompletion();
             }
 
+            // Flash success message for Inertia
             session()->flash('success', 'Profile updated successfully!');
             
-            if ($request->wantsJson() || $request->header('X-Inertia')) {
-                return response()->json([
-                    'success' => true,
-                    'user' => $user->fresh('profile'),
-                    'profile' => $profile,
-                ]);
-            }
-
-            return Redirect::route('dashboard');
+            // Return redirect for Inertia requests
+            return Redirect::route('profile.editExtended');
             
         } catch (\Exception $e) {
             Log::error('Profile update failed', ['error' => $e->getMessage()]);
