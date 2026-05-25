@@ -17,7 +17,7 @@ class JobsController extends Controller
     public function searchJobs(Request $request)
     {
         $user = Auth::user();
-        
+         
         if (!$user) {
             return redirect()->route('login');
         }
