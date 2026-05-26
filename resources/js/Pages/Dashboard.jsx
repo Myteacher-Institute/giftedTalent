@@ -575,8 +575,8 @@ export default function Dashboard({
                                     {currentUser?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
                                 </div>
                             )}
-                            <div className="verified-overlay">
-                                <i className="fa-solid fa-check-circle"></i>
+                            <div className="verified-overlay" >
+                                <i class="fa-solid fa-circle-check" style={{ color: 'rgb(99, 230, 190)' }}></i>
                             </div>
                         </div>
 
@@ -603,7 +603,7 @@ export default function Dashboard({
                                 <i className="fas fa-compass"></i> Explore
                             </Link>
                         </li>
-                        
+
                         <li>
                             <Link href="/my-applications">
                                 <i className="fa-solid fa-file"></i> My Applications
