@@ -2,6 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useState, useEffect, useRef } from 'react';
 import '../../css/find-talents.css';
 import ApplicationLogo from '@/Components/ApplicationLogo';
+import Footer from '@/Components/Footer';
 
 // Helper function to safely get skills array
 const getSkillsArray = (skills) => {
@@ -48,9 +49,9 @@ function Nav({ auth }) {
         <>
             <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
                 <Link href="/" className="logo">
-                    <ApplicationLogo className="w-10 h-10 mr-2" />
+                    <ApplicationLogo className="w-20 h-10 mr-2" />
                 </Link>
-                
+
                 <ul className="nav-links">
                     <li><Link href="/" className="nav-link">Home</Link></li>
                     <li><Link href="/jobs" className="nav-link">Find Jobs</Link></li>
@@ -59,7 +60,7 @@ function Nav({ auth }) {
                     <li><Link href="/about" className="nav-link">About</Link></li>
                     <li><Link href="/contact" className="nav-link">Contact</Link></li>
                 </ul>
-                
+
                 <div className="nav-right">
                     <div className="auth-links">
                         {auth.user ? (
@@ -71,7 +72,7 @@ function Nav({ auth }) {
                             </>
                         )}
                     </div>
-                    
+
                     <div
                         className={`hamburger ${mobileMenuOpen ? 'active' : ''}`}
                         onClick={toggleMobileMenu}
@@ -82,7 +83,7 @@ function Nav({ auth }) {
                     </div>
                 </div>
             </nav>
-            
+
             {mobileMenuOpen && (
                 <div className="mobile-menu-overlay" onClick={closeMobileMenu}>
                     <div className="mobile-menu-container" onClick={(e) => e.stopPropagation()}>
@@ -102,7 +103,7 @@ function Nav({ auth }) {
                             <Link href="/how-it-works" onClick={closeMobileMenu}>How It Works</Link>
                             <Link href="/about" onClick={closeMobileMenu}>About</Link>
                             <Link href="/contact" onClick={closeMobileMenu}>Contact</Link>
-                           
+
                             {auth.user && (
                                 <Link href='/dashboard' onClick={closeMobileMenu}>Dashboard</Link>
                             )}
@@ -123,8 +124,8 @@ export default function FindTalents({ auth, talents = [] }) {
     const filteredTalents = talents.filter(talent => {
         if (searchQuery) {
             return talent.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                   talent.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                   getSkillsArray(talent.skills).some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()));
+                talent.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                getSkillsArray(talent.skills).some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()));
         }
         return true;
     });
@@ -148,7 +149,7 @@ export default function FindTalents({ auth, talents = [] }) {
     return (
         <>
             <Head title="Find Talents - GiftedTalents" />
-            
+
             <Nav auth={auth} />
 
             <div className="find-talents-page">
@@ -156,11 +157,11 @@ export default function FindTalents({ auth, talents = [] }) {
                     <div className="find-talents-hero">
                         <h1>Find <span className="gradient-text">Talents</span></h1>
                         <p>Discover skilled professionals ready to work</p>
-                        
+
                         <div className="talents-search-bar">
                             <i className="fas fa-search"></i>
-                            <input 
-                                type="text" 
+                            <input
+                                type="text"
                                 placeholder="Search by name, title, or skills..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -181,8 +182,8 @@ export default function FindTalents({ auth, talents = [] }) {
                                 filteredTalents.map((talent) => {
                                     const skillsArray = getSkillsArray(talent.skills);
                                     return (
-                                        <div 
-                                            key={talent.id} 
+                                        <div
+                                            key={talent.id}
                                             className="talent-card"
                                             onClick={() => handleTalentClick(talent.id)}
                                         >
@@ -237,8 +238,8 @@ export default function FindTalents({ auth, talents = [] }) {
                                         filteredTalents.map((talent) => {
                                             const skillsArray = getSkillsArray(talent.skills);
                                             return (
-                                                <div 
-                                                    key={talent.id} 
+                                                <div
+                                                    key={talent.id}
                                                     className="talent-swiper-slide"
                                                     onClick={() => handleTalentClick(talent.id)}
                                                 >
@@ -283,6 +284,9 @@ export default function FindTalents({ auth, talents = [] }) {
                         </div>
                     </div>
                 </div>
+
+                {/* FOOTER */}
+                <Footer />
             </div>
         </>
     );

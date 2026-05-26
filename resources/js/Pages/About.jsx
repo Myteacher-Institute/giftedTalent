@@ -39,8 +39,6 @@ function Nav({ auth }) {
                 <li><Link href="/how-it-works" className="nav-link">How It Works</Link></li>
                 <li><Link href="/about" className="nav-link">About</Link></li>
                 <li><Link href="/contact" className="nav-link">Contact</Link></li>
-                <li><Link href="/privacy" className="nav-link">Privacy</Link></li>
-                <li><Link href="/guidelines" className="nav-link">Guidelines</Link></li>
             </ul>
             <div className="nav-right">
                 <div className="auth-links">
