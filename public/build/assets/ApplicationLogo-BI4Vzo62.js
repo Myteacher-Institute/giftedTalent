@@ -1,0 +1,1 @@
+import{j as s,L as o}from"./app-DEu8oim2.js";function e(t){return s.jsx(o,{href:"/",children:s.jsx("img",{src:"/assets/img/GIFTEDTalent_LOGO.png",alt:"GiftedTalents Logo",className:"logo",...t})})}export{e as A};
