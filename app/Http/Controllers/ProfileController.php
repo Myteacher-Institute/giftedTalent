@@ -276,7 +276,6 @@ class ProfileController extends Controller
         $validated = $request->validate([
             'email_job_alerts' => 'boolean',
             'email_application_updates' => 'boolean',
-            'email_message_notifications' => 'boolean',
             'email_marketing' => 'boolean',
             'email_newsletter' => 'boolean',
             'in_app_job_alerts' => 'boolean',
@@ -304,7 +303,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Upload user avatar
+     * Upload user avatar and save as Base64 in database
      */
     public function uploadAvatar(Request $request): RedirectResponse
     {
@@ -318,22 +317,34 @@ class ProfileController extends Controller
             
             if ($request->hasFile('avatar')) {
                 $file = $request->file('avatar');
-                $filename = $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
                 
-                Storage::disk('public')->putFileAs('avatars', $file, $filename);
+                // Validate file
+                $request->validate([
+                    'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
+                ]);
                 
-                $profile->avatar = 'avatars/' . $filename;
+                // Convert to Base64
+                $imageData = file_get_contents($file->getRealPath());
+                $base64 = base64_encode($imageData);
+                $mimeType = $file->getMimeType();
+                $base64Image = 'data:' . $mimeType . ';base64,' . $base64;
+                
+                // Save Base64 to database
+                $profile->profile_image_base64 = $base64Image;
                 $profile->save();
+                
+                // Update profile completion percentage
+                if (method_exists($user, 'updateProfileCompletion')) {
+                    $user->updateProfileCompletion();
+                }
+                
+                return Redirect::route('profile.editExtended')->with('success', 'Avatar uploaded and saved as Base64 successfully.');
             }
             
-            // Update profile completion percentage
-            if (method_exists($user, 'updateProfileCompletion')) {
-                $user->updateProfileCompletion();
-            }
-            
-            return Redirect::route('profile.editExtended')->with('success', 'Avatar uploaded successfully.');
+            return Redirect::back()->withErrors(['error' => 'No file selected']);
             
         } catch (\Exception $e) {
+            Log::error('Avatar upload failed: ' . $e->getMessage());
             return Redirect::back()->withErrors(['error' => 'Failed to upload avatar. Please try again.']);
         }
     }
@@ -505,40 +516,45 @@ class ProfileController extends Controller
      * Add a skill to the user's profile.
      */
     public function addSkill(Request $request): RedirectResponse
-    {
-        try {
-            $user = Auth::user();
-            
-            $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'proficiency_level' => 'nullable|string|in:beginner,intermediate,advanced,expert',
-                'years_experience' => 'nullable|integer|min:0|max:50',
-            ]);
-            
-            // Create or get existing skill
-            $skill = Skill::firstOrCreate([
-                'name' => $validated['name']
-            ], [
-                'is_active' => true
-            ]);
-            
+{
+    try {
+        $user = Auth::user();
+        
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'proficiency_level' => 'nullable|string|in:beginner,intermediate,advanced,expert',
+            'years_experience' => 'nullable|integer|min:0|max:50',
+        ]);
+        
+        // Create or get existing skill WITH user_id
+        $skill = Skill::firstOrCreate([
+            'user_id' => $user->id,
+            'name' => $validated['name']
+        ], [
+            'is_active' => true
+        ]);
+        
+        // Check if already attached to avoid duplicates
+        if (!$user->skills()->where('skill_id', $skill->id)->exists()) {
             // Attach skill to user with pivot data
             $user->skills()->attach($skill->id, [
                 'proficiency_level' => $validated['proficiency_level'] ?? 'intermediate',
                 'years_experience' => $validated['years_experience'] ?? 0
             ]);
-            
-            // Update profile completion
-            if (method_exists($user, 'updateProfileCompletion')) {
-                $user->updateProfileCompletion();
-            }
-            
-            return redirect()->back()->with('success', 'Skill added successfully!');
-            
-        } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Failed to add skill: ' . $e->getMessage()]);
         }
+        
+        // Update profile completion
+        if (method_exists($user, 'updateProfileCompletion')) {
+            $user->updateProfileCompletion();
+        }
+        
+        return redirect()->back()->with('success', 'Skill added successfully!');
+        
+    } catch (\Exception $e) {
+        \Log::error('Add skill error: ' . $e->getMessage());
+        return redirect()->back()->withErrors(['error' => 'Failed to add skill: ' . $e->getMessage()]);
     }
+}
 
     /**
      * Remove a skill from the user's profile.
@@ -675,72 +691,77 @@ class ProfileController extends Controller
     }
 
     /**
-     * Store a newly uploaded resume.
+     * Store a newly uploaded resume as Base64 in database.
      */
-    public function storeResume(Request $request)
-    {
-        try {
-            $request->validate([
-                'cv' => 'required|file|mimes:pdf,doc,docx|max:2048',
-                'title' => 'nullable|string|max:255',
-            ]);
+    /**
+ * Store a newly uploaded resume as Base64 in database.
+ */
+public function storeResume(Request $request)
+{
+    try {
+        $request->validate([
+            'cv' => 'required|file|mimes:pdf,doc,docx|max:2048',
+            'title' => 'nullable|string|max:255',
+        ]);
 
-            $user = Auth::user();
-            $file = $request->file('cv');
-            
-            // Generate unique filename
-            $filename = time() . '_' . $user->id . '_' . preg_replace('/[^a-zA-Z0-9]/', '_', $file->getClientOriginalName());
-            $path = $file->storeAs('resumes', $filename, 'public');
-            
-            // Create resume record
-            $resume = Resume::create([
-                'user_id' => $user->id,
-                'title' => $request->title ?? $file->getClientOriginalName(),
-                'file_name' => $file->getClientOriginalName(),
-                'file_path' => $path,
-                'file_size' => $file->getSize(),
-                'file_mime_type' => $file->getMimeType(),
-                'is_primary' => $user->resumes()->count() === 0,
-                'status' => 'pending', // Should be pending review
-            ]);
+        $user = Auth::user();
+        $file = $request->file('cv');
+        
+        // Convert file to Base64
+        $fileData = file_get_contents($file->getRealPath());
+        $base64 = base64_encode($fileData);
+        $mimeType = $file->getMimeType();
+        $base64File = 'data:' . $mimeType . ';base64,' . $base64;
+        
+        // Create resume record with Base64 in file_base64 column
+        $resume = Resume::create([
+            'user_id' => $user->id,
+            'title' => $request->title ?? $file->getClientOriginalName(),
+            'file_name' => $file->getClientOriginalName(),
+            'file_path' => null, // Clear file path since we use Base64
+            'file_base64' => $base64File, // Save Base64 here
+            'file_size' => $file->getSize(),
+            'file_mime_type' => $file->getMimeType(),
+            'is_primary' => $user->resumes()->count() === 0,
+            'status' => 'pending',
+        ]);
 
-            // Update profile completion
-            if (method_exists($user, 'updateProfileCompletion')) {
-                $user->updateProfileCompletion();
-            }
-
-            return redirect()->back()->with('success', 'CV uploaded successfully! It will be reviewed by admin.');
-            
-        } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Failed to upload CV: ' . $e->getMessage()]);
+        // Update profile completion
+        if (method_exists($user, 'updateProfileCompletion')) {
+            $user->updateProfileCompletion();
         }
+
+        return redirect()->back()->with('success', 'CV uploaded and saved as Base64 in database successfully!');
+        
+    } catch (\Exception $e) {
+        return redirect()->back()->withErrors(['error' => 'Failed to upload CV: ' . $e->getMessage()]);
     }
+}
 
     /**
-     * Delete a resume.
+     * Delete a resume from database.
      */
-    public function destroyResume($id)
-    {
-        try {
-            $resume = Resume::where('user_id', Auth::id())->findOrFail($id);
-            
-            // Delete file from storage
-            if ($resume->file_path && Storage::disk('public')->exists($resume->file_path)) {
-                Storage::disk('public')->delete($resume->file_path);
-            }
-            
-            $resume->delete();
-            
-            // Update profile completion
-            $user = Auth::user();
-            if (method_exists($user, 'updateProfileCompletion')) {
-                $user->updateProfileCompletion();
-            }
-            
-            return redirect()->back()->with('success', 'CV deleted successfully!');
-            
-        } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Failed to delete CV']);
+    /**
+ * Delete a resume from database.
+ */
+public function destroyResume($id)
+{
+    try {
+        $resume = Resume::where('user_id', Auth::id())->findOrFail($id);
+        
+        // No file to delete from storage since it's Base64 in database
+        $resume->delete();
+        
+        // Update profile completion
+        $user = Auth::user();
+        if (method_exists($user, 'updateProfileCompletion')) {
+            $user->updateProfileCompletion();
         }
+        
+        return redirect()->back()->with('success', 'CV deleted successfully from database!');
+        
+    } catch (\Exception $e) {
+        return redirect()->back()->withErrors(['error' => 'Failed to delete CV']);
     }
+}
 }

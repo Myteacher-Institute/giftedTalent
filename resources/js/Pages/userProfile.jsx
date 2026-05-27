@@ -87,6 +87,12 @@ export default function EditProfile({ user }) {
         e.preventDefault();
         clearErrors();
 
+        // ADD THIS LINE HERE ↓↓↓
+        console.log('Start Date value:', data.start_date);
+        console.log('Employment Type:', data.employment_type);
+        console.log('Availability Status:', data.availability_status);
+        // ADD THIS LINE HERE ↑↑↑
+
         patch(route('profile.updateExtended'), {
             preserveScroll: true,
             onSuccess: () => {
@@ -107,7 +113,7 @@ export default function EditProfile({ user }) {
     // ========== EXPERIENCE FUNCTIONS ==========
     const handleAddExperience = async () => {
         const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        
+
         try {
             const response = await fetch('/profile/experiences', {
                 method: 'POST',
@@ -120,7 +126,7 @@ export default function EditProfile({ user }) {
             });
 
             const data = await response.json();
-            
+
             if (response.ok) {
                 setExperiences([...experiences, data]);
                 setExpForm({
@@ -153,7 +159,7 @@ export default function EditProfile({ user }) {
 
     const handleUpdateExperience = async () => {
         const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        
+
         try {
             const response = await fetch(`/profile/experiences/${editingExp.id}`, {
                 method: 'PUT',
@@ -166,7 +172,7 @@ export default function EditProfile({ user }) {
             });
 
             const data = await response.json();
-            
+
             if (response.ok) {
                 setExperiences(experiences.map(exp => exp.id === editingExp.id ? data : exp));
                 setEditingExp(null);
@@ -198,7 +204,7 @@ export default function EditProfile({ user }) {
         if (!confirm('Delete this experience?')) return;
 
         const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        
+
         try {
             const response = await fetch(`/profile/experiences/${id}`, {
                 method: 'DELETE',
@@ -226,67 +232,48 @@ export default function EditProfile({ user }) {
     const handleAddSkill = async () => {
         if (!newSkill.trim()) return;
 
-        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        
         try {
-            const response = await fetch('/profile/skills', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': token,
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify({
-                    name: newSkill,
-                    proficiency_level: skillLevel,
-                }),
-            });
-
-            const data = await response.json();
-            
-            if (response.ok) {
-                setSkills([...skills, data]);
-                setNewSkill('');
-                setSkillLevel('intermediate');
-                if (typeof alertify !== 'undefined') {
+            await router.post(route('profile.skills.add'), {
+                name: newSkill,
+                proficiency_level: skillLevel,
+            }, {
+                preserveState: true,
+                onSuccess: () => {
+                    setNewSkill('');
+                    setSkillLevel('intermediate');
                     alertify.success('Skill added!');
+                    router.reload();
+                },
+                onError: (errors) => {
+                    console.error('Error:', errors);
+                    alertify.error(errors.message || 'Failed to add skill');
                 }
-            } else {
-                console.error('Error:', data);
-                if (typeof alertify !== 'undefined') {
-                    alertify.error(data.message || 'Failed to add skill');
-                }
-            }
+            });
         } catch (error) {
             console.error('Error adding skill:', error);
-            if (typeof alertify !== 'undefined') {
-                alertify.error('Network error. Please try again.');
-            }
+            alertify.error('Network error. Please try again.');
         }
     };
 
     const handleDeleteSkill = async (skillId) => {
-        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        
         try {
-            const response = await fetch(`/profile/skills/${skillId}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': token,
-                    'Accept': 'application/json',
-                },
-            });
-
-            if (response.ok) {
-                setSkills(skills.filter(s => s.id !== skillId));
-                if (typeof alertify !== 'undefined') {
+            await router.delete(route('profile.skills.remove', { skillId: skillId }), {
+                preserveState: true,
+                onSuccess: () => {
                     alertify.success('Skill removed');
+                    router.reload();
+                },
+                onError: (errors) => {
+                    console.error('Error:', errors);
+                    alertify.error('Failed to remove skill');
                 }
-            }
+            });
         } catch (error) {
             console.error('Error deleting skill:', error);
+            alertify.error('Network error. Please try again.');
         }
     };
+
 
     const uploadAvatar = async (e) => {
         const file = e.target.files[0];
@@ -331,7 +318,7 @@ export default function EditProfile({ user }) {
         if (!confirm('Remove profile picture?')) return;
 
         const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        
+
         try {
             await router.delete(route('profile.avatar.remove'), {
                 headers: {

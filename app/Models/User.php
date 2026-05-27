@@ -176,14 +176,14 @@ public function educations(): HasMany
         if (!empty($this->name)) $score++;
         if (!empty($this->email)) $score++;
         
-        // Employment Details from users table (2 points)
-        if (!empty($this->availability_status)) $score++;
-        if (!empty($this->employment_type)) $score++;
-        
         // === FROM PROFILES TABLE (via relationship) ===
         $profile = $this->profile;
         
         if ($profile) {
+            // Employment Details from profile table (2 points)
+            if (!empty($profile->availability_status)) $score++;
+            if (!empty($profile->employment_type)) $score++;
+            
             // Professional Details (3 points)
             if (!empty($profile->title) || !empty($profile->position)) $score++;
             if (!empty($profile->company)) $score++;

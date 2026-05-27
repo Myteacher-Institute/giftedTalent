@@ -21,6 +21,9 @@
         @inertiaHead
     </head>
     <body class="font-sans antialiased">
+        <script>
+            window.csrfToken = "{{ csrf_token() }}";
+        </script>
         <div id="app">
             @inertia
         </div>
