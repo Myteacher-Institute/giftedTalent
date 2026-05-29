@@ -32,18 +32,16 @@ Route::get('/', function () {
 
     $featuredTalents = User::where('profile_completed', '>=', 50)
                             ->with('profile')
-                            ->with('skills') // ← ADD THIS to load skills relationship
+                            ->with('skills')
                             ->orderBy('profile_completed', 'desc')
                             ->take(6)
                             ->get()
                             ->map(function($user) {
-                                // FIX: Get skills from the relationship, ensure it's always an array
                                 $skills = [];
                                 if ($user->skills && $user->skills->count() > 0) {
                                     $skills = $user->skills->pluck('name')->toArray();
                                 }
                                 
-                                // FIX: If still empty, provide default
                                 if (empty($skills)) {
                                     $skills = ['Available for work'];
                                 }
@@ -77,7 +75,7 @@ Route::get('/', function () {
                                     'avatar' => $avatar,
                                     'avatar_url' => $avatar,
                                     'profile_image_base64' => $avatar,
-                                    'skills' => $skills, // ← NOW ALWAYS AN ARRAY, NEVER NULL
+                                    'skills' => $skills,
                                     'rating' => $rating,
                                     'profile_completed' => $user->profile_completed,
                                 ];
@@ -101,7 +99,15 @@ Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name
 Route::get('/search-results', [SearchController::class, 'search'])->name('search.results');
 
 // ============================================
-// PROTECTED ROUTES (Login required for ALL)
+// PUBLIC PAGES (No login required)
+// ============================================
+
+Route::get('/how-it-works', [PageController::class, 'howItWorks'])->name('pages.howItWorks');
+Route::get('/about', [PageController::class, 'about'])->name('pages.about');
+Route::get('/contact', [PageController::class, 'contact'])->name('contact');
+
+// ============================================
+// PROTECTED ROUTES (Login required)
 // ============================================
 
 Route::middleware(['auth'])->group(function () {
@@ -121,12 +127,9 @@ Route::middleware(['auth'])->group(function () {
     // Talent Profile Route
     Route::get('/talent/{id}', [TalentController::class, 'show'])->name('talent.show');
 
-    // Navigation Pages
+    // Protected Navigation Pages
     Route::get('/jobs', [PageController::class, 'index'])->name('pages.findJobs');
     Route::get('/find-talents', [PageController::class, 'findTalents'])->name('pages.findTalents');
-    Route::get('/how-it-works', [PageController::class, 'howItWorks'])->name('pages.howItWorks');
-    Route::get('/about', [PageController::class, 'about'])->name('pages.about');
-    // Route::get('/jobs', [JobsController::class, 'index'])->name('jobs');
 
     // User Profile Routes
     Route::get('/user-profile', [ProfileController::class, 'show'])->name('pages.userProfile');
@@ -134,8 +137,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/easy-apply-job/{id}', [PageController::class, 'easyApplyJob']);
     Route::get('/search-jobs', [JobsController::class, 'searchJobs'])->name('search-jobs');
 
-    // Contact Routes
-    Route::get('/contact', [ContactController::class, 'index'])->name('contact');
+    // Contact POST Route (submitting contact form requires login)
     Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 
     // Privacy & Guidelines
@@ -147,7 +149,7 @@ Route::middleware(['auth'])->group(function () {
         return Inertia::render('Guidelines');
     })->name('guidelines');
 
-    // User Dashboard (ONLY ONCE)
+    // User Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->middleware(['auth', 'verified', 'not_admin'])
         ->name('dashboard');
@@ -167,7 +169,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/search', [SearchController::class, 'search'])->name('search');
 
-    // Explore Route (ONLY ONCE)
+    // Explore Route
     Route::get('/explore', [ExploreController::class, 'index'])->name('explore');
 
     // Notifications

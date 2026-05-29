@@ -5,8 +5,8 @@ import '../../css/nav.css';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Footer from '@/Components/Footer';
 
-// Nav Component
-function Nav() {
+// Nav Component - FIXED with closeMenu function
+function Nav({ auth }) {
     const [isActive, setIsActive] = useState(false);
     const [scrolled, setScrolled] = useState(false);
 
@@ -18,25 +18,39 @@ function Nav() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    const toggleMenu = () => {
+        setIsActive(!isActive);
+    };
+
+    const closeMenu = () => {
+        setIsActive(false);
+    };
+
     return (
         <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
-            <a className="logo">
+            <Link href="/" className="logo">
                 <ApplicationLogo className="w-20 h-10 mr-2" />
-            </a>
+            </Link>
             <ul className={`nav-links ${isActive ? 'active' : ''}`}>
-                <li><Link href="/" className="nav-link">Home</Link></li>
-                <li><Link href="/jobs" className="nav-link">Find Jobs</Link></li>
-                <li><Link href="/find-talents" className="nav-link">Find Talents</Link></li>
-                <li><Link href="/how-it-works" className="nav-link">How It Works</Link></li>
-                <li><Link href="/about" className="nav-link">About</Link></li>
-                <li><Link href="/contact" className="nav-link">Contact</Link></li>
+                <li><Link href="/" className="nav-link" onClick={closeMenu}>Home</Link></li>
+                <li><Link href="/jobs" className="nav-link" onClick={closeMenu}>Find Jobs</Link></li>
+                <li><Link href="/find-talents" className="nav-link" onClick={closeMenu}>Find Talents</Link></li>
+                <li><Link href="/how-it-works" className="nav-link" onClick={closeMenu}>How It Works</Link></li>
+                <li><Link href="/about" className="nav-link" onClick={closeMenu}>About</Link></li>
+                <li><Link href="/contact" className="nav-link" onClick={closeMenu}>Contact</Link></li>
             </ul>
             <div className="nav-right">
                 <div className="auth-links">
-                    <Link href={route('login')} className="nav-auth-link">Sign In</Link>
-                    <Link href={route('register')} className="get-started">Get Started</Link>
+                    {auth?.user ? (
+                        <Link href="/dashboard" className="nav-auth-link">Dashboard</Link>
+                    ) : (
+                        <>
+                            <Link href={route('login')} className="nav-auth-link">Sign In</Link>
+                            <Link href={route('register')} className="get-started">Get Started</Link>
+                        </>
+                    )}
                 </div>
-                <div className={`hamburger ${isActive ? 'active' : ''}`} onClick={() => setIsActive(!isActive)}>
+                <div className={`hamburger ${isActive ? 'active' : ''}`} onClick={toggleMenu}>
                     <span></span>
                     <span></span>
                     <span></span>
@@ -46,7 +60,7 @@ function Nav() {
     );
 }
 
-export default function HowItWorks() {
+export default function HowItWorks({ auth }) {  // ← ADD auth prop
     const steps = [
         {
             number: "01",
@@ -236,7 +250,7 @@ export default function HowItWorks() {
             <Head title="How It Works - GiftedTalents" />
 
             <div className="how-it-works-page">
-                <Nav />
+                <Nav auth={auth} />  {/* ← PASS auth to Nav */}
 
                 {/* Hero Section */}
                 <section className="hiw-hero">

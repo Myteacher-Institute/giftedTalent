@@ -545,7 +545,7 @@ class ProfileController extends Controller
         
         // Update profile completion
         if (method_exists($user, 'updateProfileCompletion')) {
-            $user->updateProfileCompletion();
+            $user->updateProfileCompletion(); 
         }
         
         return redirect()->back()->with('success', 'Skill added successfully!');

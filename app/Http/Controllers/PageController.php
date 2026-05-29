@@ -137,7 +137,9 @@ class PageController extends Controller
      */
     public function howItWorks(): Response
     {
-        return Inertia::render('HowItWorks');
+        return Inertia::render('HowItWorks', [
+            'auth' => ['user' => Auth::user()],
+        ]);
     }
 
     /**
@@ -145,7 +147,19 @@ class PageController extends Controller
      */
     public function about(): Response
     {
-        return Inertia::render('About');
+        return Inertia::render('About', [
+            'auth' => ['user' => Auth::user()],
+        ]);
+    }
+
+    /**
+     * Display the Contact page.
+     */
+    public function contact(): Response
+    {
+        return Inertia::render('Contact', [
+            'auth' => ['user' => Auth::user()],
+        ]);
     }
 
     /**
@@ -153,7 +167,9 @@ class PageController extends Controller
      */
     public function userProfile(): Response
     {
-        return Inertia::render('userProfile');
+        return Inertia::render('userProfile', [
+            'auth' => ['user' => Auth::user()],
+        ]);
     }
 
     /**

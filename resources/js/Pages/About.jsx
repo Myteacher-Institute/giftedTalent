@@ -9,7 +9,7 @@ import ApplicationLogo from '@/Components/ApplicationLogo';
 import Footer from '@/Components/Footer';
 
 
-// Nav Component
+// Nav Component - FIXED to check auth.user
 function Nav({ auth }) {
     const [isActive, setIsActive] = useState(false);
     const [scrolled, setScrolled] = useState(false);
@@ -27,27 +27,41 @@ function Nav({ auth }) {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    const toggleMenu = () => {
+        setIsActive(!isActive);
+    };
+
+    const closeMenu = () => {
+        setIsActive(false);
+    };
+
     return (
         <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
-            <a className="logo">
+            <Link href="/" className="logo">
                 <ApplicationLogo className="w-20 h-10 mr-2" />
-            </a>
+            </Link>
             <ul className={`nav-links ${isActive ? 'active' : ''}`}>
-                <li><Link href="/" className="nav-link">Home</Link></li>
-                <li><Link href="/jobs" className="nav-link">Find Jobs</Link></li>
-                <li><Link href="/find-talents" className="nav-link">Find Talents</Link></li>
-                <li><Link href="/how-it-works" className="nav-link">How It Works</Link></li>
-                <li><Link href="/about" className="nav-link">About</Link></li>
-                <li><Link href="/contact" className="nav-link">Contact</Link></li>
+                <li><Link href="/" className="nav-link" onClick={closeMenu}>Home</Link></li>
+                <li><Link href="/jobs" className="nav-link" onClick={closeMenu}>Find Jobs</Link></li>
+                <li><Link href="/find-talents" className="nav-link" onClick={closeMenu}>Find Talents</Link></li>
+                <li><Link href="/how-it-works" className="nav-link" onClick={closeMenu}>How It Works</Link></li>
+                <li><Link href="/about" className="nav-link" onClick={closeMenu}>About</Link></li>
+                <li><Link href="/contact" className="nav-link" onClick={closeMenu}>Contact</Link></li>
             </ul>
             <div className="nav-right">
                 <div className="auth-links">
-                    <Link href={route('login')} className="nav-auth-link">Sign In</Link>
-                    <Link href={route('register')} className="get-started">Get Started</Link>
+                    {auth?.user ? (
+                        <Link href="/dashboard" className="nav-auth-link">Dashboard</Link>
+                    ) : (
+                        <>
+                            <Link href={route('login')} className="nav-auth-link">Sign In</Link>
+                            <Link href={route('register')} className="get-started">Get Started</Link>
+                        </>
+                    )}
                 </div>
                 <div
                     className={`hamburger ${isActive ? 'active' : ''}`}
-                    onClick={() => setIsActive(!isActive)}
+                    onClick={toggleMenu}
                 >
                     <span></span>
                     <span></span>
@@ -58,7 +72,7 @@ function Nav({ auth }) {
     );
 }
 
-export default function About() {
+export default function About({ auth }) {  // ← Make sure auth is received as prop
     const values = [
         {
             icon: <FontAwesomeIcon icon={faStar} className="value-icon" />,
@@ -89,40 +103,13 @@ export default function About() {
         { number: "98%", label: "Success Rate" }
     ];
 
-    const team = [
-        {
-            name: "Henry Opara",
-            role: "CEO & Founder",
-            image: "/assets/img/team1.jpg",
-            bio: "Passionate about connecting talent with opportunity."
-        },
-        {
-            name: "Christopher Nwosu",
-            role: "CTO",
-            image: "/assets/img/team2.jpg",
-            bio: "Tech enthusiast building the future of recruitment."
-        },
-        {
-            name: "Sarah Johnson",
-            role: "Head of Talent",
-            image: "/assets/img/team3.jpg",
-            bio: "Expert in matching the right people with the right roles."
-        },
-        {
-            name: "Michael Chen",
-            role: "Product Lead",
-            image: "/assets/img/team4.jpg",
-            bio: "Driving innovation in user experience."
-        }
-    ];
-
     return (
         <>
             <Head title="About Us - GiftedTalents" />
 
             <div className="about-page">
                 {/* Header */}
-                <Nav />
+                <Nav auth={auth} />  {/* ← Pass auth to Nav */}
 
                 {/* Hero Section */}
                 <section className="about-hero">
@@ -178,7 +165,6 @@ export default function About() {
                 </section>
 
                 {/* Values Section */}
-                {/* Values Section */}
                 <section className="about-values">
                     <div className="values-header">
                         <h2>Our Core Values</h2>
@@ -197,26 +183,6 @@ export default function About() {
                     </div>
                 </section>
 
-                {/* Team Section */}
-                {/* <section className="about-team">
-                    <div className="team-header">
-                        <h2>Meet the Team</h2>
-                        <p>The passionate people behind GiftedTalents</p>
-                    </div>
-                    <div className="team-grid">
-                        {team.map((member, index) => (
-                            <div key={index} className="team-card">
-                                <div className="team-image">
-                                    <img src={member.image} alt={member.name} />
-                                </div>
-                                <h3>{member.name}</h3>
-                                <p className="team-role">{member.role}</p>
-                                <p className="team-bio">{member.bio}</p>
-                            </div>
-                        ))}
-                    </div>
-                </section> */}
-
                 {/* CTA Section */}
                 <section className="about-cta">
                     <div className="cta-content">
@@ -228,7 +194,7 @@ export default function About() {
                         </div>
                     </div>
                 </section>
-                
+
                 <Footer />
             </div>
         </>
