@@ -252,15 +252,17 @@ export default function Dashboard({
         setSidebarOpen(!sidebarOpen);
     };
 
+    // UPDATED: Improved flash messages
     useEffect(() => {
         if (flash?.success) {
-            alertify.success(flash.success);
+            alertify.success(`✨ ${flash.success}`);
         }
         if (flash?.error) {
-            alertify.error(flash.error);
+            alertify.error(`❌ ${flash.error}`);
         }
     }, [flash]);
 
+    // UPDATED: Improved profile update message
     useEffect(() => {
         const profileUpdated = sessionStorage.getItem('profileUpdated');
         const profileUpdateTime = sessionStorage.getItem('profileUpdateTime');
@@ -270,7 +272,7 @@ export default function Dashboard({
             const updateTime = parseInt(profileUpdateTime);
 
             if (updateTime && (now - updateTime) < 10000) {
-                alertify.success('Profile updated successfully! Your changes have been saved.');
+                alertify.success(`✅ Profile updated successfully! Your changes have been saved.`);
             }
 
             sessionStorage.removeItem('profileUpdated');
@@ -363,6 +365,7 @@ export default function Dashboard({
         setShowSavedJobs(true);
     };
 
+    // UPDATED: Improved save job message
     const handleSaveJob = async (jobId) => {
         try {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -379,17 +382,21 @@ export default function Dashboard({
                 if (jobToAdd) {
                     setLocalSavedJobs([...localSavedJobs, jobToAdd]);
                     setSavedJobsCount(savedJobsCount + 1);
+                    const jobTitle = jobToAdd.job_title || jobToAdd.title || 'Job';
+                    alertify.success(`📌 "${jobTitle}" has been saved to your list!`);
+                } else {
+                    alertify.success(`📌 Job saved successfully!`);
                 }
-                alertify.success('Job saved successfully!');
             } else {
-                alertify.error('Failed to save job');
+                alertify.error(`⚠️ Could not save this job. Please try again.`);
             }
         } catch (error) {
             console.error('Error saving job:', error);
-            alertify.error('Network error. Please try again.');
+            alertify.error(`📡 Network issue. Please check your connection and try again.`);
         }
     };
 
+    // UPDATED: Improved unsave job message
     const handleUnsaveJob = async (jobId) => {
         try {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -405,16 +412,17 @@ export default function Dashboard({
                 const updated = localSavedJobs.filter(job => job.id !== jobId);
                 setLocalSavedJobs(updated);
                 setSavedJobsCount(updated.length);
-                alertify.success('Job removed from saved');
+                alertify.success(`🗑️ Job removed from your saved list.`);
             } else {
-                alertify.error('Failed to remove job');
+                alertify.error(`⚠️ Could not remove job. Please try again.`);
             }
         } catch (error) {
             console.error('Error removing saved job:', error);
-            alertify.error('Network error. Please try again.');
+            alertify.error(`📡 Network issue. Please check your connection and try again.`);
         }
     };
 
+    // UPDATED: Improved apply job message
     const handleApplyJob = async (jobId) => {
         try {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -430,23 +438,27 @@ export default function Dashboard({
             const data = await response.json();
 
             if (response.ok) {
-                alertify.success(data.message || 'Application submitted successfully!');
+                const message = data.message || 'Application submitted successfully!';
+                alertify.success(`🎉 ${message} We'll notify you about the status.`);
             } else {
-                alertify.error(data.message || 'Failed to apply for job');
+                const errorMsg = data.message || 'Failed to apply for job';
+                alertify.error(`❌ ${errorMsg} Please try again.`);
             }
         } catch (error) {
             console.error('Error applying for job:', error);
-            alertify.error('Network error. Please try again.');
+            alertify.error(`📡 Network issue. Please check your connection and try again.`);
         }
     };
 
+    // UPDATED: Improved profile complete message
     useEffect(() => {
         const hasShown = localStorage.getItem('profileCompleteShown');
         if (profileComplete === 100 && !hasShown) {
-            alertify.success('Congratulations! Your profile is 100% complete!', 3);
+            const userName = currentUser?.name?.split(' ')[0] || 'User';
+            alertify.success(`🏆 Congratulations ${userName}! Your profile is 100% complete! You're now getting the best job matches.`);
             localStorage.setItem('profileCompleteShown', 'true');
         }
-    }, [profileComplete]);
+    }, [profileComplete, currentUser]);
 
     const isFieldCompleted = (fieldName) => {
         if (profileStatus.status && profileStatus.status[fieldName]) {
@@ -520,7 +532,6 @@ export default function Dashboard({
                                 <img
                                     src={(() => {
                                         let avatarPath = currentUser.profile.avatar;
-                                        // Clean the path to avoid double storage
                                         let cleanPath = avatarPath.replace(/^\/+/, '');
                                         cleanPath = cleanPath.replace(/^storage\//, '');
                                         return `/storage/${cleanPath}`;
