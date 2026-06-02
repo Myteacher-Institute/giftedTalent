@@ -27,24 +27,13 @@ export default function EditProfile({ user }) {
         availability_status: '',
     });
 
-    // Experience states
-    const [experiences, setExperiences] = useState([]);
-    const [showExpForm, setShowExpForm] = useState(false);
-    const [editingExp, setEditingExp] = useState(null);
-    const [expForm, setExpForm] = useState({
-        company: '',
-        position: '',
-        location: '',
-        start_date: '',
-        end_date: '',
-        is_current: false,
-        description: '',
-    });
-
     // Skills states
     const [skills, setSkills] = useState([]);
     const [newSkill, setNewSkill] = useState('');
     const [skillLevel, setSkillLevel] = useState('intermediate');
+
+    // ADD THIS - Avatar preview state
+    const [avatarPreview, setAvatarPreview] = useState(null);
 
     // Populate form with current values on mount
     useEffect(() => {
@@ -70,11 +59,6 @@ export default function EditProfile({ user }) {
             });
         }
 
-        // Load experiences
-        if (user?.experiences) {
-            setExperiences(user.experiences);
-        }
-
         // Load skills
         if (user?.skills) {
             setSkills(user.skills);
@@ -87,11 +71,9 @@ export default function EditProfile({ user }) {
         e.preventDefault();
         clearErrors();
 
-        // ADD THIS LINE HERE ↓↓↓
         console.log('Start Date value:', data.start_date);
         console.log('Employment Type:', data.employment_type);
         console.log('Availability Status:', data.availability_status);
-        // ADD THIS LINE HERE ↑↑↑
 
         patch(route('profile.updateExtended'), {
             preserveScroll: true,
@@ -108,124 +90,6 @@ export default function EditProfile({ user }) {
                 }
             }
         });
-    };
-
-    // ========== EXPERIENCE FUNCTIONS ==========
-    const handleAddExperience = async () => {
-        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-        try {
-            const response = await fetch('/profile/experiences', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': token,
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify(expForm),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                setExperiences([...experiences, data]);
-                setExpForm({
-                    company: '',
-                    position: '',
-                    location: '',
-                    start_date: '',
-                    end_date: '',
-                    is_current: false,
-                    description: '',
-                });
-                setShowExpForm(false);
-                if (typeof alertify !== 'undefined') {
-                    alertify.success('Experience added successfully!');
-                }
-                router.reload();
-            } else {
-                console.error('Error:', data);
-                if (typeof alertify !== 'undefined') {
-                    alertify.error(data.message || 'Failed to add experience');
-                }
-            }
-        } catch (error) {
-            console.error('Error adding experience:', error);
-            if (typeof alertify !== 'undefined') {
-                alertify.error('Network error. Please try again.');
-            }
-        }
-    };
-
-    const handleUpdateExperience = async () => {
-        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-        try {
-            const response = await fetch(`/profile/experiences/${editingExp.id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': token,
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify(expForm),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                setExperiences(experiences.map(exp => exp.id === editingExp.id ? data : exp));
-                setEditingExp(null);
-                setExpForm({
-                    company: '',
-                    position: '',
-                    location: '',
-                    start_date: '',
-                    end_date: '',
-                    is_current: false,
-                    description: '',
-                });
-                if (typeof alertify !== 'undefined') {
-                    alertify.success('Experience updated!');
-                }
-                router.reload();
-            } else {
-                console.error('Error:', data);
-                if (typeof alertify !== 'undefined') {
-                    alertify.error(data.message || 'Failed to update experience');
-                }
-            }
-        } catch (error) {
-            console.error('Error updating experience:', error);
-        }
-    };
-
-    const handleDeleteExperience = async (id) => {
-        if (!confirm('Delete this experience?')) return;
-
-        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-        try {
-            const response = await fetch(`/profile/experiences/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': token,
-                    'Accept': 'application/json',
-                },
-            });
-
-            if (response.ok) {
-                setExperiences(experiences.filter(exp => exp.id !== id));
-                if (typeof alertify !== 'undefined') {
-                    alertify.success('Experience deleted!');
-                }
-            } else {
-                const data = await response.json();
-                console.error('Error:', data);
-            }
-        } catch (error) {
-            console.error('Error deleting experience:', error);
-        }
     };
 
     // ========== SKILLS FUNCTIONS ==========
@@ -274,10 +138,48 @@ export default function EditProfile({ user }) {
         }
     };
 
-
+    // UPDATED: uploadAvatar function with HEIC validation
     const uploadAvatar = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
+
+        // HEIC and file validation
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        
+        // Check for HEIC files
+        if (file.type === 'image/heic' || fileExtension === 'heic') {
+            if (typeof alertify !== 'undefined') {
+                alertify.error('❌ HEIC files are not supported. Please convert your image to JPG, PNG, or GIF format before uploading.');
+            }
+            e.target.value = '';
+            return;
+        }
+        
+        // Check allowed types
+        if (!allowedTypes.includes(file.type)) {
+            if (typeof alertify !== 'undefined') {
+                alertify.error('❌ Only JPG, PNG, GIF, and WEBP images are allowed.');
+            }
+            e.target.value = '';
+            return;
+        }
+        
+        // Check file size (max 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            if (typeof alertify !== 'undefined') {
+                alertify.error('❌ Image size must be less than 2MB.');
+            }
+            e.target.value = '';
+            return;
+        }
+
+        // Create preview immediately
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setAvatarPreview(reader.result);
+        };
+        reader.readAsDataURL(file);
 
         setUploading(true);
         const formData = new FormData();
@@ -293,21 +195,24 @@ export default function EditProfile({ user }) {
                 preserveState: true,
                 onSuccess: () => {
                     if (typeof alertify !== 'undefined') {
-                        alertify.success('Avatar uploaded!');
+                        alertify.success('✅ Avatar uploaded successfully!');
                     }
+                    setAvatarPreview(null);
                     router.reload();
                 },
                 onError: (errors) => {
                     console.error('Upload error:', errors);
+                    setAvatarPreview(null);
                     if (typeof alertify !== 'undefined') {
-                        alertify.error('Failed to upload image');
+                        alertify.error('❌ Failed to upload image. Please use JPG, PNG, or GIF format.');
                     }
                 }
             });
         } catch (error) {
             console.error('Upload failed', error);
+            setAvatarPreview(null);
             if (typeof alertify !== 'undefined') {
-                alertify.error('Upload failed');
+                alertify.error('❌ Upload failed. Please try again.');
             }
         } finally {
             setUploading(false);
@@ -346,10 +251,20 @@ export default function EditProfile({ user }) {
     const initials = user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'JD';
     const hasAvatar = user?.profile?.avatar_url || user?.profile?.avatar;
 
+    // UPDATED: getAvatarUrl to handle preview first
     const getAvatarUrl = () => {
+        // If we have a preview, use it first
+        if (avatarPreview) return avatarPreview;
+        
         const avatarUrl = user?.profile?.avatar_url || user?.profile?.avatar;
+        
+        // Check if it's a HEIC file and return null (will trigger initials fallback)
+        if (avatarUrl && typeof avatarUrl === 'string' && avatarUrl.toLowerCase().includes('.heic')) {
+            return null;
+        }
+        
         if (!avatarUrl) {
-            return `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=4F46E5&color=fff&size=150&bold=true`;
+            return null;
         }
         if (typeof avatarUrl === 'string' && (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://') || avatarUrl.startsWith('data:image'))) {
             return avatarUrl;
@@ -376,16 +291,29 @@ export default function EditProfile({ user }) {
                         <p>Update your personal and professional details</p>
                     </div>
 
-                    {/* Avatar Section */}
+                    {/* Avatar Section - UPDATED with preview */}
                     <div className="profile-avatar-section">
                         <div className="profile-avatar-wrapper">
-                            {hasAvatar ? (
+                            {avatarPreview ? (
                                 <img
-                                    src={getAvatarUrl()}
+                                    src={avatarPreview}
+                                    alt="Profile Preview"
+                                    className="profile-avatar-img"
+                                />
+                            ) : (hasAvatar && getAvatarUrl()) ? (
+                                <img
+                                    src={getAvatarUrl()}    
                                     alt="Profile"
                                     className="profile-avatar-img"
                                     onError={(e) => {
-                                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=4F46E5&color=fff&size=150&bold=true`;
+                                        e.target.style.display = 'none';
+                                        const parent = e.target.parentElement;
+                                        if (parent && !parent.querySelector('.avatar-fallback-initials')) {
+                                            const initialsDiv = document.createElement('div');
+                                            initialsDiv.className = 'profile-avatar-initials avatar-fallback-initials';
+                                            initialsDiv.textContent = initials;
+                                            parent.appendChild(initialsDiv);
+                                        }
                                     }}
                                 />
                             ) : (
@@ -405,7 +333,7 @@ export default function EditProfile({ user }) {
                                     id="avatar-upload"
                                     type="file"
                                     onChange={uploadAvatar}
-                                    accept="image/*"
+                                    accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                                     className="hidden-input"
                                     disabled={uploading}
                                 />
@@ -576,110 +504,6 @@ export default function EditProfile({ user }) {
                                     <InputError message={errors.bio} />
                                 </div>
                             </div>
-                        </div>
-
-                        {/* Work Experience Section */}
-                        <div className="form-section">
-                            <div className="form-section-title">
-                                <i className="fas fa-briefcase"></i>
-                                <span>Work Experience</span>
-                                <button type="button" className="add-item-btn" onClick={() => setShowExpForm(!showExpForm)}>
-                                    <i className="fas fa-plus"></i> Add Experience
-                                </button>
-                            </div>
-
-                            {/* Experience List */}
-                            {experiences.length > 0 && (
-                                <div className="items-list">
-                                    {experiences.map(exp => (
-                                        <div key={exp.id} className="item-card">
-                                            <div className="item-header">
-                                                <h4>{exp.position} at {exp.company}</h4>
-                                                <div className="item-actions">
-                                                    <button type="button" className="item-edit" onClick={() => {
-                                                        setEditingExp(exp);
-                                                        setExpForm(exp);
-                                                        setShowExpForm(true);
-                                                    }}>
-                                                        <i className="fas fa-edit"></i>
-                                                    </button>
-                                                    <button type="button" className="item-delete" onClick={() => handleDeleteExperience(exp.id)}>
-                                                        <i className="fas fa-trash"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <p className="item-date">{exp.start_date} - {exp.is_current ? 'Present' : exp.end_date}</p>
-                                            <p className="item-location">{exp.location}</p>
-                                            {exp.description && <p className="item-description">{exp.description}</p>}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            {/* Add/Edit Experience Form */}
-                            {showExpForm && (
-                                <div className="item-form">
-                                    <h4>{editingExp ? 'Edit Experience' : 'Add New Experience'}</h4>
-                                    <div className="form-row">
-                                        <div className="form-group">
-                                            <label>Company</label>
-                                            <input type="text" value={expForm.company} onChange={(e) => setExpForm({ ...expForm, company: e.target.value })} className="form-input" placeholder="Company name" />
-                                        </div>
-                                        <div className="form-group">
-                                            <label>Position</label>
-                                            <input type="text" value={expForm.position} onChange={(e) => setExpForm({ ...expForm, position: e.target.value })} className="form-input" placeholder="Job title" />
-                                        </div>
-                                    </div>
-                                    <div className="form-row">
-                                        <div className="form-group">
-                                            <label>Location</label>
-                                            <input type="text" value={expForm.location} onChange={(e) => setExpForm({ ...expForm, location: e.target.value })} className="form-input" placeholder="City, Country" />
-                                        </div>
-                                    </div>
-                                    <div className="form-row">
-                                        <div className="form-group">
-                                            <label>Start Date</label>
-                                            <input type="date" value={expForm.start_date} onChange={(e) => setExpForm({ ...expForm, start_date: e.target.value })} className="form-input" />
-                                        </div>
-                                        <div className="form-group">
-                                            <label>End Date</label>
-                                            <input type="date" value={expForm.end_date} onChange={(e) => setExpForm({ ...expForm, end_date: e.target.value })} className="form-input" disabled={expForm.is_current} />
-                                        </div>
-                                    </div>
-                                    <div className="form-row">
-                                        <div className="form-group">
-                                            <label className="checkbox-label">
-                                                <input type="checkbox" checked={expForm.is_current} onChange={(e) => setExpForm({ ...expForm, is_current: e.target.checked, end_date: '' })} />
-                                                I currently work here
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div className="form-row">
-                                        <div className="form-group full-width">
-                                            <label>Description</label>
-                                            <textarea value={expForm.description} onChange={(e) => setExpForm({ ...expForm, description: e.target.value })} className="form-textarea" rows="3" placeholder="Describe your responsibilities and achievements..."></textarea>
-                                        </div>
-                                    </div>
-                                    <div className="form-actions small">
-                                        <button type="button" className="btn-cancel-small" onClick={() => {
-                                            setShowExpForm(false);
-                                            setEditingExp(null);
-                                            setExpForm({
-                                                company: '',
-                                                position: '',
-                                                location: '',
-                                                start_date: '',
-                                                end_date: '',
-                                                is_current: false,
-                                                description: '',
-                                            });
-                                        }}>Cancel</button>
-                                        <button type="button" className="btn-submit-small" onClick={editingExp ? handleUpdateExperience : handleAddExperience}>
-                                            {editingExp ? 'Update' : 'Add'} Experience
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
                         </div>
 
                         {/* Skills Section */}

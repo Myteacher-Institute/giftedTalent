@@ -1,5 +1,5 @@
-
 import React from 'react';
+import { Link } from '@inertiajs/react';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 
 export default function Footer() {
@@ -7,16 +7,15 @@ export default function Footer() {
         <footer>
             <div className="footer-top">
                 <div className="footer-left">
-                    <a href="/" className="brand" onClick={(e) => { e.preventDefault(); navigateTo('/'); }}>
-                        <ApplicationLogo className="logo w-[520px] h-[200px] mt-8" />
-                    </a>
+                    {/* Remove the outer Link - ApplicationLogo already has one */}
+                    <ApplicationLogo className="logo w-[520px] h-[200px] mt-8" />
                 </div>
 
                 <div className="footer-right">
-                    <a href="/about">About</a>
-                    <a href="/contact">Contact</a>
-                    <a href="/privacy">Privacy Policy</a>
-                    <a href="/guidelines">Community Guideline</a>
+                    <Link href="/about">About</Link>
+                    <Link href="/contact">Contact</Link>
+                    <Link href="/privacy">Privacy Policy</Link>
+                    <Link href="/guidelines">Community Guideline</Link>
                 </div>
             </div>
 
@@ -30,7 +29,6 @@ export default function Footer() {
                     <span>Powered by:</span> MyTeacher Institute. All rights reserved.
                 </p>
             </div>
-
         </footer>
     );
 }

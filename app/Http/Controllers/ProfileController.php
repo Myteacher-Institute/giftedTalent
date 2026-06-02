@@ -55,6 +55,7 @@ class ProfileController extends Controller
             'status' => session('status'),
             'user' => $user,
             'availableSkills' => Skill::where('is_active', true)->get(),
+            'csrfToken' => csrf_token(),
         ]);
     }
 

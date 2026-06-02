@@ -587,7 +587,7 @@ export default function Dashboard({
                                 </div>
                             )}
                             <div className="verified-overlay" >
-                                <i class="fa-solid fa-circle-check" style={{ color: 'rgb(99, 230, 190)' }}></i>
+                                <i className="fa-solid fa-circle-check" style={{ color: 'rgb(99, 230, 190)' }}></i>
                             </div>
                         </div>
 

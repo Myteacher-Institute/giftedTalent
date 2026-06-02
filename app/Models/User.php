@@ -156,7 +156,7 @@ public function receivedMessages(): HasMany
 
 public function educations(): HasMany
 {
-    return $this->hasMany(Education::class); // ← Correct - use Educations (plural)
+    return $this->hasMany(Education::class);
 }
 
     
@@ -169,7 +169,7 @@ public function educations(): HasMany
     public function calculateProfileCompletion()
     {
         $score = 0;
-        $total = 12; // Total fields to check
+        $total = 15; // Total fields to check (updated from 12 to 15)
         
         // === FROM USERS TABLE ===
         // Personal Information (2 points)
@@ -189,17 +189,18 @@ public function educations(): HasMany
             if (!empty($profile->company)) $score++;
             if (!empty($profile->bio)) $score++;
             
-            // Contact & Location (2 points)
+            // Contact & Location (3 points) - Added country separately
             if (!empty($profile->phone)) $score++;
             if (!empty($profile->address) || !empty($profile->city)) $score++;
+            if (!empty($profile->country)) $score++; // NEW: Country gets its own point
             
             // Education (1 point)
             if (!empty($profile->education)) $score++;
             
-            // Social Links (1 point) - at least one social link
-            if (!empty($profile->portfolio_url) || !empty($profile->github_url) || !empty($profile->linkedin_url)) {
-                $score++;
-            }
+            // Social Links (3 points) - Individual points for each social link
+            if (!empty($profile->linkedin_url)) $score++;
+            if (!empty($profile->github_url)) $score++;
+            if (!empty($profile->portfolio_url)) $score++;
         }
         
         // === FROM SKILLS TABLE (via relationship) ===

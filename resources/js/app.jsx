@@ -7,19 +7,29 @@ import { createRoot } from 'react-dom/client';
 
 const appName = import.meta.env.VITE_APP_NAME || 'GiftedTalents';
 
-// Create Inertia app - ONLY ONCE
-createInertiaApp({
-    title: (title) => `${title} - ${appName}`,
-    resolve: (name) =>
-        resolvePageComponent(
-            `./Pages/${name}.jsx`,
-            import.meta.glob('./Pages/**/*.jsx'),
-        ),
-    setup({ el, App, props }) {
-        const root = createRoot(el);
-        root.render(<App {...props} />);
-    },
-    progress: {
-        color: '#4B5563',
-    },
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+    const appElement = document.getElementById('app');
+    
+    if (!appElement) {
+        console.error('App element not found!');
+        return;
+    }
+
+    createInertiaApp({
+        title: (title) => `${title} - ${appName}`,
+        resolve: (name) =>
+            resolvePageComponent(
+                `./Pages/${name}.jsx`,
+                import.meta.glob('./Pages/**/*.jsx'),
+            ),
+        setup({ el, App, props }) {
+            // Use the app element directly
+            const root = createRoot(appElement);
+            root.render(<App {...props} />);
+        },
+        progress: {
+            color: '#4B5563',
+        },
+    });
 });
