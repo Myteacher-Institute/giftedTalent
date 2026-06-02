@@ -9,7 +9,7 @@ import AppNavbar from '../Components/AppNavbar';
 window.alertify = window.alertify || alertify;
 
 // Job Card Component - Professional Design with View More Toggle
-function JobCard({ job, onSave, onUnsave, onApply, isSaved = false }) {
+function JobCard({ job, onSave, onUnsave, onApply, isSaved = false, hasApplied = false }) {
     const [showMenu, setShowMenu] = useState(null);
     const [saved, setSaved] = useState(isSaved);
     const [applying, setApplying] = useState(false);
@@ -31,6 +31,10 @@ function JobCard({ job, onSave, onUnsave, onApply, isSaved = false }) {
     };
 
     const handleApplyClick = async () => {
+        if (hasApplied) {
+            alertify.warning('⚠️ You have already applied for this job.');
+            return;
+        }
         setApplying(true);
         await onApply(job.id);
         setApplying(false);
@@ -193,18 +197,18 @@ function JobCard({ job, onSave, onUnsave, onApply, isSaved = false }) {
                     <button
                         className={`easy-apply-btn ${job.easy_apply ? 'premium-easy' : ''}`}
                         onClick={handleApplyClick}
-                        disabled={applying}
+                        disabled={applying || hasApplied}
                     >
                         <i className="fas fa-paper-plane"></i>
-                        {applying ? 'Applying...' : (job.easy_apply ? 'Easy Apply' : 'Apply Now')}
+                        {hasApplied ? 'Applied' : (applying ? 'Applying...' : (job.easy_apply ? 'Easy Apply' : 'Apply Now'))}
                     </button>
                     <div className="job-menu-trigger" onClick={() => toggleMenu(job.id)}>
                         <i className="fas fa-ellipsis-v"></i>
                     </div>
                     {showMenu === job.id && (
                         <div className="job-dropdown-menu">
-                            <button onClick={handleApplyClick} disabled={applying}>
-                                <i className="fas fa-paper-plane"></i> Apply Now
+                            <button onClick={handleApplyClick} disabled={applying || hasApplied}>
+                                <i className="fas fa-paper-plane"></i> {hasApplied ? 'Already Applied' : 'Apply Now'}
                             </button>
                             <button onClick={handleSaveClick}>
                                 <i className={`fas ${saved ? 'fa-bookmark' : 'fa-bookmark'}`} style={{ color: saved ? '#4F46E5' : '' }}></i>
@@ -245,6 +249,8 @@ export default function Dashboard({
     const [showSavedJobs, setShowSavedJobs] = useState(false);
     const [loadingSaved, setLoadingSaved] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    // Track applied job IDs to prevent duplicate applications
+    const [appliedJobIds, setAppliedJobIds] = useState([]);
 
     const currentUser = auth?.user;
 
@@ -422,8 +428,14 @@ export default function Dashboard({
         }
     };
 
-    // UPDATED: Improved apply job message
+    // UPDATED: Improved apply job message with 409 handling
     const handleApplyJob = async (jobId) => {
+        // Check if already applied using local state
+        if (appliedJobIds.includes(jobId)) {
+            alertify.warning(`⚠️ You have already applied for this job. Check "My Applications" for status.`);
+            return;
+        }
+        
         try {
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
@@ -440,6 +452,14 @@ export default function Dashboard({
             if (response.ok) {
                 const message = data.message || 'Application submitted successfully!';
                 alertify.success(`🎉 ${message} We'll notify you about the status.`);
+                // Add to applied list to prevent duplicate attempts
+                setAppliedJobIds(prev => [...prev, jobId]);
+                // Reload to update stats
+                router.reload();
+            } else if (response.status === 409) {
+                // Handle duplicate application - add to local state so user won't try again
+                setAppliedJobIds(prev => [...prev, jobId]);
+                alertify.warning(`⚠️ You have already applied for this job. Check "My Applications" for status.`);
             } else {
                 const errorMsg = data.message || 'Failed to apply for job';
                 alertify.error(`❌ ${errorMsg} Please try again.`);
@@ -664,6 +684,7 @@ export default function Dashboard({
                                             onUnsave={handleUnsaveJob}
                                             onApply={handleApplyJob}
                                             isSaved={true}
+                                            hasApplied={appliedJobIds.includes(job.id)}
                                         />
                                     ))}
                                 </div>
@@ -759,6 +780,7 @@ export default function Dashboard({
                                                 onUnsave={handleUnsaveJob}
                                                 onApply={handleApplyJob}
                                                 isSaved={localSavedJobs.some(saved => saved.id === job.id)}
+                                                hasApplied={appliedJobIds.includes(job.id)}
                                             />
                                         ))}
                                     </div>
@@ -778,6 +800,7 @@ export default function Dashboard({
                                                 onUnsave={handleUnsaveJob}
                                                 onApply={handleApplyJob}
                                                 isSaved={localSavedJobs.some(saved => saved.id === job.id)}
+                                                hasApplied={appliedJobIds.includes(job.id)}
                                             />
                                         ))}
                                     </div>
