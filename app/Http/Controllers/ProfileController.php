@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
-use App\Models\Experience;
 use App\Models\Profile;
 use App\Models\Resume;
 use App\Models\Skill;
@@ -28,7 +27,6 @@ class ProfileController extends Controller
         $user = $request->user()->loadMissing([
             'profile',
             'skills',
-            'experiences',
             'resumes'
         ]);
 
@@ -48,7 +46,7 @@ class ProfileController extends Controller
      */
     public function editExtendedProfile(Request $request): InertiaResponse
     {
-        $user = $request->user()->loadMissing(['profile', 'skills', 'experiences', 'resumes']);
+        $user = $request->user()->loadMissing(['profile', 'skills', 'resumes']);
 
         return Inertia::render('userProfile', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
@@ -577,103 +575,6 @@ class ProfileController extends Controller
             
         } catch (\Exception $e) {
             return redirect()->back()->withErrors(['error' => 'Failed to remove skill']);
-        }
-    }
-
-    /**
-     * Add work experience.
-     */
-    public function addExperience(Request $request): RedirectResponse
-    {
-        try {
-            $user = Auth::user();
-            
-            $validated = $request->validate([
-                'company' => 'required|string|max:255',
-                'position' => 'required|string|max:255',
-                'location' => 'nullable|string|max:255',
-                'start_date' => 'required|date',
-                'end_date' => 'nullable|date|after:start_date',
-                'is_current' => 'boolean',
-                'description' => 'nullable|string',
-            ]);
-            
-            Experience::create([
-                'user_id' => $user->id,
-                'company' => $validated['company'],
-                'position' => $validated['position'],
-                'location' => $validated['location'] ?? null,
-                'start_date' => $validated['start_date'],
-                'end_date' => $validated['end_date'] ?? null,
-                'is_current' => $validated['is_current'] ?? false,
-                'description' => $validated['description'] ?? null,
-            ]);
-            
-            // Update profile completion
-            if (method_exists($user, 'updateProfileCompletion')) {
-                $user->updateProfileCompletion();
-            }
-            
-            return redirect()->back()->with('success', 'Experience added successfully!');
-            
-        } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Failed to add experience: ' . $e->getMessage()]);
-        }
-    }
-
-    /**
-     * Update work experience.
-     */
-    public function updateExperience(Request $request, Experience $experience): RedirectResponse
-    {
-        try {
-            // Check ownership
-            if ($experience->user_id !== Auth::id()) {
-                return redirect()->back()->withErrors(['error' => 'Unauthorized action']);
-            }
-            
-            $validated = $request->validate([
-                'company' => 'required|string|max:255',
-                'position' => 'required|string|max:255',
-                'location' => 'nullable|string|max:255',
-                'start_date' => 'required|date',
-                'end_date' => 'nullable|date|after:start_date',
-                'is_current' => 'boolean',
-                'description' => 'nullable|string',
-            ]);
-            
-            $experience->update($validated);
-            
-            return redirect()->back()->with('success', 'Experience updated successfully!');
-            
-        } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Failed to update experience']);
-        }
-    }
-
-    /**
-     * Delete work experience.
-     */
-    public function deleteExperience(Experience $experience): RedirectResponse
-    {
-        try {
-            // Check ownership
-            if ($experience->user_id !== Auth::id()) {
-                return redirect()->back()->withErrors(['error' => 'Unauthorized action']);
-            }
-            
-            $experience->delete();
-            
-            // Update profile completion
-            $user = Auth::user();
-            if (method_exists($user, 'updateProfileCompletion')) {
-                $user->updateProfileCompletion();
-            }
-            
-            return redirect()->back()->with('success', 'Experience deleted successfully!');
-            
-        } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => 'Failed to delete experience']);
         }
     }
 
