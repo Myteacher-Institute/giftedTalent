@@ -165,10 +165,10 @@ export default function EditProfile({ user }) {
             return;
         }
         
-        // Check file size (max 2MB)
-        if (file.size > 2 * 1024 * 1024) {
+        // Check file size (max 10MB)
+        if (file.size > 10 * 1024 * 1024) {
             if (typeof alertify !== 'undefined') {
-                alertify.error('❌ Image size must be less than 2MB.');
+                alertify.error('❌ Image size must be less than 10MB.');
             }
             e.target.value = '';
             return;

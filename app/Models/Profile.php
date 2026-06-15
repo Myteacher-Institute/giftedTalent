@@ -20,6 +20,7 @@ class Profile extends Model
         'avatar',
         'cover_image',
         'position',
+        'title',
         'education',
         'availability_status',
         'availability_type',
