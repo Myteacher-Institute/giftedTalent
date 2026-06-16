@@ -22,6 +22,9 @@ class Profile extends Model
         'position',
         'title',
         'education',
+        'company',
+        'employment_type',
+        'start_date',
         'availability_status',
         'availability_type',
         'expected_salary',
@@ -31,6 +34,7 @@ class Profile extends Model
         'linkedin_url',
         'github_url',
         'portfolio_url',
+        'profile_image_base64',
     ];
 
     protected $casts = [

@@ -377,7 +377,9 @@ export default function Dashboard({
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const response = await fetch(`/saved-jobs/${jobId}`, {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
+                    'Accept': 'application/json',
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken,
                 },
@@ -408,7 +410,9 @@ export default function Dashboard({
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const response = await fetch(`/saved-jobs/${jobId}`, {
                 method: 'DELETE',
+                credentials: 'same-origin',
                 headers: {
+                    'Accept': 'application/json',
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken,
                 },

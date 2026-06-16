@@ -43,8 +43,7 @@ class SearchController extends Controller
                 $q->where('name', 'like', "%{$query}%")
                   ->orWhereHas('profile', function($profile) use ($query) {
                       $profile->where('position', 'like', "%{$query}%")
-                              ->orWhere('bio', 'like', "%{$query}%")
-                              ->orWhere('title', 'like', "%{$query}%");
+                              ->orWhere('bio', 'like', "%{$query}%");
                   });
             })
             ->with('profile', 'skills')

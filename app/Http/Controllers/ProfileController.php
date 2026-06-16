@@ -79,71 +79,70 @@ class ProfileController extends Controller
      */
     public function updateExtendedProfile(Request $request): RedirectResponse
     {
+        $user = $request->user();
+        $profile = $user->profile ?? Profile::firstOrCreate(['user_id' => $user->id]);
+
+        // Validate all fields including profile_image before the try block so validation errors are returned normally.
+        $validated = $request->validate([
+            'first_name' => 'nullable|string|max:100',
+            'last_name' => 'nullable|string|max:100',
+            'email' => 'nullable|email|max:255|unique:users,email,' . $user->id,
+            'phone' => 'nullable|string|max:20',
+            'position' => 'nullable|string|max:100',
+            'title' => 'nullable|string|max:100',
+            'company' => 'nullable|string|max:100',
+            'education' => 'nullable|string|max:100',
+            'bio' => 'nullable|string|max:1000',
+            'address' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:100',
+            'country' => 'nullable|string|max:100',
+            'linkedin_url' => 'nullable|string|max:255',
+            'github_url' => 'nullable|string|max:255',
+            'portfolio_url' => 'nullable|string|max:255',
+            'profile_image' => 'nullable|string',
+            'employment_type' => 'nullable|string|max:255',
+            'start_date' => 'nullable|string',
+            'availability_status' => 'nullable|string|max:255',
+        ]);
+
+        Log::info('Profile data validated', ['validated' => $validated]);
+
         try {
-            $user = $request->user();
-            $profile = $user->profile;
-
-            // Validate all fields including profile_image
-            $validated = $request->validate([
-                'first_name' => 'nullable|string|max:100',
-                'last_name' => 'nullable|string|max:100',
-                'email' => 'nullable|email|max:255|unique:users,email,' . $user->id,
-                'phone' => 'nullable|string|max:20',
-                'position' => 'nullable|string|max:100',
-                'title' => 'nullable|string|max:100',
-                'company' => 'nullable|string|max:100',
-                'education' => 'nullable|string|max:100',
-                'bio' => 'nullable|string|max:1000',
-                'address' => 'nullable|string|max:255',
-                'city' => 'nullable|string|max:100',
-                'country' => 'nullable|string|max:100',
-                'linkedin_url' => 'nullable|string|max:255',
-                'github_url' => 'nullable|string|max:255',
-                'portfolio_url' => 'nullable|string|max:255',
-                'profile_image' => 'nullable|string',
-                'employment_type' => 'nullable|string|max:255',
-                'start_date' => 'nullable|string',
-                'availability_status' => 'nullable|string|max:255',
-            ]);
-
-            Log::info('Profile data validated', ['validated' => $validated]);
-
             // Update user basic info
             $userUpdated = false;
             if (isset($validated['first_name']) || isset($validated['last_name'])) {
                 $currentFirstName = explode(' ', $user->name)[0] ?? '';
                 $currentLastName = explode(' ', $user->name, 2)[1] ?? '';
-                
+
                 $firstName = $validated['first_name'] ?? $currentFirstName;
                 $lastName = $validated['last_name'] ?? $currentLastName;
-                
+
                 $newName = trim($firstName . ' ' . $lastName);
                 if ($user->name !== $newName) {
                     $user->name = $newName;
                     $userUpdated = true;
                 }
             }
-            
+
             if (isset($validated['email']) && $user->email !== $validated['email']) {
                 $user->email = $validated['email'];
                 $user->email_verified_at = null;
                 $userUpdated = true;
             }
-            
+
             if ($userUpdated) {
                 $user->save();
             }
 
             // Prepare profile data
             $profileData = Arr::except($validated, ['first_name', 'last_name', 'email', 'profile_image']);
-            
             $filteredProfileData = [];
             foreach ($profileData as $key => $value) {
                 if ($value !== null && $value !== '') {
                     $filteredProfileData[$key] = $value;
                 }
             }
-            
+
             // Update the existing profile
             if (!empty($filteredProfileData)) {
                 foreach ($filteredProfileData as $key => $value) {
@@ -154,14 +153,14 @@ class ProfileController extends Controller
             // Handle profile image
             if (array_key_exists('profile_image', $validated)) {
                 $base64Image = $validated['profile_image'];
-                
+
                 if ($base64Image === '') {
                     $profile->profile_image_base64 = null;
                 } elseif ($base64Image && preg_match('/^data:image\/(\w+);base64,/', $base64Image)) {
                     $profile->profile_image_base64 = $base64Image;
                 }
             }
-            
+
             $profile->save();
 
             // Refresh the user and profile
@@ -175,10 +174,9 @@ class ProfileController extends Controller
 
             // Flash success message for Inertia
             session()->flash('success', 'Profile updated successfully!');
-            
+
             // Return redirect for Inertia requests
             return Redirect::route('profile.editExtended');
-            
         } catch (\Exception $e) {
             Log::error('Profile update failed', ['error' => $e->getMessage()]);
             session()->flash('error', 'An error occurred while updating profile.');
@@ -319,7 +317,7 @@ class ProfileController extends Controller
                 
                 // Validate file
                 $request->validate([
-                    'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
+                    'avatar' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10240'
                 ]);
                 
                 // Convert to Base64

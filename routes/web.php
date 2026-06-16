@@ -206,6 +206,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/saved-jobs/{jobId}', function ($jobId) {
         $user = auth()->user();
         
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
         $exists = DB::table('saved_jobs')
             ->where('user_id', $user->id)
             ->where('job_id', $jobId)
@@ -225,18 +229,22 @@ Route::middleware(['auth'])->group(function () {
                 ->delete();
         }
         
-        return redirect()->back();
+        return response()->json(['message' => 'Job saved successfully.']);
     })->name('saved-jobs.store');
 
     Route::delete('/saved-jobs/{jobId}', function ($jobId) {
         $user = auth()->user();
         
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
         DB::table('saved_jobs')
             ->where('user_id', $user->id)
             ->where('job_id', $jobId)
             ->delete();
         
-        return redirect()->back();
+        return response()->json(['message' => 'Job removed successfully.']);
     })->name('saved-jobs.destroy');
 
     // Message Routes

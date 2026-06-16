@@ -71,11 +71,7 @@ export default function EditProfile({ user }) {
         e.preventDefault();
         clearErrors();
 
-        console.log('Start Date value:', data.start_date);
-        console.log('Employment Type:', data.employment_type);
-        console.log('Availability Status:', data.availability_status);
-
-        patch(route('profile.updateExtended'), {
+        patch(route('profile.updateExtended'), data, {
             preserveScroll: true,
             onSuccess: () => {
                 if (typeof alertify !== 'undefined') {
@@ -86,7 +82,8 @@ export default function EditProfile({ user }) {
             onError: (errors) => {
                 console.error('Validation errors:', errors);
                 if (typeof alertify !== 'undefined') {
-                    alertify.error('Please check the form for errors.');
+                    const message = errors?.employment_type || errors?.availability_status || errors?.start_date || errors?.error || 'Please check the form for errors.';
+                    alertify.error(message);
                 }
             }
         });
