@@ -302,61 +302,61 @@ class ProfileController extends Controller
     /**
      * Upload user avatar and save as Base64 in database
      */
-    public function uploadAvatar(Request $request): \Illuminate\Http\JsonResponse | RedirectResponse
+    public function uploadAvatar(Request $request)
     {
         try {
             $user = Auth::user();
-            $profile = $user->profile;
             
-            if (!$profile) {
-                $profile = Profile::create(['user_id' => $user->id]);
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
             }
             
-            // Validate file first
+            if (!$request->hasFile('avatar')) {
+                return response()->json(['error' => 'No file uploaded'], 400);
+            }
+            
+            $file = $request->file('avatar');
+            
+            // Validate file
             $validated = $request->validate([
                 'avatar' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10240'
             ]);
             
-            if ($request->hasFile('avatar')) {
-                $file = $request->file('avatar');
-                
-                // Convert to Base64
-                $imageData = file_get_contents($file->getRealPath());
-                $base64 = base64_encode($imageData);
-                $mimeType = $file->getMimeType();
-                $base64Image = 'data:' . $mimeType . ';base64,' . $base64;
-                
-                // Save Base64 to database
-                $profile->profile_image_base64 = $base64Image;
-                $profile->save();
-                
-                // Update profile completion percentage
-                if (method_exists($user, 'updateProfileCompletion')) {
-                    $user->updateProfileCompletion();
-                }
-                
-                // Return JSON for AJAX requests, redirect for regular requests
-                if ($request->wantsJson()) {
-                    return response()->json(['message' => 'Avatar uploaded successfully.'], 200);
-                }
-                
-                return Redirect::route('profile.editExtended')->with('success', 'Avatar uploaded and saved as Base64 successfully.');
+            if (!$file->isValid()) {
+                return response()->json(['error' => 'Invalid file upload'], 400);
             }
             
-            if ($request->wantsJson()) {
-                return response()->json(['error' => 'No file selected'], 400);
+            // Read file
+            $filePath = $file->getRealPath();
+            if (!file_exists($filePath)) {
+                return response()->json(['error' => 'File not found on server'], 400);
             }
             
-            return Redirect::back()->withErrors(['error' => 'No file selected']);
-            
-        } catch (\Exception $e) {
-            Log::error('Avatar upload failed: ' . $e->getMessage());
-            
-            if ($request->wantsJson()) {
-                return response()->json(['error' => 'Failed to upload avatar. ' . $e->getMessage()], 400);
+            $imageData = file_get_contents($filePath);
+            if ($imageData === false) {
+                return response()->json(['error' => 'Failed to read file'], 400);
             }
             
-            return Redirect::back()->withErrors(['error' => 'Failed to upload avatar. Please try again.']);
+            // Encode to base64
+            $base64 = base64_encode($imageData);
+            $mimeType = $file->getMimeType();
+            $base64Image = 'data:' . $mimeType . ';base64,' . $base64;
+            
+            // Get or create profile
+            $profile = $user->profile ?? Profile::create(['user_id' => $user->id]);
+            
+            // Save to database
+            $profile->profile_image_base64 = $base64Image;
+            $profile->save();
+            
+            return response()->json(['message' => 'Avatar uploaded successfully'], 200);
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Avatar validation failed: ' . json_encode($e->errors()));
+            return response()->json(['error' => 'Invalid file format or size. Use JPG, PNG, GIF, or WebP under 10MB.'], 422);
+        } catch (\Throwable $e) {
+            Log::error('Avatar upload exception: ' . $e->getMessage() . ' | Line: ' . $e->getLine() . ' | File: ' . $e->getFile());
+            return response()->json(['error' => 'Upload failed: ' . $e->getMessage()], 500);
         }
     }
 

@@ -184,37 +184,39 @@ export default function EditProfile({ user }) {
         const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
         try {
-            await router.post(route('profile.avatar.upload'), formData, {
+            const response = await fetch(route('profile.avatar.upload'), {
+                method: 'POST',
                 headers: {
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': token,
                 },
-                forceFormData: true,
-                preserveState: true,
-                onSuccess: () => {
-                    if (typeof alertify !== 'undefined') {
-                        alertify.success('✅ Avatar uploaded successfully!');
-                    }
-                    setAvatarPreview(null);
-                    router.reload();
-                },
-                onError: (errors) => {
-                    console.error('Upload error:', errors);
-                    setAvatarPreview(null);
-                    if (typeof alertify !== 'undefined') {
-                        const errorMsg = errors?.error || errors?.avatar || 'Failed to upload image. Please use JPG, PNG, or GIF format.';
-                        alertify.error('❌ ' + errorMsg);
-                    }
-                }
+                credentials: 'same-origin',
+                body: formData
             });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                if (typeof alertify !== 'undefined') {
+                    alertify.success('✅ Avatar uploaded successfully!');
+                }
+                setAvatarPreview(null);
+                // Reload to show the updated avatar
+                setTimeout(() => {
+                    router.reload();
+                }, 500);
+            } else {
+                throw new Error(data.error || 'Upload failed');
+            }
         } catch (error) {
-            console.error('Upload failed', error);
+            console.error('Upload error:', error);
             setAvatarPreview(null);
             if (typeof alertify !== 'undefined') {
-                alertify.error('❌ Upload failed. Please try again.');
+                alertify.error('❌ ' + (error.message || 'Upload failed. Please try again.'));
             }
         } finally {
             setUploading(false);
+            e.target.value = '';
         }
     };
 
