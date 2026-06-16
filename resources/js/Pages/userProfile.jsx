@@ -186,6 +186,7 @@ export default function EditProfile({ user }) {
         try {
             await router.post(route('profile.avatar.upload'), formData, {
                 headers: {
+                    'Accept': 'application/json',
                     'X-CSRF-TOKEN': token,
                 },
                 forceFormData: true,
@@ -201,7 +202,8 @@ export default function EditProfile({ user }) {
                     console.error('Upload error:', errors);
                     setAvatarPreview(null);
                     if (typeof alertify !== 'undefined') {
-                        alertify.error('❌ Failed to upload image. Please use JPG, PNG, or GIF format.');
+                        const errorMsg = errors?.error || errors?.avatar || 'Failed to upload image. Please use JPG, PNG, or GIF format.';
+                        alertify.error('❌ ' + errorMsg);
                     }
                 }
             });

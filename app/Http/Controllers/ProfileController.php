@@ -302,7 +302,7 @@ class ProfileController extends Controller
     /**
      * Upload user avatar and save as Base64 in database
      */
-    public function uploadAvatar(Request $request): RedirectResponse
+    public function uploadAvatar(Request $request): \Illuminate\Http\JsonResponse | RedirectResponse
     {
         try {
             $user = Auth::user();
@@ -312,13 +312,13 @@ class ProfileController extends Controller
                 $profile = Profile::create(['user_id' => $user->id]);
             }
             
+            // Validate file first
+            $validated = $request->validate([
+                'avatar' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10240'
+            ]);
+            
             if ($request->hasFile('avatar')) {
                 $file = $request->file('avatar');
-                
-                // Validate file
-                $request->validate([
-                    'avatar' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10240'
-                ]);
                 
                 // Convert to Base64
                 $imageData = file_get_contents($file->getRealPath());
@@ -335,13 +335,27 @@ class ProfileController extends Controller
                     $user->updateProfileCompletion();
                 }
                 
+                // Return JSON for AJAX requests, redirect for regular requests
+                if ($request->wantsJson()) {
+                    return response()->json(['message' => 'Avatar uploaded successfully.'], 200);
+                }
+                
                 return Redirect::route('profile.editExtended')->with('success', 'Avatar uploaded and saved as Base64 successfully.');
+            }
+            
+            if ($request->wantsJson()) {
+                return response()->json(['error' => 'No file selected'], 400);
             }
             
             return Redirect::back()->withErrors(['error' => 'No file selected']);
             
         } catch (\Exception $e) {
             Log::error('Avatar upload failed: ' . $e->getMessage());
+            
+            if ($request->wantsJson()) {
+                return response()->json(['error' => 'Failed to upload avatar. ' . $e->getMessage()], 400);
+            }
+            
             return Redirect::back()->withErrors(['error' => 'Failed to upload avatar. Please try again.']);
         }
     }
