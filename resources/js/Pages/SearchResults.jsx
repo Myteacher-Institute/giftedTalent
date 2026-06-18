@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import AppNavbar from '../Components/AppNavbar';
 import '../../css/search-results.css';
+import { getAvatarUrl } from '@/Utils/avatar';
 
 export default function SearchResults({ auth, jobs = [], talents = [], searchQuery = '' }) {
     const [filterType, setFilterType] = useState('all'); // 'all', 'jobs', 'talents'
@@ -206,35 +207,41 @@ export default function SearchResults({ auth, jobs = [], talents = [], searchQue
                                     ))}
 
                                     {/* Talents Section */}
-                                    {displayTalents.map(talent => (
-                                        <Link key={`talent-${talent.id}`} href={`/talent/${talent.id}`} className="search-result-card">
-                                            <div className="result-flex-row">
-                                                <img 
-                                                    src={talent.avatar || talent.profile_image_base64 || `https://ui-avatars.com/api/?name=${encodeURIComponent(talent.name)}&background=4F46E5&color=fff`} 
-                                                    alt={talent.name} 
-                                                    className="result-avatar"
-                                                    onError={(e) => {
-                                                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(talent.name)}&background=4F46E5&color=fff`;
-                                                    }}
-                                                />
-                                                <div className="result-content">
-                                                    <span className="result-badge-talent">Talent</span>
-                                                    <h3 className="result-title">{talent.name}</h3>
-                                                    <p className="result-subtitle">{talent.title || talent.position}</p>
-                                                    {talent.skills && talent.skills.length > 0 && (
-                                                        <div className="result-tags">
-                                                            {talent.skills.slice(0, 3).map(skill => (
-                                                                <span key={skill} className="result-tag">{skill}</span>
-                                                            ))}
-                                                            {talent.skills.length > 3 && (
-                                                                <span className="result-tag">+{talent.skills.length - 3} more</span>
-                                                            )}
-                                                        </div>
+                                    {displayTalents.map(talent => {
+                                        const url = getAvatarUrl({ profile: { profile_image_base64: talent.profile_image_base64, avatar_url: talent.avatar_url, avatar: talent.avatar }, fallbackName: talent.name, fallbackColor: '4F46E5' });
+                                        const initials = talent.name ? talent.name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase() : 'JD';
+                                        return (
+                                            <Link key={`talent-${talent.id}`} href={`/talent/${talent.id}`} className="search-result-card">
+                                                <div className="result-flex-row">
+                                                    {url ? (
+                                                        <img
+                                                            src={url}
+                                                            alt={talent.name}
+                                                            className="result-avatar"
+                                                            onError={(e) => { e.target.style.display = 'none'; }}
+                                                        />
+                                                    ) : (
+                                                        <div className="result-avatar result-avatar--initials">{initials}</div>
                                                     )}
+                                                    <div className="result-content">
+                                                        <span className="result-badge-talent">Talent</span>
+                                                        <h3 className="result-title">{talent.name}</h3>
+                                                        <p className="result-subtitle">{talent.title || talent.position}</p>
+                                                        {talent.skills && talent.skills.length > 0 && (
+                                                            <div className="result-tags">
+                                                                {talent.skills.slice(0, 3).map(skill => (
+                                                                    <span key={skill} className="result-tag">{skill}</span>
+                                                                ))}
+                                                                {talent.skills.length > 3 && (
+                                                                    <span className="result-tag">+{talent.skills.length - 3} more</span>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </Link>
-                                    ))}
+                                            </Link>
+                                        );
+                                    })}
                                 </div>
                             )}
                         </main>

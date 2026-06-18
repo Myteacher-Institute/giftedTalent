@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getAvatarUrl } from '@/Utils/avatar';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '../Layouts/AuthenticatedLayout';
 import '../../css/Dashboard.css';
@@ -287,44 +288,7 @@ export default function Dashboard({
     }, []);
 
     // Get profile image URL - NO API CALLS, returns null if no image
-    const getProfileImageUrl = () => {
-        // Check for base64 in profile
-        if (profile?.profile_image_base64 && typeof profile.profile_image_base64 === 'string') {
-            return profile.profile_image_base64;
-        }
-        // Check for avatar_url in user's profile
-        if (currentUser?.profile?.avatar_url && typeof currentUser.profile.avatar_url === 'string') {
-            if (currentUser.profile.avatar_url.startsWith('http')) {
-                return currentUser.profile.avatar_url;
-            }
-            // Remove any leading slashes and storage prefix
-            let cleanPath = currentUser.profile.avatar_url.replace(/^\/+/, '');
-            cleanPath = cleanPath.replace(/^storage\//, '');
-            return `/storage/${cleanPath}`;
-        }
-        // Check for avatar path
-        if (currentUser?.profile?.avatar && typeof currentUser.profile.avatar === 'string') {
-            const avatarPath = currentUser.profile.avatar;
-            if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
-                return avatarPath;
-            }
-            if (avatarPath.startsWith('data:image')) {
-                return avatarPath;
-            }
-            // Remove any leading slashes and storage prefix
-            let cleanPath = avatarPath.replace(/^\/+/, '');
-            cleanPath = cleanPath.replace(/^storage\//, '');
-            return `/storage/${cleanPath}`;
-        }
-        // Check for profile avatar_url
-        if (profile?.avatar_url && typeof profile.avatar_url === 'string') {
-            let cleanPath = profile.avatar_url.replace(/^\/+/, '');
-            cleanPath = cleanPath.replace(/^storage\//, '');
-            return `/storage/${cleanPath}`;
-        }
-        // Return null - this will trigger the initials fallback
-        return null;
-    };
+    const getProfileImageUrl = () => getAvatarUrl({ profile, currentUser, fallbackName: currentUser?.name || 'User', fallbackColor: '667eea' });
 
     // Get user initials for fallback
     const getUserInitials = () => {
@@ -546,70 +510,61 @@ export default function Dashboard({
                 <aside className={`sidebar ${sidebarOpen ? 'mobile-open' : ''}`}>
                     <div className="profile">
                         <div className="profile-image-wrapper">
-                            {currentUser?.profile?.profile_image_base64 ? (
-                                <img
-                                    src={currentUser.profile.profile_image_base64}
-                                    alt={currentUser?.name || 'Profile'}
-                                    className="profile-image"
-                                />
-                            ) : currentUser?.profile?.avatar ? (
-                                <img
-                                    src={(() => {
-                                        let avatarPath = currentUser.profile.avatar;
-                                        let cleanPath = avatarPath.replace(/^\/+/, '');
-                                        cleanPath = cleanPath.replace(/^storage\//, '');
-                                        return `/storage/${cleanPath}`;
-                                    })()}
-                                    alt={currentUser?.name || 'Profile'}
-                                    className="profile-image"
-                                    onError={(e) => {
-                                        e.target.style.display = 'none';
-                                        const parent = e.target.parentElement;
-                                        if (parent && !parent.querySelector('.initials-fallback')) {
-                                            const userName = currentUser?.name || 'User';
-                                            const initials = userName
-                                                .split(' ')
-                                                .map(name => name[0])
-                                                .join('')
-                                                .toUpperCase()
-                                                .slice(0, 2);
-                                            const initialsDiv = document.createElement('div');
-                                            initialsDiv.className = 'initials-fallback';
-                                            initialsDiv.textContent = initials;
-                                            initialsDiv.style.cssText = `
-                            width: 96px;
-                            height: 96px;
-                            border-radius: 50%;
-                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            font-size: 36px;
-                            font-weight: 700;
-                            color: white;
-                            margin: 0 auto;
-                        `;
-                                            parent.appendChild(initialsDiv);
-                                        }
-                                    }}
-                                />
-                            ) : (
-                                <div className="initials-fallback" style={{
-                                    width: '96px',
-                                    height: '96px',
-                                    borderRadius: '50%',
-                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontSize: '36px',
-                                    fontWeight: '700',
-                                    color: 'white',
-                                    margin: '0 auto'
-                                }}>
-                                    {currentUser?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
-                                </div>
-                            )}
+                            {(() => {
+                                const avatarUrl = getProfileImageUrl();
+                                if (!avatarUrl) {
+                                    const initials = currentUser?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
+                                    return (
+                                        <div className="initials-fallback" style={{
+                                            width: '96px',
+                                            height: '96px',
+                                            borderRadius: '50%',
+                                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '36px',
+                                            fontWeight: '700',
+                                            color: 'white',
+                                            margin: '0 auto'
+                                        }}>
+                                            {initials}
+                                        </div>
+                                    );
+                                }
+
+                                return (
+                                    <img
+                                        src={avatarUrl}
+                                        alt={currentUser?.name || 'Profile'}
+                                        className="profile-image"
+                                        onError={(e) => {
+                                            e.target.style.display = 'none';
+                                            const parent = e.target.parentElement;
+                                            if (parent && !parent.querySelector('.initials-fallback')) {
+                                                const initials = currentUser?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
+                                                const initialsDiv = document.createElement('div');
+                                                initialsDiv.className = 'initials-fallback';
+                                                initialsDiv.textContent = initials;
+                                                initialsDiv.style.cssText = `
+                                                    width: 96px;
+                                                    height: 96px;
+                                                    border-radius: 50%;
+                                                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                                    display: flex;
+                                                    align-items: center;
+                                                    justify-content: center;
+                                                    font-size: 36px;
+                                                    font-weight: 700;
+                                                    color: white;
+                                                    margin: 0 auto;
+                                                `;
+                                                parent.appendChild(initialsDiv);
+                                            }
+                                        }}
+                                    />
+                                );
+                            })()}
                             <div className="verified-overlay" >
                                 <i className="fa-solid fa-circle-check" style={{ color: 'rgb(99, 230, 190)' }}></i>
                             </div>

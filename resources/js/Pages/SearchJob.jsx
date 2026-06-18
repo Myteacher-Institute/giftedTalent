@@ -3,6 +3,7 @@ import AppNavbar from '../Components/AppNavbar';
 import '../../css/Dashboard.css';
 import '../../css/search-job.css';
 import { Head, router } from '@inertiajs/react';
+import { getAvatarUrl } from '@/Utils/avatar';
 
 export default function SearchJob({ auth, profile, recommendedJobs = [], exploreJobs = [], savedJobs: initialSavedJobs = [] }) {
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -77,30 +78,7 @@ export default function SearchJob({ auth, profile, recommendedJobs = [], explore
     const userProfile = profile || currentUser?.profile || {};
 
     // Get profile image URL with base64 support
-    const getProfileImageUrl = () => {
-        if (profile?.profile_image_base64 && typeof profile.profile_image_base64 === 'string') {
-            return profile.profile_image_base64;
-        }
-        if (currentUser?.profile?.profile_image_base64 && typeof currentUser.profile.profile_image_base64 === 'string') {
-            return currentUser.profile.profile_image_base64;
-        }
-        if (currentUser?.profile?.avatar_url && typeof currentUser.profile.avatar_url === 'string') {
-            return currentUser.profile.avatar_url;
-        }
-        if (currentUser?.profile?.avatar && typeof currentUser.profile.avatar === 'string') {
-            const avatarPath = currentUser.profile.avatar;
-            if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
-                return avatarPath;
-            }
-            if (avatarPath.startsWith('data:image')) {
-                return avatarPath;
-            }
-            const cleanPath = avatarPath.replace(/^\/+/, '');
-            return `/storage/${cleanPath}`;
-        }
-        const userName = currentUser?.name || 'User';
-        return `https://ui-avatars.com/api/?background=667eea&color=fff&size=100&name=${encodeURIComponent(userName)}`;
-    };
+    const getProfileImageUrl = () => getAvatarUrl({ profile, currentUser, fallbackName: currentUser?.name || 'User', fallbackColor: '667eea' });
 
     // Get user display name
     const getDisplayName = () => {

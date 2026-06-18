@@ -1,4 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
+import { getAvatarUrl } from '@/Utils/avatar';
 import { useState, useEffect, useRef } from 'react';
 import '../../css/nav.css';
 import '../../css/hero.css';
@@ -686,20 +687,23 @@ export default function Welcome({ auth, laravelVersion, phpVersion, jobs = [], f
                                         return (
                                             <div key={talent.id} className="feature-talent-card">
                                                 <div className="feature-talent-card-header">
-                                                    {talent.profile_image_base64 || talent.avatar_url || talent.avatar ? (
-                                                        <img
-                                                            src={talent.profile_image_base64 || talent.avatar_url || talent.avatar}
-                                                            alt={talent.name}
-                                                            onError={(e) => {
-                                                                e.target.style.display = 'none';
-                                                                e.target.parentElement.innerHTML = `<div class="feature-talent-avatar-initials">${getInitials(talent.name)}</div>`;
-                                                            }}
-                                                        />
-                                                    ) : (
-                                                        <div className="feature-talent-avatar-initials">
-                                                            {getInitials(talent.name)}
-                                                        </div>
-                                                    )}
+                                                    {(() => {
+                                                        const url = getAvatarUrl({ profile: { profile_image_base64: talent.profile_image_base64, avatar_url: talent.avatar_url, avatar: talent.avatar }, fallbackName: talent.name, fallbackColor: '4F46E5' });
+                                                        if (!url) return (
+                                                            <div className="feature-talent-avatar-initials">{getInitials(talent.name)}</div>
+                                                        );
+                                                        return (
+                                                            <img
+                                                                src={url}
+                                                                alt={talent.name}
+                                                                onError={(e) => {
+                                                                    e.target.style.display = 'none';
+                                                                    e.target.parentElement.innerHTML = `<div class="feature-talent-avatar-initials">${getInitials(talent.name)}</div>`;
+                                                                }}
+                                                            />
+                                                        );
+                                                    })()}
+                                                    
                                                     <div className="talent-rating-badge">
                                                         <i className="fas fa-star"></i>
                                                         <span>{talent.rating || 4.0}</span>

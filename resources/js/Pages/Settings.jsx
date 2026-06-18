@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getAvatarUrl } from '@/Utils/avatar';
 import { Head, Link, router } from '@inertiajs/react';
 import AppNavbar from '../Components/AppNavbar';
 import ProfileSettings from '../Components/Settings/ProfileSettings';
@@ -27,35 +28,7 @@ export default function Settings({ auth, user, profile, flash }) {
         }
     }, [flash]);
 
-    const getProfileImageUrl = () => {
-        if (profile?.profile_image_base64) {
-            return profile.profile_image_base64;
-        }
-        if (currentUser?.profile?.profile_image_base64) {
-            return currentUser.profile.profile_image_base64;
-        }
-        if (profile?.avatar_url) {
-            return profile.avatar_url;
-        }
-        if (profile?.avatar) {
-            const avatarPath = profile.avatar;
-            if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
-                return avatarPath;
-            }
-            const cleanPath = avatarPath.replace(/^\/+/, '');
-            return `/storage/${cleanPath}`;
-        }
-        if (currentUser?.avatar) {
-            const avatarPath = currentUser.avatar;
-            if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
-                return avatarPath;
-            }
-            const cleanPath = avatarPath.replace(/^\/+/, '');
-            return `/storage/${cleanPath}`;
-        }
-        const userName = currentUser?.name || 'User';
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
-    };
+    const getProfileImageUrl = () => getAvatarUrl({ profile, currentUser, fallbackName: currentUser?.name || 'User', fallbackColor: '4F46E5' });
 
     const toggleMobileMenu = () => {
         setIsMobileMenuOpen(!isMobileMenuOpen);

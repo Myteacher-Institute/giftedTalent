@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState, useEffect, useRef } from 'react';
 import '../../css/find-talents.css';
+import { getAvatarUrl } from '@/Utils/avatar';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Footer from '@/Components/Footer';
 
@@ -181,6 +182,7 @@ export default function FindTalents({ auth, talents = [] }) {
                             ) : (
                                 filteredTalents.map((talent) => {
                                     const skillsArray = getSkillsArray(talent.skills);
+                                    const url = getAvatarUrl({ profile: { profile_image_base64: talent.profile_image_base64, avatar_url: talent.avatar_url, avatar: talent.avatar }, fallbackName: talent.name, fallbackColor: '4F46E5' });
                                     return (
                                         <div
                                             key={talent.id}
@@ -189,8 +191,8 @@ export default function FindTalents({ auth, talents = [] }) {
                                         >
                                             <div className="talent-card-header">
                                                 <div className="talent-avatar">
-                                                    {talent.avatar ? (
-                                                        <img src={talent.avatar} alt={talent.name} />
+                                                    {url ? (
+                                                        <img src={url} alt={talent.name} />
                                                     ) : (
                                                         <div className="avatar-initials">{getInitials(talent.name)}</div>
                                                     )}

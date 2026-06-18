@@ -2,6 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import AppNavbar from '../Components/AppNavbar';
 import '../../css/explore.css';
+import { getAvatarUrl } from '@/Utils/avatar';
 
 export default function Explore({ 
     auth, 
@@ -35,24 +36,7 @@ export default function Explore({
     
     const currentUser = auth?.user;
 
-    const getProfileImageUrl = () => {
-        if (currentUser?.profile?.profile_image_base64) {
-            return currentUser.profile.profile_image_base64;
-        }
-        if (currentUser?.profile?.avatar_url) {
-            return currentUser.profile.avatar_url;
-        }
-        if (currentUser?.profile?.avatar) {
-            const avatarPath = currentUser.profile.avatar;
-            if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
-                return avatarPath;
-            }
-            const cleanPath = avatarPath.replace(/^\/+/, '');
-            return `/storage/${cleanPath}`;
-        }
-        const userName = currentUser?.name || 'User';
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=667eea&color=fff&size=100&bold=true`;
-    };
+    const getProfileImageUrl = () => getAvatarUrl({ profile: currentUser?.profile || {}, currentUser, fallbackName: currentUser?.name || 'User', fallbackColor: '667eea' });
 
     const getDisplayName = () => {
         return currentUser?.name?.toUpperCase() || 'USER NAME';
@@ -503,22 +487,22 @@ export default function Explore({
                         ) : (
                             <>
                                 <div className="talents-grid">
-                                    {currentTalents.map((talent, index) => (
-                                        <div key={talent.id || index} className="talent-card" onClick={() => handleTalentClick(talent.id)}>
-                                            <div className="talent-avatar">
-                                                {talent.avatar ? (
-                                                    <img src={talent.avatar} alt={talent.name} className="talent-avatar-img" />
-                                                ) : (
-                                                    <div className="talent-avatar-placeholder">
-                                                        {talent.name?.charAt(0)?.toUpperCase() || 'T'}
-                                                    </div>
-                                                )}
-                                                {talent.verified && (
-                                                    <div className="verified-badge">
-                                                        <i className="fas fa-check-circle"></i>
-                                                    </div>
-                                                )}
-                                            </div>
+                                    {currentTalents.map((talent, index) => {
+                                        const url = getAvatarUrl({ profile: { profile_image_base64: talent.profile_image_base64, avatar_url: talent.avatar_url, avatar: talent.avatar }, fallbackName: talent.name, fallbackColor: '4F46E5' });
+                                        return (
+                                            <div key={talent.id || index} className="talent-card" onClick={() => handleTalentClick(talent.id)}>
+                                                <div className="talent-avatar">
+                                                    {url ? (
+                                                        <img src={url} alt={talent.name} className="talent-avatar-img" onError={(e) => { e.target.style.display = 'none'; }} />
+                                                    ) : (
+                                                        <div className="talent-avatar-placeholder">{talent.name?.charAt(0)?.toUpperCase() || 'T'}</div>
+                                                    )}
+                                                    {talent.verified && (
+                                                        <div className="verified-badge">
+                                                            <i className="fas fa-check-circle"></i>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             <h3 className="talent-name">{talent.name}</h3>
                                             <p className="talent-title">{talent.title || 'Professional'}</p>
                                             <div className="talent-location">
@@ -539,7 +523,8 @@ export default function Explore({
                                             </div>
                                             <button className="view-talent-btn">View Profile →</button>
                                         </div>
-                                    ))}
+                                    )}
+                                )}
                                 </div>
                                 
                                 {/* Pagination */}

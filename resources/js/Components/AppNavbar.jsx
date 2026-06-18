@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Notification from './Notification';
 import ApplicationLogo from './ApplicationLogo';
 import '../../css/nav.css';
+import { getAvatarUrl } from '@/Utils/avatar';
 
 const AppNavbar = ({ user, newJobsCount, onMenuToggle, isMenuOpen, searchTerm, onSearchChange, onSearchSubmit }) => {
     const [scrolled, setScrolled] = useState(false);
@@ -82,24 +83,7 @@ const AppNavbar = ({ user, newJobsCount, onMenuToggle, isMenuOpen, searchTerm, o
 
     const hasSearch = true;
 
-    const getProfileImageUrl = () => {
-        if (user?.profile?.profile_image_base64) {
-            return user.profile.profile_image_base64;
-        }
-        if (user?.profile?.avatar_url) {
-            return user.profile.avatar_url;
-        }
-        if (user?.profile?.avatar) {
-            const avatarPath = user.profile.avatar;
-            if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
-                return avatarPath;
-            }
-            const cleanPath = avatarPath.replace(/^\/+/, '');
-            return `/storage/${cleanPath}`;
-        }
-        const userName = user?.name || 'User';
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=40&bold=true`;
-    };
+    const getProfileImageUrl = () => getAvatarUrl({ currentUser: user, fallbackName: user?.name || 'User', fallbackColor: '4F46E5' });
 
     return (
         <>

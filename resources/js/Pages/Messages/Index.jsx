@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import AppNavbar from '../../Components/AppNavbar';
+import { getAvatarUrl } from '@/Utils/avatar';
 import '../../../css/messageindex.css';
 
 export default function MessagesIndex({ auth, conversations }) {
@@ -307,28 +308,31 @@ export default function MessagesIndex({ auth, conversations }) {
                                 <Link href="/hire" className="browse-link">Browse Talent</Link>
                             </div>
                         ) : (
-                            localConversations.map(conv => (
-                                <div 
-                                    key={conv.user_id} 
-                                    className={`conversation-item ${selectedUser === conv.user_id ? 'active' : ''}`}
-                                    onClick={() => setSelectedUser(conv.user_id)}
-                                >
-                                    <div className="conv-avatar">
-                                        {conv.avatar ? (
-                                            <img src={conv.avatar} alt={conv.name} />
-                                        ) : (
-                                            <div className="avatar-placeholder">{getInitials(conv.name)}</div>
+                            localConversations.map(conv => {
+                                const url = getAvatarUrl({ profile: { profile_image_base64: conv.profile_image_base64, avatar_url: conv.avatar_url, avatar: conv.avatar }, fallbackName: conv.name, fallbackColor: '4F46E5' });
+                                return (
+                                    <div 
+                                        key={conv.user_id} 
+                                        className={`conversation-item ${selectedUser === conv.user_id ? 'active' : ''}`}
+                                        onClick={() => setSelectedUser(conv.user_id)}
+                                    >
+                                        <div className="conv-avatar">
+                                            {url ? (
+                                                <img src={url} alt={conv.name} />
+                                            ) : (
+                                                <div className="avatar-placeholder">{getInitials(conv.name)}</div>
+                                            )}
+                                        </div>
+                                        <div className="conv-info">
+                                            <div className="conv-name">{conv.name}</div>
+                                            <div className="conv-last-message">{conv.last_message || 'Start chatting'}</div>
+                                        </div>
+                                        {conv.unread_count > 0 && (
+                                            <div className="conv-unread">{conv.unread_count}</div>
                                         )}
                                     </div>
-                                    <div className="conv-info">
-                                        <div className="conv-name">{conv.name}</div>
-                                        <div className="conv-last-message">{conv.last_message || 'Start chatting'}</div>
-                                    </div>
-                                    {conv.unread_count > 0 && (
-                                        <div className="conv-unread">{conv.unread_count}</div>
-                                    )}
-                                </div>
-                            ))
+                                );
+                            })
                         )}
                     </div>
                 </div>
@@ -349,13 +353,14 @@ export default function MessagesIndex({ auth, conversations }) {
                                 </button>
                                 <div className="chat-user">
                                     <div className="chat-avatar">
-                                        {selectedUserData?.avatar ? (
-                                            <img src={selectedUserData.avatar} alt={selectedUserData.name} />
-                                        ) : (
-                                            <div className="avatar-placeholder-small">
-                                                {getInitials(selectedUserData?.name)}
-                                            </div>
-                                        )}
+                                        {(() => {
+                                            const url = getAvatarUrl({ profile: { profile_image_base64: selectedUserData?.profile_image_base64, avatar_url: selectedUserData?.avatar_url, avatar: selectedUserData?.avatar }, fallbackName: selectedUserData?.name, fallbackColor: '4F46E5' });
+                                            return url ? (
+                                                <img src={url} alt={selectedUserData.name} />
+                                            ) : (
+                                                <div className="avatar-placeholder-small">{getInitials(selectedUserData?.name)}</div>
+                                            );
+                                        })()}
                                     </div>
                                     <h3>{selectedUserData?.name}</h3>
                                 </div>

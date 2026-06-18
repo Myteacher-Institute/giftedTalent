@@ -5,6 +5,7 @@ import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import '../../css/userProfile.css';
+import { getAvatarUrl } from '@/Utils/avatar';
 
 export default function EditProfile({ user }) {
     const { data, setData, patch, processing, errors, clearErrors } = useForm({
@@ -249,30 +250,9 @@ export default function EditProfile({ user }) {
         }
     };
 
+    const avatarSrc = avatarPreview || getAvatarUrl({ profile: user?.profile || {}, currentUser: user, fallbackName: user?.name || 'User', fallbackColor: '4F46E5' });
     const initials = user?.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'JD';
-    const hasAvatar = user?.profile?.avatar_url || user?.profile?.avatar;
-
-    // UPDATED: getAvatarUrl to handle preview first
-    const getAvatarUrl = () => {
-        // If we have a preview, use it first
-        if (avatarPreview) return avatarPreview;
-        
-        const avatarUrl = user?.profile?.avatar_url || user?.profile?.avatar;
-        
-        // Check if it's a HEIC file and return null (will trigger initials fallback)
-        if (avatarUrl && typeof avatarUrl === 'string' && avatarUrl.toLowerCase().includes('.heic')) {
-            return null;
-        }
-        
-        if (!avatarUrl) {
-            return null;
-        }
-        if (typeof avatarUrl === 'string' && (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://') || avatarUrl.startsWith('data:image'))) {
-            return avatarUrl;
-        }
-        const cleanPath = String(avatarUrl).replace(/^\/+/, '');
-        return cleanPath.startsWith('storage/') ? `/${cleanPath}` : `/storage/${cleanPath}`;
-    };
+    const hasAvatar = !!avatarSrc;
 
     const handleChange = (e, field) => {
         setData(field, e.target.value);
@@ -283,28 +263,12 @@ export default function EditProfile({ user }) {
             <Head title="Edit Profile" />
             <div className="profile-edit-container">
                 <div className="profile-edit-card">
-                    {/* Header */}
-                    <div className="profile-edit-header">
-                        <Link href="/dashboard" className="back-to-dashboard">
-                            <i className="fas fa-arrow-left"></i> Back to Dashboard
-                        </Link>
-                        <h1>Edit Profile</h1>
-                        <p>Update your personal and professional details</p>
-                    </div>
-
-                    {/* Avatar Section - UPDATED with preview */}
                     <div className="profile-avatar-section">
                         <div className="profile-avatar-wrapper">
-                            {avatarPreview ? (
+                            {avatarSrc ? (
                                 <img
-                                    src={avatarPreview}
+                                    src={avatarSrc}
                                     alt="Profile Preview"
-                                    className="profile-avatar-img"
-                                />
-                            ) : (hasAvatar && getAvatarUrl()) ? (
-                                <img
-                                    src={getAvatarUrl()}    
-                                    alt="Profile"
                                     className="profile-avatar-img"
                                     onError={(e) => {
                                         e.target.style.display = 'none';
@@ -318,10 +282,9 @@ export default function EditProfile({ user }) {
                                     }}
                                 />
                             ) : (
-                                <div className="profile-avatar-initials">
-                                    {initials}
-                                </div>
+                                <div className="profile-avatar-initials">{initials}</div>
                             )}
+
                             <div className="profile-verified-badge">
                                 <i className="fas fa-check-circle"></i>
                             </div>

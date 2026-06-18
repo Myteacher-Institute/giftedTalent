@@ -1,6 +1,7 @@
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import { useState } from 'react';
 import AppNavbar from '../Components/AppNavbar';
+import { getAvatarUrl } from '@/Utils/avatar';
 import '../../css/talent_profile.css';
 
 
@@ -93,6 +94,8 @@ export default function TalentProfile({ auth, talent }) {
         setShowMessageModal(true);
     };
 
+    const avatarUrl = getAvatarUrl({ profile: { profile_image_base64: talent.profile_image_base64, avatar_url: talent.avatar_url, avatar: talent.avatar }, fallbackName: talent.name, fallbackColor: '4F46E5' });
+
     return (
         <>
             <Head title={`${talent.name || 'Talent'} - GiftedTalent Profile`} />
@@ -107,16 +110,10 @@ export default function TalentProfile({ auth, talent }) {
                         
                         {/* Profile Image */}
                         <div className="talent-profile-image-full">
-                            {!imageError && talent.avatar ? (
-                                <img 
-                                    src={talent.avatar} 
-                                    alt={talent.name}
-                                    onError={() => setImageError(true)}
-                                />
+                            {avatarUrl ? (
+                                <img src={avatarUrl} alt={talent.name} onError={() => setImageError(true)} />
                             ) : (
-                                <div className="talent-avatar-initials-full">
-                                    {getInitials(talent.name)}
-                                </div>
+                                <div className="talent-avatar-initials-full">{getInitials(talent.name)}</div>
                             )}
                         </div>
                         

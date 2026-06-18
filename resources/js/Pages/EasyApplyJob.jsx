@@ -1,8 +1,10 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import '../../css/EasyApplyJob.css';
+import '../../css/explore.css';
 import '../../css/nav.css';
 import AppNavbar from '../Components/AppNavbar';
+import { getAvatarUrl } from '@/Utils/avatar';
 
 export default function EasyApplyJob({ auth, profile, job, hasApplied }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -35,30 +37,7 @@ export default function EasyApplyJob({ auth, profile, job, hasApplied }) {
         setSidebarOpen(false);
     };
 
-    const getProfileImageUrl = () => {
-        if (profile?.profile_image_base64) {
-            return profile.profile_image_base64;
-        }
-        if (currentUser?.profile?.profile_image_base64) {
-            return currentUser.profile.profile_image_base64;
-        }
-        if (currentUser?.profile?.avatar_url) {
-            return currentUser.profile.avatar_url;
-        }
-        if (currentUser?.profile?.avatar) {
-            const avatarPath = currentUser.profile.avatar;
-            if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
-                return avatarPath;
-            }
-            if (avatarPath.startsWith('data:image')) {
-                return avatarPath;
-            }
-            const cleanPath = avatarPath.replace(/^\/+/, '');
-            return `/storage/${cleanPath}`;
-        }
-        const userName = currentUser?.name || 'User';
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=4F46E5&color=fff&size=150&bold=true`;
-    };
+    const getProfileImageUrl = () => getAvatarUrl({ profile: profile || {}, currentUser, fallbackName: currentUser?.name || 'User', fallbackColor: '4F46E5' });
 
     const handleLogout = () => {
         router.post('/logout');
