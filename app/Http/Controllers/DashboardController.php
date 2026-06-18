@@ -291,16 +291,20 @@ class DashboardController extends Controller
         $user = $profile->user;
         
         $status = [
-            // 'email_verified' => $user->email_verified_at !== null,  // COMMENTED OUT - EMAIL VERIFICATION NOT REQUIRED
+            // 'email_verified' => $user->email_verified_at !== null,  // EMAIL VERIFICATION NOT REQUIRED
             'name' => !empty($user->name),
+            'email' => !empty($user->email),
             'phone' => !empty($profile->phone) || !empty($user->phone),
+            'employment_type' => !empty($profile->employment_type),
             'position' => !empty($profile->position),
             'company' => !empty($profile->company),
             'bio' => !empty($profile->bio) && strlen(trim($profile->bio)) > 20,
             'skills' => $user->skills()->count() >= 1,
-            'experience' => $user->experiences()->count() > 0,
+            // 'experience' removed by request
             'education' => $user->educations()->count() > 0,
             'portfolio' => !empty($profile->portfolio_url),
+            'linkedin' => !empty($profile->linkedin_url),
+            'github' => !empty($profile->github_url),
             'location' => !empty($profile->city) || !empty($profile->address),
             'cv_uploaded' => $user->resumes()->count() > 0,
         ];
